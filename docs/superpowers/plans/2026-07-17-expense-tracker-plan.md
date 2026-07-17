@@ -1276,16 +1276,6 @@ export function TransactionRow({ transaction, todayKey, onPress }: TransactionRo
           {subtitle}
         </Text>
       </View>
-      {transaction.photoPath === null && (
-        <View
-          className="h-9 w-9 flex-shrink-0 flex-col gap-[3px] rounded-lg px-[6px] py-[7px]"
-          style={{ backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#ECECEA' }}>
-          <View className="h-[2.5px] w-full rounded-sm" style={{ backgroundColor: '#E5E7EB' }} />
-          <View className="h-[2.5px] w-[65%] rounded-sm" style={{ backgroundColor: '#E5E7EB' }} />
-          <View className="h-[2.5px] w-[85%] rounded-sm" style={{ backgroundColor: '#E5E7EB' }} />
-          <View className="h-[2.5px] w-[45%] rounded-sm" style={{ backgroundColor: '#D1D5DB' }} />
-        </View>
-      )}
       <View className="flex-shrink-0 items-end">
         <Text className="text-[15px] font-semibold" style={{ color: amountColor }}>
           {amountStr}
@@ -1299,7 +1289,7 @@ export function TransactionRow({ transaction, todayKey, onPress }: TransactionRo
 }
 ```
 
-Note: this ports the mockup's "receipt placeholder" glyph (shown when there's **no** photo) — re-reading the mockup, `t.ph` marks rows that show the placeholder icon, which in the mockup's seed data was actually used as a stand-in for "has an attached receipt image" (a decorative filled-document icon), not "no photo". For the real app, a transaction either has a real `photoPath` (show the actual thumbnail — deferred detail, out of scope for the row, full photo shows in Transaction Detail) or has none (show nothing extra, not a placeholder graphic, since a placeholder glyph implying "there's a receipt" would be misleading when there isn't one). This task therefore **omits** the placeholder graphic entirely rather than inverting the mockup's condition — simpler and honest about state. Revise the component above: delete the `{transaction.photoPath === null && (...)}` block and its contents.
+Note: the mockup shows a decorative "receipt placeholder" glyph on rows flagged `t.ph` in its seed data — on inspection that flag actually means "has an attached receipt image" there, not "no photo" (it's a stand-in graphic used because the mockup has no real photos to render). This task deliberately omits that glyph rather than port a confusingly-inverted condition: a transaction either has a real `photoPath` (its thumbnail is shown in `TransactionDetail`, not here) or it doesn't, and showing a "there's a receipt" icon on rows *without* one would be misleading.
 
 - [ ] **Step 2: Manual verification**
 
@@ -2150,7 +2140,7 @@ import { useMemo, useState } from 'react';
 import { SegmentedControl } from '@/components/expense/segmented-control';
 import { useOpenTransactionDetail } from '@/components/expense/transaction-detail';
 import { TransactionRow } from '@/components/expense/transaction-row';
-import { CATEGORIES, categoryOf } from '@/lib/categories';
+import { CATEGORIES } from '@/lib/categories';
 import { dayLabel, formatCurrency, monthKey, shiftDateKey, toDateKey } from '@/lib/format';
 import { type Transaction, useTransactions } from '@/lib/transactions';
 import { Pressable, ScrollView, Text, View } from '@/tw';
@@ -2343,7 +2333,7 @@ export default function HistoryScreen() {
 }
 ```
 
-Note: the empty-state graphic is simplified to an emoji-in-a-card rather than the mockup's hand-drawn receipt illustration (rows of gray bars) — a deliberate scope trim for a rarely-seen edge case, not a placeholder. `categoryOf` is imported but unused by this simplified version; remove that import if `tsc`/lint flags it as unused.
+Note: the empty-state graphic is simplified to an emoji-in-a-card rather than the mockup's hand-drawn receipt illustration (rows of gray bars) — a deliberate scope trim for a rarely-seen edge case, not a placeholder.
 
 - [ ] **Step 2: Manual verification**
 
