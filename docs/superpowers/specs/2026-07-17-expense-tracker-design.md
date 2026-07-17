@@ -8,7 +8,7 @@ SpendLens becomes a real expense-tracking app: capture receipts, log transaction
 
 ## Architecture
 
-```
+```text
 src/
   app/
     index.tsx                 — Capture screen (app launch lands here)
