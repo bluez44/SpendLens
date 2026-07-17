@@ -2,6 +2,20 @@
 @import 'tailwindcss/preflight.css' layer(base);
 @import 'tailwindcss/utilities.css';
 
+@layer theme {
+  @theme {
+    --color-brand: #10b981;
+    --color-brand-dark: #059669;
+    --color-brand-light: #34d399;
+    --color-danger: #ef4444;
+    --color-ink: #111111;
+    --color-muted: #9ca3af;
+    --color-app-bg: #fafafa;
+    --color-card: #ffffff;
+    --color-hairline: #f2f2f0;
+  }
+}
+
 :root {
   --font-display:
     Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
