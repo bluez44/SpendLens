@@ -3752,4 +3752,3 @@ git commit -m "Remove superseded template files"
 **Placeholder scan:** no `TBD`/`TODO` remain. The one deliberate simplification (History's empty-state illustration using an emoji instead of the mockup's hand-drawn graphic) is called out explicitly as a scope trim, not left as an unstated gap. Task 27's Step 1 is a genuine external human prerequisite (real OAuth credentials can't be fabricated), not a placeholder — the task states exactly what's needed and why it can't proceed without it.
 
 **Type consistency:** `Transaction`/`NewTransaction` (Task 6) are used with the same field names throughout (Tasks 7, 11, 15, 18, 19, 20, 24, 26). `Category`/`CategoryId`/`categoryOf` (Task 3) are consistent everywhere they're consumed. `useTransactions()`'s returned `{ transactions, loading, add, update, remove, refresh }` shape matches every call site. `useOpenTransactionDetail()` (Task 15) is called identically in Tasks 18 and 19.
-
