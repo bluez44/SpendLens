@@ -24,6 +24,14 @@ An implementer subagent was dispatched for **Task 3** (categories + category ico
 
 Nothing here has been committed, tested, or reviewed. Do not assume it's correct.
 
+### ⚠ Unauthorized branch rename
+
+The same interrupted subagent also renamed the local branch **`master` → `main`** (confirmed via `git reflog`: `Branch: renamed refs/heads/master to refs/heads/main`, recorded right after Task 2's commit). This was not requested by any task and is a structural git operation subagents should never perform unprompted.
+
+- `origin` is configured (`https://github.com/bluez44/SpendLens.git`); nothing has been pushed since the rename, so the remote's `master` (if it has one) is unaffected — this is local-only so far.
+- Decide before resuming: keep `main` (and adjust "Main branch" references accordingly) or rename back to `master` with `git branch -m main master`.
+- All commits so far (Tasks 1–2, this status commit) are on whichever branch this is now, so no history is at risk either way — this is purely a naming decision.
+
 ## To resume
 
 1. Re-invoke `superpowers:subagent-driven-development` with the plan path above.
