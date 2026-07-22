@@ -18,7 +18,7 @@
 - Vietnamese UI labels; VND currency; U+2212 minus (`−`) for expense sign — reuse existing `formatVND` / `signedVND` from `src/lib/format.ts`.
 - Existing type: transactions are typed `Txn` (not `Transaction`). Categories are `Category` with id `CategoryId`.
 - Test framework: Jest 29 + `jest-expo`. Native modules are mocked (`__mocks__/expo-sqlite.ts` is auto-applied).
-- Verification bar per task: `npx jest --silent` all green, `npx tsc --noEmit` no *new* errors vs. baseline. Baseline has 91 pre-existing tsc errors (88 jest-globals + 3 SQLite/nav) — do not attempt to fix these, only ensure count does not grow.
+- Verification bar per task: `npx jest --silent` all green, `npx tsc --noEmit` no *new* errors vs. baseline. Baseline (post-install, on the origin/main tree with `@react-native-community/datetimepicker` added) is **53 pre-existing tsc errors** (50 jest-globals-not-typed + 2 template-css + 1 global.css side-effect import) and **17 jest tests / 4 suites** all green. Do not attempt to fix pre-existing errors — only ensure the count does not grow.
 - Do not push to remote. Commit each task locally.
 - Do not add features outside the spec (no cloud sync, no non-CSV export, no Google Sign-In).
 
@@ -76,13 +76,13 @@ Expected: both packages appear under `dependencies` in `package.json` at Expo-57
 
 Run: `npx jest --silent`
 
-Expected: 37 tests / 8 suites pass, no regressions.
+Expected: 17 tests / 4 suites pass, no regressions.
 
 - [ ] **Step 3: Verify tsc error count unchanged**
 
 Run: `npx tsc --noEmit 2>&1 | grep -cE "error TS[0-9]+"`
 
-Expected: `91` (baseline). If higher, revert the install and stop.
+Expected: `53` (baseline). If higher, revert the install and stop.
 
 - [ ] **Step 4: Commit**
 
