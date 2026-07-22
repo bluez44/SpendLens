@@ -17,6 +17,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { getColors } from '@/constants/tokens';
 import { SettingsProvider, useSettings } from '@/lib/settings-context';
 import { TransactionsProvider } from '@/lib/transactions-context';
+import { scheduleDailyReminder } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -24,6 +25,15 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
   const { settings } = useSettings();
   const effective = settings.themeMode === 'auto' ? scheme : settings.themeMode;
   const colors = getColors(effective);
+
+  useEffect(() => {
+    if (!settings.reminderEnabled || !settings.reminderHHMM) return;
+    const [hh, mm] = settings.reminderHHMM.split(':').map(Number);
+    scheduleDailyReminder(hh, mm).catch(() => {
+      // silent — permission may have been revoked externally
+    });
+  }, [settings.reminderEnabled, settings.reminderHHMM]);
+
   return (
     <ThemeProvider value={effective === 'dark' ? DarkTheme : DefaultTheme}>
       <StatusBar style="auto" />
