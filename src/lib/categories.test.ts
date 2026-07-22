@@ -2,7 +2,7 @@ import { categoryOf, CATEGORIES } from './categories';
 
 describe('categoryOf', () => {
   it('returns the matching category', () => {
-    expect(categoryOf('food').label).toBe('Food');
+    expect(categoryOf('food').label).toBe('Ăn uống');
   });
 
   it('falls back to "other" for an unknown id', () => {

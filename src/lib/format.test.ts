@@ -1,9 +1,45 @@
-import { dayLabel, formatCurrency, monthKey, shiftDateKey, toDateKey } from './format';
+import {
+  compactK,
+  compactTr,
+  dayLabel,
+  formatCurrency,
+  formatVND,
+  monthKey,
+  shiftDateKey,
+  signedVND,
+  toDateKey,
+} from './format';
 
 describe('formatCurrency', () => {
   it('formats with two decimals and thousands separators', () => {
     expect(formatCurrency(1234.5)).toBe('$1,234.50');
     expect(formatCurrency(6.75)).toBe('$6.75');
+  });
+});
+
+describe('formatVND', () => {
+  it('groups thousands with dots and appends ₫', () => {
+    expect(formatVND(45000)).toBe('45.000₫');
+    expect(formatVND(2500000)).toBe('2.500.000₫');
+    expect(formatVND(0)).toBe('0₫');
+  });
+});
+
+describe('signedVND', () => {
+  it('prefixes minus for expense and plus for income', () => {
+    expect(signedVND(45000, false)).toBe('−45.000₫');
+    expect(signedVND(2500000, true)).toBe('+2.500.000₫');
+  });
+});
+
+describe('compact', () => {
+  it('compactK rounds to thousands', () => {
+    expect(compactK(730000)).toBe('730k');
+    expect(compactK(2500000)).toBe('2.500k');
+  });
+
+  it('compactTr shows millions with a comma decimal', () => {
+    expect(compactTr(4230000)).toBe('4,23tr');
   });
 });
 
@@ -29,12 +65,12 @@ describe('shiftDateKey', () => {
 
 describe('dayLabel', () => {
   it('labels today and yesterday specially', () => {
-    expect(dayLabel('2026-07-17', '2026-07-17')).toBe('Today');
-    expect(dayLabel('2026-07-16', '2026-07-17')).toBe('Yesterday');
+    expect(dayLabel('2026-07-17', '2026-07-17')).toBe('Hôm nay');
+    expect(dayLabel('2026-07-16', '2026-07-17')).toBe('Hôm qua');
   });
 
-  it('labels older dates as "Mon D"', () => {
-    expect(dayLabel('2026-07-10', '2026-07-17')).toBe('Jul 10');
+  it('labels older dates as "D ThM"', () => {
+    expect(dayLabel('2026-07-10', '2026-07-17')).toBe('10 Th7');
   });
 });
 
