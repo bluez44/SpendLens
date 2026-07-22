@@ -54,10 +54,18 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <Text style={{ fontSize: 22, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>Tổng quan</Text>
           <View style={styles.headerActions}>
-            <Pressable style={[styles.iconBtn, { backgroundColor: c.segment }]} onPress={() => router.push('/settings')}>
+            <Pressable
+              onPress={() => router.push('/settings')}
+              hitSlop={8}
+              accessibilityLabel="Cài đặt"
+              style={[styles.iconBtn, { backgroundColor: c.segment }]}>
               <Icon name="settings" size={18} color={c.text} />
             </Pressable>
-            <Pressable style={[styles.iconBtn, { backgroundColor: c.segment }]} onPress={goBack}>
+            <Pressable
+              onPress={goBack}
+              hitSlop={8}
+              accessibilityLabel="Đóng"
+              style={[styles.iconBtn, { backgroundColor: c.segment }]}>
               <Icon name="close" size={18} color={c.text} />
             </Pressable>
           </View>

@@ -42,18 +42,19 @@ class MockSQLiteDatabase {
     return this.nativeDb.prepare(source).all(...params) as T[];
   }
 
-  getFirstSync<T>(source: string, ...params: any[]): T | undefined {
-    // Handle both array and spread parameters
+  getFirstSync<T>(source: string, ...params: any[]): T | null {
     const actualParams = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
-    return this.nativeDb.prepare(source).get(...actualParams) as T | undefined;
+    const row = this.nativeDb.prepare(source).get(...actualParams) as T | undefined;
+    return row ?? null;
   }
 
-  runSync(source: string, ...params: any[]): { lastInsertRowId: number } {
+  runSync(source: string, ...params: any[]): { lastInsertRowId: number; changes: number } {
     const stmt = this.nativeDb.prepare(source);
-    stmt.run(...params);
-    // Get the last insert row ID
-    const result = this.nativeDb.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
-    return { lastInsertRowId: result.id };
+    const result = stmt.run(...params);
+    return {
+      lastInsertRowId: Number(result.lastInsertRowid),
+      changes: Number(result.changes),
+    };
   }
 }
 

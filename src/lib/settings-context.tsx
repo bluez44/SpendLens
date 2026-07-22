@@ -20,13 +20,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   });
 
   const update = useCallback(<K extends keyof Settings>(key: K, value: Settings[K]) => {
-    updateSetting(key, value);
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    try {
+      updateSetting(key, value);
+      setSettings((prev) => ({ ...prev, [key]: value }));
+    } catch (err) {
+      console.warn('Failed to persist setting', key, err);
+    }
   }, []);
 
   const reset = useCallback(() => {
-    resetSettings();
-    setSettings(DEFAULTS);
+    try {
+      resetSettings();
+      setSettings(DEFAULTS);
+    } catch (err) {
+      console.warn('Failed to reset settings', err);
+    }
   }, []);
 
   return (

@@ -108,9 +108,6 @@ export default function SettingsScreen() {
 
         {/* GIAO DIỆN */}
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>GIAO DIỆN</Text>
-        <View style={[styles.row, { borderColor: colors.hairline }]}>
-          <Text style={{ color: colors.text, fontWeight: '500' }}>Chế độ tối</Text>
-        </View>
         <Segmented
           options={THEME_LABELS}
           value={themeIndex >= 0 ? themeIndex : 0}

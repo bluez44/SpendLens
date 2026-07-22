@@ -34,9 +34,9 @@ export async function exportAndShareCsv(txns: Txn[]): Promise<boolean> {
   if (!(await Sharing.isAvailableAsync())) return false;
   const csv = buildTransactionsCsv(txns);
   const file = new File(Paths.cache, `spendlens-export-${Date.now()}.csv`);
-  file.create();
-  file.write(csv);
   try {
+    file.create();
+    file.write(csv);
     await Sharing.shareAsync(file.uri, {
       mimeType: 'text/csv',
       dialogTitle: 'Xuất SpendLens',

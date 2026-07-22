@@ -1,3 +1,12 @@
+jest.mock('expo-file-system', () => ({
+  __esModule: true,
+  File: jest.fn().mockImplementation((p: string) => ({
+    delete: () => {
+      if (p.startsWith('/tmp/does-not-exist')) throw new Error('ENOENT: mock');
+    },
+  })),
+}));
+
 import * as SQLite from 'expo-sqlite';
 
 import { insertTransaction, listTransactions, resetTransactions } from './transactions';

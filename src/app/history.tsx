@@ -36,10 +36,18 @@ export default function HistoryScreen() {
         <View style={styles.header}>
           <Text style={{ fontSize: 22, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>Thu chi</Text>
           <View style={styles.headerActions}>
-            <Pressable style={[styles.iconBtn, { backgroundColor: c.segment }]} onPress={() => setExportOpen(true)}>
+            <Pressable
+              onPress={() => setExportOpen(true)}
+              hitSlop={8}
+              accessibilityLabel="Xuất CSV"
+              style={[styles.iconBtn, { backgroundColor: c.segment }]}>
               <Icon name="share" size={18} color={c.text} />
             </Pressable>
-            <Pressable style={[styles.iconBtn, { backgroundColor: c.segment }]} onPress={goBack}>
+            <Pressable
+              onPress={goBack}
+              hitSlop={8}
+              accessibilityLabel="Đóng"
+              style={[styles.iconBtn, { backgroundColor: c.segment }]}>
               <Icon name="close" size={18} color={c.text} />
             </Pressable>
           </View>
