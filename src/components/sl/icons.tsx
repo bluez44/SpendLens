@@ -11,7 +11,8 @@ export type IconName =
   | 'arrow-up'
   | 'flip'
   | 'flash'
-  | 'flash-off';
+  | 'flash-off'
+  | 'settings';
 
 export function Icon({
   name,
@@ -72,6 +73,14 @@ export function Icon({
         <>
           <Path d="M13 2 5 13h5l-1 9 8-12h-5z" {...p} />
           <Path d="M4 3l16 18" {...p} strokeWidth={2.2} />
+        </>
+      )}
+      {name === 'settings' && (
+        <>
+          <Path d="M4 7h10M4 12h6M4 17h13" {...p} strokeWidth={2} />
+          <Circle cx={17} cy={7} r={2.2} {...p} strokeWidth={2} />
+          <Circle cx={13} cy={12} r={2.2} {...p} strokeWidth={2} />
+          <Circle cx={20} cy={17} r={2.2} {...p} strokeWidth={2} />
         </>
       )}
     </Svg>
