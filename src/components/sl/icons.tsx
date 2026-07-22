@@ -12,7 +12,8 @@ export type IconName =
   | 'flip'
   | 'flash'
   | 'flash-off'
-  | 'settings';
+  | 'settings'
+  | 'share';
 
 export function Icon({
   name,
@@ -81,6 +82,14 @@ export function Icon({
           <Circle cx={17} cy={7} r={2.2} {...p} strokeWidth={2} />
           <Circle cx={13} cy={12} r={2.2} {...p} strokeWidth={2} />
           <Circle cx={20} cy={17} r={2.2} {...p} strokeWidth={2} />
+        </>
+      )}
+      {name === 'share' && (
+        <>
+          <Circle cx={6} cy={12} r={2} {...p} strokeWidth={2} />
+          <Circle cx={18} cy={6} r={2} {...p} strokeWidth={2} />
+          <Circle cx={18} cy={18} r={2} {...p} strokeWidth={2} />
+          <Path d="M8 11l8-4M8 13l8 4" {...p} strokeWidth={2} />
         </>
       )}
     </Svg>

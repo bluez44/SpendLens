@@ -5,11 +5,13 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DateRangeModal } from '@/components/sl/date-range-modal';
 import { Icon } from '@/components/sl/icons';
 import { Segmented } from '@/components/sl/segmented';
 import { TransactionRow } from '@/components/sl/transaction-row';
 import { Money, useColors, W } from '@/constants/tokens';
 import { compactK, dayLabel, formatVND, toDateKey } from '@/lib/format';
+import { exportAndShareCsv } from '@/lib/export';
 import { filterRange, groupByDay, summarize, type Range } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 
@@ -21,6 +23,7 @@ export default function HistoryScreen() {
   const { transactions } = useTransactions();
   const [rangeIndex, setRangeIndex] = useState(1);
   const range = RANGES[rangeIndex];
+  const [exportOpen, setExportOpen] = useState(false);
 
   const todayKey = toDateKey(new Date());
   const ranged = useMemo(() => filterRange(transactions, range), [transactions, range]);
@@ -32,9 +35,14 @@ export default function HistoryScreen() {
       <View style={{ paddingHorizontal: 20 }}>
         <View style={styles.header}>
           <Text style={{ fontSize: 22, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>Thu chi</Text>
-          <Pressable style={[styles.iconBtn, { backgroundColor: c.segment }]} onPress={goBack}>
-            <Icon name="close" size={18} color={c.text} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable style={[styles.iconBtn, { backgroundColor: c.segment }]} onPress={() => setExportOpen(true)}>
+              <Icon name="share" size={18} color={c.text} />
+            </Pressable>
+            <Pressable style={[styles.iconBtn, { backgroundColor: c.segment }]} onPress={goBack}>
+              <Icon name="close" size={18} color={c.text} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={{ marginTop: 12 }}>
@@ -83,6 +91,18 @@ export default function HistoryScreen() {
         <Icon name="grid" size={17} color={c.scheme === 'dark' ? '#111' : '#fff'} />
         <Text style={{ fontSize: 13, fontWeight: W.bold, color: c.scheme === 'dark' ? '#111' : '#fff' }}>Thư viện</Text>
       </Pressable>
+
+      <DateRangeModal
+        visible={exportOpen}
+        initialFrom={toDateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1))}
+        initialTo={toDateKey(new Date())}
+        onCancel={() => setExportOpen(false)}
+        onExport={async (from, to) => {
+          setExportOpen(false);
+          const filtered = transactions.filter((t) => t.date >= from && t.date <= to);
+          await exportAndShareCsv(filtered);
+        }}
+      />
     </View>
   );
 }
@@ -104,6 +124,7 @@ function goBack() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconBtn: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   summary: {
     flexDirection: 'row',
