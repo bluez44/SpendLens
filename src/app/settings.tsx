@@ -1,19 +1,30 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
+import { DateRangeModal } from '@/components/sl/date-range-modal';
 import { GradientButton } from '@/components/sl/gradient';
+import { Segmented } from '@/components/sl/segmented';
 import { Text } from '@/components/sl/text';
 import { useColors } from '@/constants/tokens';
-import { formatVND } from '@/lib/format';
+import { exportAndShareCsv } from '@/lib/export';
+import { formatVND, toDateKey } from '@/lib/format';
 import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@/lib/notifications';
 import { useSettings } from '@/lib/settings-context';
+import { resetTransactions } from '@/lib/transactions';
+import { useTransactions } from '@/lib/transactions-context';
+
+const THEME_MODES = ['auto', 'light', 'dark'] as const;
+const THEME_LABELS = ['Auto', 'Sáng', 'Tối'];
 
 export default function SettingsScreen() {
   const colors = useColors();
-  const { settings, update } = useSettings();
+  const { settings, update, reset } = useSettings();
+  const { transactions, refresh } = useTransactions();
   const [budgetOpen, setBudgetOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState(String(settings.monthlyBudget || ''));
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
 
@@ -54,6 +65,8 @@ export default function SettingsScreen() {
     await scheduleDailyReminder(hh, mm);
   };
 
+  const themeIndex = THEME_MODES.indexOf(settings.themeMode);
+
   const [hh, mm] = (settings.reminderHHMM ?? '21:00').split(':').map(Number);
   const initialTime = new Date();
   initialTime.setHours(hh, mm, 0, 0);
@@ -93,12 +106,101 @@ export default function SettingsScreen() {
           </Pressable>
         )}
 
-        {/* TODO Task 12: theme, data, info sections */}
+        {/* GIAO DIỆN */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>GIAO DIỆN</Text>
+        <View style={[styles.row, { borderColor: colors.hairline }]}>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>Chế độ tối</Text>
+        </View>
+        <Segmented
+          options={THEME_LABELS}
+          value={themeIndex >= 0 ? themeIndex : 0}
+          onChange={(i) => update('themeMode', THEME_MODES[i])}
+        />
+
+        {/* DỮ LIỆU */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>DỮ LIỆU</Text>
+        <Pressable style={[styles.row, { borderColor: colors.hairline }]} onPress={() => setExportOpen(true)}>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>Xuất CSV</Text>
+          <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>›</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.row, { borderColor: colors.hairline }]}
+          onPress={() =>
+            Alert.alert('Xoá giao dịch', 'Tất cả giao dịch và ảnh sẽ bị xoá vĩnh viễn.', [
+              { text: 'Huỷ', style: 'cancel' },
+              {
+                text: 'Xoá',
+                style: 'destructive',
+                onPress: () => {
+                  resetTransactions();
+                  refresh();
+                },
+              },
+            ])
+          }>
+          <Text style={{ color: '#FB5B4D', fontWeight: '500' }}>Xoá giao dịch</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.row, { borderColor: colors.hairline }]}
+          onPress={() =>
+            Alert.alert('Reset về mặc định', 'Tất cả giao dịch, ảnh và cài đặt sẽ được đưa về mặc định.', [
+              { text: 'Huỷ', style: 'cancel' },
+              {
+                text: 'Reset',
+                style: 'destructive',
+                onPress: async () => {
+                  resetTransactions();
+                  reset();
+                  await cancelDailyReminder();
+                  refresh();
+                },
+              },
+            ])
+          }>
+          <Text style={{ color: '#FB5B4D', fontWeight: '500' }}>Reset về mặc định</Text>
+        </Pressable>
+
+        {/* THÔNG TIN */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>THÔNG TIN</Text>
+        <View style={[styles.row, { borderColor: colors.hairline }]}>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>Phiên bản</Text>
+          <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
+            {Constants.expoConfig?.version ?? '1.0.0'}
+          </Text>
+        </View>
+        <Pressable
+          style={[styles.row, { borderColor: colors.hairline }]}
+          onPress={() => Linking.openURL('https://github.com/bluez44/SpendLens')}>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>GitHub</Text>
+          <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>›</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.row, { borderColor: colors.hairline }]}
+          onPress={() => Linking.openURL('https://github.com/bluez44/SpendLens/issues')}>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>Báo lỗi</Text>
+          <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>›</Text>
+        </Pressable>
+        <View style={[styles.row, { borderColor: colors.hairline }]}>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>Giấy phép</Text>
+          <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>MIT</Text>
+        </View>
       </ScrollView>
 
       {timePicker != null && (
         <DateTimePicker value={initialTime} mode="time" is24Hour onChange={onTimePicked} />
       )}
+
+      <DateRangeModal
+        visible={exportOpen}
+        initialFrom={toDateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1))}
+        initialTo={toDateKey(new Date())}
+        onCancel={() => setExportOpen(false)}
+        onExport={async (from, to) => {
+          setExportOpen(false);
+          const filtered = transactions.filter((t) => t.date >= from && t.date <= to);
+          await exportAndShareCsv(filtered);
+        }}
+      />
 
       {/* Budget keypad modal */}
       <Modal visible={budgetOpen} transparent animationType="slide" onRequestClose={() => setBudgetOpen(false)}>
