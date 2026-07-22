@@ -15,13 +15,36 @@ import { useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { getColors } from '@/constants/tokens';
+import { SettingsProvider, useSettings } from '@/lib/settings-context';
 import { TransactionsProvider } from '@/lib/transactions-context';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
+  const { settings } = useSettings();
+  const effective = settings.themeMode === 'auto' ? scheme : settings.themeMode;
+  const colors = getColors(effective);
+  return (
+    <ThemeProvider value={effective === 'dark' ? DarkTheme : DefaultTheme}>
+      <StatusBar style="auto" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.bg },
+        }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="home" />
+        <Stack.Screen name="history" />
+        <Stack.Screen name="gallery" />
+        <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="transaction/[id]" />
+      </Stack>
+    </ThemeProvider>
+  );
+}
+
 export default function RootLayout() {
   const scheme = useColorScheme();
-  const colors = getColors(scheme);
 
   const [fontsLoaded] = useFonts({
     PlusJakartaSans_400Regular,
@@ -39,23 +62,11 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <TransactionsProvider>
-        <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <StatusBar style="auto" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.bg },
-            }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="home" />
-            <Stack.Screen name="history" />
-            <Stack.Screen name="gallery" />
-            <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="transaction/[id]" />
-          </Stack>
-        </ThemeProvider>
-      </TransactionsProvider>
+      <SettingsProvider>
+        <TransactionsProvider>
+          <ThemedShell scheme={scheme} />
+        </TransactionsProvider>
+      </SettingsProvider>
     </SafeAreaProvider>
   );
 }
