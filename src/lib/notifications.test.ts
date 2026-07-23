@@ -61,11 +61,10 @@ describe('cancelDailyReminder', () => {
 });
 
 describe('setNotificationHandler', () => {
-  it('is invoked once at module load with shouldShowAlert true', () => {
+  it('is invoked once at module load with banner and list true', () => {
     expect(mocked.setNotificationHandler).toHaveBeenCalledTimes(1);
     const arg = (mocked.setNotificationHandler as jest.Mock).mock.calls[0][0];
     return expect(arg.handleNotification()).resolves.toEqual({
-      shouldShowAlert: true,
       shouldShowBanner: true,
       shouldShowList: true,
       shouldPlaySound: true,

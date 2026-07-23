@@ -14,6 +14,7 @@ import { Money, Radius, useColors, W } from '@/constants/tokens';
 import { CATEGORIES, categoryOf } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
 import { dayLabel, formatVND, toDateKey } from '@/lib/format';
+import { decideBudgetAlert } from '@/lib/budget-alert';
 import { fireBudgetAlert } from '@/lib/notifications';
 import type { NewTxn, Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
@@ -54,9 +55,10 @@ export default function EntryScreen() {
   const accent = isIncome ? Money.income : Money.expense;
 
   function scrollToOffset(y: number) {
+    if (Platform.OS === 'ios') return;  // iOS auto-adjust handles it
     setTimeout(() => {
       scrollRef.current?.scrollTo({ y: Math.max(0, y - 20), animated: true });
-    }, 100);
+    }, 250);
   }
 
   const save = async () => {
@@ -83,18 +85,19 @@ export default function EntryScreen() {
           const spent = transactions
             .filter((t) => !t.isIncome && t.date.slice(0, 7) === currentMonth)
             .reduce((s, t) => s + t.amount, 0) + amount;
-          const pct = (spent / budget) * 100;
-          const [lastMonth, lastLevel] = settings.budgetNotifiedMonth.split(':');
-          const lastLevelNum = Number(lastLevel) || 0;
-          const sameMonth = lastMonth === currentMonth;
-
-          let fireLevel: 80 | 100 | null = null;
-          if (pct >= 100 && !(sameMonth && lastLevelNum >= 100)) fireLevel = 100;
-          else if (pct >= 80 && !(sameMonth && lastLevelNum >= 80)) fireLevel = 80;
-
+          const fireLevel = decideBudgetAlert({
+            spent,
+            budget,
+            notifiedMonth: settings.budgetNotifiedMonth,
+            currentMonth,
+          });
           if (fireLevel) {
-            await fireBudgetAlert(fireLevel);
             updateSettings('budgetNotifiedMonth', `${currentMonth}:${fireLevel}`);
+            try {
+              await fireBudgetAlert(fireLevel);
+            } catch (err) {
+              console.warn('Failed to fire budget alert', err);
+            }
           }
         }
       }

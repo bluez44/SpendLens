@@ -1,7 +1,7 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
@@ -185,18 +185,21 @@ function CameraPage({
   setZoom: (v: number) => void;
 }) {
   const initialZoomRef = useRef(0);
-  const pinch = Gesture.Pinch()
-    .onStart(() => { initialZoomRef.current = zoom; })
-    .onUpdate((e) => {
-      const next = Math.max(0, Math.min(1, initialZoomRef.current + (e.scale - 1) * 0.5));
-      runOnJS(setZoom)(next);
-    });
+  const zoomRef = useRef(zoom);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
 
-  const doubleTap = Gesture.Tap()
-    .numberOfTaps(2)
-    .onEnd(() => { runOnJS(setZoom)(0); });
-
-  const cameraGesture = Gesture.Simultaneous(pinch, doubleTap);
+  const cameraGesture = useMemo(() => {
+    const pinch = Gesture.Pinch()
+      .onStart(() => { initialZoomRef.current = zoomRef.current; })
+      .onUpdate((e) => {
+        const next = Math.max(0, Math.min(1, initialZoomRef.current + (e.scale - 1) * 0.5));
+        runOnJS(setZoom)(next);
+      });
+    const doubleTap = Gesture.Tap()
+      .numberOfTaps(2)
+      .onEnd(() => { runOnJS(setZoom)(0); });
+    return Gesture.Simultaneous(pinch, doubleTap);
+  }, []);
 
   return (
     <View style={{ height: SCREEN_HEIGHT, backgroundColor: '#111111' }}>
