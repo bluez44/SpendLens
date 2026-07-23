@@ -7,6 +7,7 @@ import {
   PlusJakartaSans_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/plus-jakarta-sans';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -79,11 +80,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <SettingsProvider>
-          <TransactionsProvider>
-            <ThemedShell scheme={scheme} />
-          </TransactionsProvider>
-        </SettingsProvider>
+        <BottomSheetModalProvider>
+          <SettingsProvider>
+            <TransactionsProvider>
+              <ThemedShell scheme={scheme} />
+            </TransactionsProvider>
+          </SettingsProvider>
+        </BottomSheetModalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
