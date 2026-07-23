@@ -3,6 +3,8 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Dimensions, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 
 import { Text } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,6 +33,7 @@ export default function CameraScreen() {
   const [isSnapping, setIsSnapping] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const [zoom, setZoom] = useState(0);
 
   const todayKey = toDateKey(new Date());
   const todayTxns = useMemo(
@@ -109,6 +112,8 @@ export default function CameraScreen() {
                 setNote={setNote}
                 setNoteFocused={setNoteFocused}
                 todayExpense={todayExpense}
+                zoom={zoom}
+                setZoom={setZoom}
               />
             );
           if (item.type === 'empty') return <EmptyTodayCard />;
@@ -159,7 +164,7 @@ function CameraPage({
   facing, setFacing, flash, setFlash,
   cameraRef, capture,
   note, noteFocused, setNote, setNoteFocused,
-  todayExpense,
+  todayExpense, zoom, setZoom,
 }: {
   insets: EdgeInsets;
   permission: ReturnType<typeof useCameraPermissions>[0];
@@ -176,7 +181,23 @@ function CameraPage({
   setNote: (v: string) => void;
   setNoteFocused: (v: boolean) => void;
   todayExpense: number;
+  zoom: number;
+  setZoom: (v: number) => void;
 }) {
+  const initialZoomRef = useRef(0);
+  const pinch = Gesture.Pinch()
+    .onStart(() => { initialZoomRef.current = zoom; })
+    .onUpdate((e) => {
+      const next = Math.max(0, Math.min(1, initialZoomRef.current + (e.scale - 1) * 0.5));
+      runOnJS(setZoom)(next);
+    });
+
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => { runOnJS(setZoom)(0); });
+
+  const cameraGesture = Gesture.Simultaneous(pinch, doubleTap);
+
   return (
     <View style={{ height: SCREEN_HEIGHT, backgroundColor: '#111111' }}>
       {/* Top nav */}
@@ -196,7 +217,20 @@ function CameraPage({
         <View style={styles.viewfinder}>
           {granted ? (
             <>
-              <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} flash={flash} />
+              <GestureDetector gesture={cameraGesture}>
+                <CameraView
+                  ref={cameraRef}
+                  style={StyleSheet.absoluteFill}
+                  facing={facing}
+                  flash={flash}
+                  zoom={zoom}
+                />
+              </GestureDetector>
+              {zoom > 0 && (
+                <View style={styles.zoomBadge}>
+                  <Text style={styles.zoomBadgeText}>{(1 + zoom * 4).toFixed(1)}x</Text>
+                </View>
+              )}
               <Pressable style={styles.flashBtn} onPress={() => setFlash((f) => (f === 'off' ? 'on' : 'off'))}>
                 <Icon name={flash === 'on' ? 'flash' : 'flash-off'} size={19} color="#fff" />
               </Pressable>
@@ -418,6 +452,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  zoomBadge: {
+    position: 'absolute', top: 12, left: 12,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    zIndex: 5,
+  },
+  zoomBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   chevron: {
     flexDirection: 'row',
     alignItems: 'center',
