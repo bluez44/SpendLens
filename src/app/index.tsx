@@ -28,7 +28,6 @@ export default function CameraScreen() {
   const [flash, setFlash] = useState<'off' | 'on'>('off');
   const [note, setNote] = useState('');
   const [noteFocused, setNoteFocused] = useState(false);
-  const noteInputRef = useRef<TextInput>(null);
 
   const todayKey = toDateKey(new Date());
   const todayTxns = useMemo(
@@ -65,7 +64,7 @@ export default function CameraScreen() {
 
   const capture = async () => {
     const currentNote = note;
-    noteInputRef.current?.blur();
+    setNoteFocused(false);
     try {
       const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7, shutterSound: false });
       router.push({
@@ -105,7 +104,6 @@ export default function CameraScreen() {
                 noteFocused={noteFocused}
                 setNote={setNote}
                 setNoteFocused={setNoteFocused}
-                noteInputRef={noteInputRef}
                 todayExpense={todayExpense}
               />
             );
@@ -136,7 +134,7 @@ function CameraPage({
   insets, permission, requestPermission, granted,
   facing, setFacing, flash, setFlash,
   cameraRef, capture,
-  note, noteFocused, setNote, setNoteFocused, noteInputRef,
+  note, noteFocused, setNote, setNoteFocused,
   todayExpense,
 }: {
   insets: EdgeInsets;
@@ -153,7 +151,6 @@ function CameraPage({
   noteFocused: boolean;
   setNote: (v: string) => void;
   setNoteFocused: (v: boolean) => void;
-  noteInputRef: React.RefObject<TextInput | null>;
   todayExpense: number;
 }) {
   return (
@@ -193,36 +190,17 @@ function CameraPage({
 
           <Pressable
             style={styles.noteTapZone}
-            onPress={() => noteInputRef.current?.focus()}
+            onPress={() => setNoteFocused(true)}
             pointerEvents={noteFocused ? 'none' : 'auto'}
           />
 
           {note && !noteFocused ? (
-            <Pressable style={styles.notePreview} onPress={() => noteInputRef.current?.focus()}>
+            <Pressable style={styles.notePreview} onPress={() => setNoteFocused(true)}>
               <Icon name="edit" size={12} color="rgba(255,255,255,0.85)" />
               <Text numberOfLines={1} style={styles.notePreviewText}>{note}</Text>
             </Pressable>
           ) : null}
 
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.noteInputWrap}
-            pointerEvents={noteFocused ? 'auto' : 'none'}
-          >
-            <TextInput
-              ref={noteInputRef}
-              value={note}
-              onChangeText={setNote}
-              onFocus={() => setNoteFocused(true)}
-              onBlur={() => setNoteFocused(false)}
-              placeholder="Thêm ghi chú..."
-              placeholderTextColor="rgba(255,255,255,0.5)"
-              returnKeyType="done"
-              onSubmitEditing={() => noteInputRef.current?.blur()}
-              maxLength={140}
-              style={styles.noteInput}
-            />
-          </KeyboardAvoidingView>
         </View>
       </View>
 
@@ -241,6 +219,25 @@ function CameraPage({
           <Icon name="arrow-up" size={14} color="rgba(255,255,255,0.42)" />
         </View>
       </View>
+      {noteFocused && (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.noteInputOverlay}
+        >
+          <TextInput
+            autoFocus
+            value={note}
+            onChangeText={setNote}
+            onBlur={() => setNoteFocused(false)}
+            placeholder="Thêm ghi chú..."
+            placeholderTextColor="rgba(255,255,255,0.5)"
+            returnKeyType="done"
+            onSubmitEditing={() => setNoteFocused(false)}
+            maxLength={140}
+            style={styles.noteInput}
+          />
+        </KeyboardAvoidingView>
+      )}
     </View>
   );
 }
@@ -330,13 +327,15 @@ const styles = StyleSheet.create({
     maxWidth: '80%', zIndex: 6,
   },
   notePreviewText: { fontSize: 13, fontWeight: '600', color: '#fff' },
-  noteInputWrap: {
-    position: 'absolute', left: 12, right: 12, bottom: 12,
-    zIndex: 10,
+  noteInputOverlay: {
+    position: 'absolute',
+    left: 0, right: 0, bottom: 0,
+    padding: 12,
+    zIndex: 30,
   },
   noteInput: {
     padding: 12, borderRadius: 16, fontSize: 15, fontWeight: '500',
-    backgroundColor: 'rgba(0,0,0,0.65)', color: '#fff',
+    backgroundColor: 'rgba(0,0,0,0.75)', color: '#fff',
   },
   captureArea: {
     alignItems: 'center',
