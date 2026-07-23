@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Text, TextInput } from '@/components/sl/text';
@@ -25,13 +25,15 @@ export default function EntryScreen() {
   const { add, update, getById } = useTransactions();
 
   const editing = id != null;
-  const existing = editing ? getById(Number(id)) : undefined;
+  const existing = useMemo(
+    () => (editing ? getById(Number(id)) : undefined),
+    [editing, id, getById]
+  );
   const photoUri = photo ?? existing?.photoPath ?? undefined;
 
   const [isIncome, setIsIncome] = useState(existing?.isIncome ?? false);
   const [amount, setAmount] = useState(existing?.amount ?? 0);
   const [category, setCategory] = useState<CategoryId>(existing?.category ?? 'food');
-  const [name, setName] = useState(existing?.name ?? '');
   const [note, setNote] = useState(existing?.note ?? params.note ?? '');
 
   const accent = isIncome ? Money.income : Money.expense;
@@ -42,7 +44,7 @@ export default function EntryScreen() {
       date: editing && existing ? existing.date : toDateKey(new Date()),
       time: editing && existing ? existing.time : nowTime(),
       category: isIncome ? 'other' : category,
-      name: name.trim() || (isIncome ? 'Thu nhập' : categoryOf(category).label),
+      name: isIncome ? 'Thu nhập' : categoryOf(category).label,
       note: note.trim() || null,
       amount,
       isIncome,
@@ -106,8 +108,8 @@ export default function EntryScreen() {
         <View style={[styles.field, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
           <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>GHI CHÚ</Text>
           <TextInput
-            value={name}
-            onChangeText={setName}
+            value={note}
+            onChangeText={setNote}
             placeholder={isIncome ? 'Lương, thưởng…' : 'Bún bò Huế · gần công ty'}
             placeholderTextColor={c.textSecondary}
             style={{ fontSize: 14.5, fontWeight: W.semibold, color: c.text, padding: 0 }}

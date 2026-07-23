@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
-import { useColors } from '@/constants/tokens';
+import { TodayBadge } from '@/components/sl/today-badge';
 import { categoryOf } from '@/lib/categories';
 import { formatVND } from '@/lib/format';
 import type { Txn } from '@/lib/transactions';
@@ -12,7 +12,6 @@ import type { Txn } from '@/lib/transactions';
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 export function TxnCard({ txn }: { txn: Txn }) {
-  const colors = useColors();
   const cat = categoryOf(txn.category);
   const sign = txn.isIncome ? '+' : '−';
 
@@ -29,9 +28,7 @@ export function TxnCard({ txn }: { txn: Txn }) {
         style={styles.bottomFade}
       />
 
-      <View style={styles.todayBadge}>
-        <Text style={styles.todayBadgeText}>Hôm nay</Text>
-      </View>
+      <TodayBadge />
 
       <View style={styles.info}>
         <View style={[styles.categoryChip, { backgroundColor: cat.chip }]}>
@@ -52,12 +49,6 @@ const styles = StyleSheet.create({
   bottomFade: {
     position: 'absolute', left: 0, right: 0, bottom: 0, height: '50%',
   },
-  todayBadge: {
-    position: 'absolute', top: 60, left: 20,
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
-  todayBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   info: {
     position: 'absolute', left: 20, right: 20, bottom: 60, gap: 8,
   },

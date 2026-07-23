@@ -1,18 +1,19 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Dimensions, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { GradientButton, Shutter } from '@/components/sl/gradient';
 import { Icon } from '@/components/sl/icons';
+import { TodayBadge } from '@/components/sl/today-badge';
 import { TxnCard } from '@/components/sl/txn-card';
 import { Money, W, useColors } from '@/constants/tokens';
 import { formatVND, toDateKey } from '@/lib/format';
-import { filterRange } from '@/lib/transactions';
 import type { Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 
@@ -29,14 +30,16 @@ export default function CameraScreen() {
   const [noteFocused, setNoteFocused] = useState(false);
   const noteInputRef = useRef<TextInput>(null);
 
-  const todayExpense = useMemo(
-    () => filterRange(transactions, 'day').filter((t) => !t.isIncome).reduce((s, t) => s + t.amount, 0),
-    [transactions]
-  );
-
   const todayKey = toDateKey(new Date());
   const todayTxns = useMemo(
     () => transactions.filter((t) => t.date === todayKey),
+    [transactions, todayKey]
+  );
+
+  const todayExpense = useMemo(
+    () => transactions
+      .filter((t) => t.date === todayKey && !t.isIncome)
+      .reduce((s, t) => s + t.amount, 0),
     [transactions, todayKey]
   );
 
@@ -45,10 +48,20 @@ export default function CameraScreen() {
     | { type: 'empty' }
     | { type: 'txn'; txn: Txn };
 
-  const pages: PageItem[] =
-    todayTxns.length === 0
-      ? [{ type: 'camera' }, { type: 'empty' }]
-      : [{ type: 'camera' }, ...todayTxns.map((t) => ({ type: 'txn' as const, txn: t }))];
+  const pages = useMemo<PageItem[]>(
+    () => (
+      todayTxns.length === 0
+        ? [{ type: 'camera' }, { type: 'empty' }]
+        : [{ type: 'camera' }, ...todayTxns.map((t) => ({ type: 'txn' as const, txn: t }))]
+    ),
+    [todayTxns]
+  );
+
+  const keyExtractor = useCallback(
+    (item: PageItem, i: number) =>
+      item.type === 'txn' ? `txn-${item.txn.id}` : `${item.type}-${i}`,
+    []
+  );
 
   const capture = async () => {
     const currentNote = note;
@@ -73,9 +86,7 @@ export default function CameraScreen() {
       <StatusBar style="light" />
       <FlatList
         data={pages}
-        keyExtractor={(item, i) =>
-          item.type === 'txn' ? `txn-${item.txn.id}` : `${item.type}-${i}`
-        }
+        keyExtractor={keyExtractor}
         renderItem={({ item }) => {
           if (item.type === 'camera')
             return (
@@ -128,7 +139,7 @@ function CameraPage({
   note, noteFocused, setNote, setNoteFocused, noteInputRef,
   todayExpense,
 }: {
-  insets: { top: number; bottom: number };
+  insets: EdgeInsets;
   permission: ReturnType<typeof useCameraPermissions>[0];
   requestPermission: ReturnType<typeof useCameraPermissions>[1];
   granted: boolean;
@@ -245,9 +256,7 @@ function EmptyTodayCard() {
         justifyContent: 'center',
         padding: 32,
       }}>
-      <View style={{ position: 'absolute', top: 60, left: 20, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.45)' }}>
-        <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Hôm nay</Text>
-      </View>
+      <TodayBadge />
       <Text style={{ fontSize: 48, marginBottom: 12 }}>✨</Text>
       <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text, textAlign: 'center' }}>
         Chưa có giao dịch nào hôm nay
