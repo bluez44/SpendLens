@@ -14,7 +14,7 @@
         "foregroundImage": "./assets/logo/spendlens-logo-1024.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.bluez.SpendLens"
+      "package": "com.bluez.spendlens"
     },
     "web": {
       "output": "static",
