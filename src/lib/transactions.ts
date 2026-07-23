@@ -1,4 +1,5 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
+import { File } from 'expo-file-system';
 
 import { db as defaultDb } from './db';
 import type { CategoryId } from './categories';
@@ -220,4 +221,21 @@ export function categoryBreakdown(txns: Txn[]): CategorySlice[] {
       return { id: c.id, label: c.label, color: c.fg, amount, pct: grand ? (amount / grand) * 100 : 0 };
     })
     .sort((a, b) => b.amount - a.amount);
+}
+
+export function resetTransactions(database: SQLiteDatabase = defaultDb): void {
+  const rows = database.getAllSync<{ photo_path: string | null }>(
+    'SELECT photo_path FROM transactions WHERE photo_path IS NOT NULL',
+  );
+  database.runSync('DELETE FROM transactions');
+  for (const row of rows) {
+    const p = row.photo_path;
+    if (!p) continue;
+    if (p.startsWith('http')) continue;
+    try {
+      new File(p).delete();
+    } catch {
+      // best-effort; ignore missing/renamed files
+    }
+  }
 }

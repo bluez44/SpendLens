@@ -1,18 +1,23 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Dimensions, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { GradientButton, Shutter } from '@/components/sl/gradient';
 import { Icon } from '@/components/sl/icons';
-import { Money, W } from '@/constants/tokens';
-import { formatVND } from '@/lib/format';
-import { filterRange } from '@/lib/transactions';
+import { TodayBadge } from '@/components/sl/today-badge';
+import { TxnCard } from '@/components/sl/txn-card';
+import { Money, W, useColors } from '@/constants/tokens';
+import { formatVND, toDateKey } from '@/lib/format';
+import type { Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
+
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 export default function CameraScreen() {
   const insets = useSafeAreaInsets();
@@ -21,18 +26,56 @@ export default function CameraScreen() {
   const { transactions } = useTransactions();
   const [facing, setFacing] = useState<'back' | 'front'>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
+  const [note, setNote] = useState('');
+  const [noteFocused, setNoteFocused] = useState(false);
+  const noteInputRef = useRef<TextInput>(null);
+
+  const todayKey = toDateKey(new Date());
+  const todayTxns = useMemo(
+    () => transactions.filter((t) => t.date === todayKey),
+    [transactions, todayKey]
+  );
 
   const todayExpense = useMemo(
-    () => filterRange(transactions, 'day').filter((t) => !t.isIncome).reduce((s, t) => s + t.amount, 0),
-    [transactions]
+    () => transactions
+      .filter((t) => t.date === todayKey && !t.isIncome)
+      .reduce((s, t) => s + t.amount, 0),
+    [transactions, todayKey]
+  );
+
+  type PageItem =
+    | { type: 'camera' }
+    | { type: 'empty' }
+    | { type: 'txn'; txn: Txn };
+
+  const pages = useMemo<PageItem[]>(
+    () => (
+      todayTxns.length === 0
+        ? [{ type: 'camera' }, { type: 'empty' }]
+        : [{ type: 'camera' }, ...todayTxns.map((t) => ({ type: 'txn' as const, txn: t }))]
+    ),
+    [todayTxns]
+  );
+
+  const keyExtractor = useCallback(
+    (item: PageItem, i: number) =>
+      item.type === 'txn' ? `txn-${item.txn.id}` : `${item.type}-${i}`,
+    []
   );
 
   const capture = async () => {
+    const currentNote = note;
+    noteInputRef.current?.blur();
     try {
-      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7 });
-      router.push(photo?.uri ? { pathname: '/entry', params: { photo: photo.uri } } : '/entry');
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7, shutterSound: false });
+      router.push({
+        pathname: '/entry',
+        params: photo?.uri
+          ? { photo: photo.uri, note: currentNote }
+          : currentNote ? { note: currentNote } : {},
+      });
     } catch {
-      router.push('/entry');
+      router.push({ pathname: '/entry', params: currentNote ? { note: currentNote } : {} });
     }
   };
 
@@ -41,21 +84,90 @@ export default function CameraScreen() {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
+      <FlatList
+        data={pages}
+        keyExtractor={keyExtractor}
+        renderItem={({ item }) => {
+          if (item.type === 'camera')
+            return (
+              <CameraPage
+                insets={insets}
+                permission={permission}
+                requestPermission={requestPermission}
+                granted={granted}
+                facing={facing}
+                setFacing={setFacing}
+                flash={flash}
+                setFlash={setFlash}
+                cameraRef={cameraRef}
+                capture={capture}
+                note={note}
+                noteFocused={noteFocused}
+                setNote={setNote}
+                setNoteFocused={setNoteFocused}
+                noteInputRef={noteInputRef}
+                todayExpense={todayExpense}
+              />
+            );
+          if (item.type === 'empty') return <EmptyTodayCard />;
+          return <TxnCard txn={item.txn} />;
+        }}
+        pagingEnabled
+        snapToInterval={SCREEN_HEIGHT}
+        decelerationRate="fast"
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!noteFocused}
+      />
+    </View>
+  );
+}
 
+function RoundButton({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.roundBtn, { opacity: pressed ? 0.7 : 1 }]}>
+      {children}
+    </Pressable>
+  );
+}
+
+function CameraPage({
+  insets, permission, requestPermission, granted,
+  facing, setFacing, flash, setFlash,
+  cameraRef, capture,
+  note, noteFocused, setNote, setNoteFocused, noteInputRef,
+  todayExpense,
+}: {
+  insets: EdgeInsets;
+  permission: ReturnType<typeof useCameraPermissions>[0];
+  requestPermission: ReturnType<typeof useCameraPermissions>[1];
+  granted: boolean;
+  facing: 'back' | 'front';
+  setFacing: React.Dispatch<React.SetStateAction<'back' | 'front'>>;
+  flash: 'off' | 'on';
+  setFlash: React.Dispatch<React.SetStateAction<'off' | 'on'>>;
+  cameraRef: React.RefObject<CameraView | null>;
+  capture: () => Promise<void>;
+  note: string;
+  noteFocused: boolean;
+  setNote: (v: string) => void;
+  setNoteFocused: (v: boolean) => void;
+  noteInputRef: React.RefObject<TextInput | null>;
+  todayExpense: number;
+}) {
+  return (
+    <View style={{ height: SCREEN_HEIGHT, backgroundColor: '#111111' }}>
       {/* Top nav */}
       <View style={[styles.nav, { paddingTop: insets.top + 8 }]}>
-        <RoundButton onPress={() => router.push('/home')}>
-          <Icon name="home" />
-        </RoundButton>
+        <RoundButton onPress={() => router.push('/home')}><Icon name="home" /></RoundButton>
         <View style={styles.totalPill}>
           <Text style={{ fontSize: 12, fontWeight: W.semibold, color: 'rgba(255,255,255,0.65)' }}>Hôm nay</Text>
           <Text style={{ fontSize: 15, fontWeight: W.extrabold, color: Money.expenseOnDark }}>
             −{formatVND(todayExpense)}
           </Text>
         </View>
-        <RoundButton onPress={() => router.push('/history')}>
-          <Icon name="menu" />
-        </RoundButton>
+        <RoundButton onPress={() => router.push('/history')}><Icon name="menu" /></RoundButton>
       </View>
 
       {/* Viewfinder */}
@@ -64,9 +176,7 @@ export default function CameraScreen() {
           {granted ? (
             <>
               <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} flash={flash} />
-              <Pressable
-                style={styles.flashBtn}
-                onPress={() => setFlash((f) => (f === 'off' ? 'on' : 'off'))}>
+              <Pressable style={styles.flashBtn} onPress={() => setFlash((f) => (f === 'off' ? 'on' : 'off'))}>
                 <Icon name={flash === 'on' ? 'flash' : 'flash-off'} size={19} color="#fff" />
               </Pressable>
             </>
@@ -80,13 +190,43 @@ export default function CameraScreen() {
               ) : null}
             </View>
           )}
-          <View style={styles.caption}>
-            <Text style={{ fontSize: 14, fontWeight: W.medium, color: 'rgba(255,255,255,0.72)' }}>Thêm ghi chú…</Text>
-          </View>
+
+          <Pressable
+            style={styles.noteTapZone}
+            onPress={() => noteInputRef.current?.focus()}
+            pointerEvents={noteFocused ? 'none' : 'auto'}
+          />
+
+          {note && !noteFocused ? (
+            <Pressable style={styles.notePreview} onPress={() => noteInputRef.current?.focus()}>
+              <Icon name="edit" size={12} color="rgba(255,255,255,0.85)" />
+              <Text numberOfLines={1} style={styles.notePreviewText}>{note}</Text>
+            </Pressable>
+          ) : null}
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.noteInputWrap}
+            pointerEvents={noteFocused ? 'auto' : 'none'}
+          >
+            <TextInput
+              ref={noteInputRef}
+              value={note}
+              onChangeText={setNote}
+              onFocus={() => setNoteFocused(true)}
+              onBlur={() => setNoteFocused(false)}
+              placeholder="Thêm ghi chú..."
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              returnKeyType="done"
+              onSubmitEditing={() => noteInputRef.current?.blur()}
+              maxLength={140}
+              style={styles.noteInput}
+            />
+          </KeyboardAvoidingView>
         </View>
       </View>
 
-      {/* Capture */}
+      {/* Capture area — minus the "vuốt lên" hint */}
       <View style={[styles.captureArea, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.captureRow}>
           <View style={styles.sideSlot} />
@@ -97,24 +237,34 @@ export default function CameraScreen() {
             <Icon name="flip" size={22} color="#fff" />
           </Pressable>
         </View>
-        <Pressable style={styles.hint} onPress={() => router.push('/history')}>
+        <View style={styles.chevron}>
           <Icon name="arrow-up" size={14} color="rgba(255,255,255,0.42)" />
-          <Text style={{ fontSize: 12, fontWeight: W.semibold, color: 'rgba(255,255,255,0.42)' }}>
-            Vuốt lên xem lịch sử
-          </Text>
-        </Pressable>
+        </View>
       </View>
     </View>
   );
 }
 
-function RoundButton({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
+function EmptyTodayCard() {
+  const colors = useColors();
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.roundBtn, { opacity: pressed ? 0.7 : 1 }]}>
-      {children}
-    </Pressable>
+    <View
+      style={{
+        height: SCREEN_HEIGHT,
+        backgroundColor: colors.card,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 32,
+      }}>
+      <TodayBadge />
+      <Text style={{ fontSize: 48, marginBottom: 12 }}>✨</Text>
+      <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text, textAlign: 'center' }}>
+        Chưa có giao dịch nào hôm nay
+      </Text>
+      <Text style={{ fontSize: 14, color: colors.textSecondary, marginTop: 6, textAlign: 'center' }}>
+        Chụp bill đầu tiên nhé!
+      </Text>
+    </View>
   );
 }
 
@@ -168,12 +318,25 @@ const styles = StyleSheet.create({
     fontWeight: W.medium,
     textAlign: 'center',
   },
-  caption: {
-    margin: 12,
-    paddingVertical: 13,
-    paddingHorizontal: 17,
-    borderRadius: 20,
-    backgroundColor: 'rgba(18,18,18,0.42)',
+  noteTapZone: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    height: '50%', zIndex: 5,
+  },
+  notePreview: {
+    position: 'absolute', bottom: 14, alignSelf: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18,
+    backgroundColor: 'rgba(18,18,18,0.55)',
+    maxWidth: '80%', zIndex: 6,
+  },
+  notePreviewText: { fontSize: 13, fontWeight: '600', color: '#fff' },
+  noteInputWrap: {
+    position: 'absolute', left: 12, right: 12, bottom: 12,
+    zIndex: 10,
+  },
+  noteInput: {
+    padding: 12, borderRadius: 16, fontSize: 15, fontWeight: '500',
+    backgroundColor: 'rgba(0,0,0,0.65)', color: '#fff',
   },
   captureArea: {
     alignItems: 'center',
@@ -208,9 +371,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hint: {
+  chevron: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
 });

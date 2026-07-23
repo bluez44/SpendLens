@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Text, TextInput } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,17 +20,21 @@ import { useTransactions } from '@/lib/transactions-context';
 export default function EntryScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  const { photo, id } = useLocalSearchParams<{ photo?: string; id?: string }>();
+  const params = useLocalSearchParams<{ photo?: string; note?: string; id?: string }>();
+  const { photo, id } = params;
   const { add, update, getById } = useTransactions();
 
   const editing = id != null;
-  const existing = editing ? getById(Number(id)) : undefined;
+  const existing = useMemo(
+    () => (editing ? getById(Number(id)) : undefined),
+    [editing, id, getById]
+  );
   const photoUri = photo ?? existing?.photoPath ?? undefined;
 
   const [isIncome, setIsIncome] = useState(existing?.isIncome ?? false);
   const [amount, setAmount] = useState(existing?.amount ?? 0);
   const [category, setCategory] = useState<CategoryId>(existing?.category ?? 'food');
-  const [name, setName] = useState(existing?.name ?? '');
+  const [note, setNote] = useState(existing?.note ?? params.note ?? '');
 
   const accent = isIncome ? Money.income : Money.expense;
 
@@ -40,8 +44,8 @@ export default function EntryScreen() {
       date: editing && existing ? existing.date : toDateKey(new Date()),
       time: editing && existing ? existing.time : nowTime(),
       category: isIncome ? 'other' : category,
-      name: name.trim() || (isIncome ? 'Thu nhập' : categoryOf(category).label),
-      note: existing?.note ?? null,
+      name: isIncome ? 'Thu nhập' : categoryOf(category).label,
+      note: note.trim() || null,
       amount,
       isIncome,
       photoPath: photoUri ?? null,
@@ -57,8 +61,12 @@ export default function EntryScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {/* Photo */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={insets.top}
+        style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {/* Photo */}
         <View style={styles.photoWrap}>
           <PhotoTile uri={photoUri} width="100%" height={150} radius={Radius.cardLg} />
           <Pressable style={styles.close} onPress={() => router.back()}>
@@ -100,8 +108,8 @@ export default function EntryScreen() {
         <View style={[styles.field, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
           <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>GHI CHÚ</Text>
           <TextInput
-            value={name}
-            onChangeText={setName}
+            value={note}
+            onChangeText={setNote}
             placeholder={isIncome ? 'Lương, thưởng…' : 'Bún bò Huế · gần công ty'}
             placeholderTextColor={c.textSecondary}
             style={{ fontSize: 14.5, fontWeight: W.semibold, color: c.text, padding: 0 }}
@@ -124,6 +132,7 @@ export default function EntryScreen() {
           style={{ marginTop: 20, marginBottom: insets.bottom + 12 }}
         />
       </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

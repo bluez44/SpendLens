@@ -38,8 +38,23 @@ class MockSQLiteDatabase {
     this.nativeDb.exec(source);
   }
 
-  getAllSync<T>(source: string): T[] {
-    return this.nativeDb.prepare(source).all() as T[];
+  getAllSync<T>(source: string, ...params: any[]): T[] {
+    return this.nativeDb.prepare(source).all(...params) as T[];
+  }
+
+  getFirstSync<T>(source: string, ...params: any[]): T | null {
+    const actualParams = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
+    const row = this.nativeDb.prepare(source).get(...actualParams) as T | undefined;
+    return row ?? null;
+  }
+
+  runSync(source: string, ...params: any[]): { lastInsertRowId: number; changes: number } {
+    const stmt = this.nativeDb.prepare(source);
+    const result = stmt.run(...params);
+    return {
+      lastInsertRowId: Number(result.lastInsertRowid),
+      changes: Number(result.changes),
+    };
   }
 }
 

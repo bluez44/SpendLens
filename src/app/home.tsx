@@ -6,12 +6,13 @@ import { Text } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BarChart } from '@/components/sl/bar-chart';
+import { BudgetBar } from '@/components/sl/budget-bar';
 import { Donut } from '@/components/sl/donut';
 import { GradientFill } from '@/components/sl/gradient';
 import { Icon } from '@/components/sl/icons';
 import { Segmented } from '@/components/sl/segmented';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
-import { compactTr, formatVND } from '@/lib/format';
+import { compactTr, formatVND, monthKey, toDateKey } from '@/lib/format';
 import {
   categoryBreakdown,
   filterRange,
@@ -20,6 +21,7 @@ import {
   type Range,
 } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
+import { useSettings } from '@/lib/settings-context';
 
 const RANGES: Range[] = ['day', 'week', 'month'];
 
@@ -27,9 +29,15 @@ export default function HomeScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { transactions } = useTransactions();
+  const { settings } = useSettings();
   const [rangeIndex, setRangeIndex] = useState(2);
   const range = RANGES[rangeIndex];
   const isDark = c.scheme === 'dark';
+
+  const currentMonthKey = monthKey(toDateKey(new Date()));
+  const spentThisMonth = transactions
+    .filter((t) => !t.isIncome && monthKey(t.date) === currentMonthKey)
+    .reduce((sum, t) => sum + t.amount, 0);
 
   const ranged = useMemo(() => filterRange(transactions, range), [transactions, range]);
   const sum = useMemo(() => summarize(ranged), [ranged]);
@@ -45,9 +53,22 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={{ fontSize: 22, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>Tổng quan</Text>
-          <Pressable style={[styles.iconBtn, { backgroundColor: c.segment }]} onPress={goBack}>
-            <Icon name="close" size={18} color={c.text} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => router.push('/settings')}
+              hitSlop={8}
+              accessibilityLabel="Cài đặt"
+              style={[styles.iconBtn, { backgroundColor: c.segment }]}>
+              <Icon name="settings" size={18} color={c.text} />
+            </Pressable>
+            <Pressable
+              onPress={goBack}
+              hitSlop={8}
+              accessibilityLabel="Đóng"
+              style={[styles.iconBtn, { backgroundColor: c.segment }]}>
+              <Icon name="close" size={18} color={c.text} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={{ marginTop: 14 }}>
@@ -75,6 +96,13 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
+
+        {/* Budget bar */}
+        <BudgetBar
+          spent={spentThisMonth}
+          budget={settings.monthlyBudget}
+          onSetBudget={() => router.push('/settings')}
+        />
 
         {/* Monthly bars */}
         <View style={[styles.card, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
@@ -119,6 +147,7 @@ function goBack() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconBtn: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   summaryCard: {
     marginTop: 16,
