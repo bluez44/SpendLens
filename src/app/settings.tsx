@@ -1,10 +1,10 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
-import { DateRangeModal } from '@/components/sl/date-range-modal';
+import { DateRangeSheet, type DateRangeSheetHandle } from '@/components/sl/date-range-sheet';
 import { GradientButton } from '@/components/sl/gradient';
 import { Segmented } from '@/components/sl/segmented';
 import { Text } from '@/components/sl/text';
@@ -26,7 +26,7 @@ export default function SettingsScreen() {
   const { settings, update, reset } = useSettings();
   const { transactions, refresh } = useTransactions();
   const [budgetOpen, setBudgetOpen] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
+  const exportSheetRef = useRef<DateRangeSheetHandle>(null);
   const [budgetDraft, setBudgetDraft] = useState(String(settings.monthlyBudget || ''));
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
 
@@ -144,7 +144,7 @@ export default function SettingsScreen() {
 
         {/* DỮ LIỆU */}
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>{t('settings.section_data')}</Text>
-        <Pressable style={[styles.row, { borderColor: colors.hairline }]} onPress={() => setExportOpen(true)}>
+        <Pressable style={[styles.row, { borderColor: colors.hairline }]} onPress={() => exportSheetRef.current?.present()}>
           <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.export_row')}</Text>
           <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>›</Text>
         </Pressable>
@@ -215,13 +215,11 @@ export default function SettingsScreen() {
         <DateTimePicker value={initialTime} mode="time" is24Hour onChange={onTimePicked} />
       )}
 
-      <DateRangeModal
-        visible={exportOpen}
+      <DateRangeSheet
+        ref={exportSheetRef}
         initialFrom={toDateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1))}
         initialTo={toDateKey(new Date())}
-        onCancel={() => setExportOpen(false)}
         onExport={async (from, to) => {
-          setExportOpen(false);
           const filtered = transactions.filter((t) => t.date >= from && t.date <= to);
           await exportAndShareCsv(filtered);
         }}

@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DateRangeModal } from '@/components/sl/date-range-modal';
+import { DateRangeSheet, type DateRangeSheetHandle } from '@/components/sl/date-range-sheet';
 import { Icon } from '@/components/sl/icons';
 import { Segmented } from '@/components/sl/segmented';
 import { TransactionRow } from '@/components/sl/transaction-row';
@@ -25,7 +25,7 @@ export default function HistoryScreen() {
   const { transactions } = useTransactions();
   const [rangeIndex, setRangeIndex] = useState(1);
   const range = RANGES[rangeIndex];
-  const [exportOpen, setExportOpen] = useState(false);
+  const exportSheetRef = useRef<DateRangeSheetHandle>(null);
 
   const todayKey = toDateKey(new Date());
   const ranged = useMemo(() => filterRange(transactions, range), [transactions, range]);
@@ -39,7 +39,7 @@ export default function HistoryScreen() {
           <Text style={{ fontSize: 22, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>{t('history.header')}</Text>
           <View style={styles.headerActions}>
             <Pressable
-              onPress={() => setExportOpen(true)}
+              onPress={() => exportSheetRef.current?.present()}
               hitSlop={8}
               accessibilityLabel={t('history.export_a11y')}
               style={[styles.iconBtn, { backgroundColor: c.segment }]}>
@@ -106,13 +106,11 @@ export default function HistoryScreen() {
         <Text style={{ fontSize: 13, fontWeight: W.bold, color: c.scheme === 'dark' ? '#111' : '#fff' }}>{t('history.gallery_fab')}</Text>
       </Pressable>
 
-      <DateRangeModal
-        visible={exportOpen}
+      <DateRangeSheet
+        ref={exportSheetRef}
         initialFrom={toDateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1))}
         initialTo={toDateKey(new Date())}
-        onCancel={() => setExportOpen(false)}
         onExport={async (from, to) => {
-          setExportOpen(false);
           const filtered = transactions.filter((tx) => tx.date >= from && tx.date <= to);
           await exportAndShareCsv(filtered);
         }}
