@@ -105,6 +105,19 @@ export default function SettingsScreen() {
             </Text>
           </Pressable>
         )}
+        <View style={[styles.row, { borderColor: colors.hairline, opacity: settings.monthlyBudget > 0 ? 1 : 0.5 }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.text, fontWeight: '500' }}>Cảnh báo vượt ngân sách</Text>
+            {settings.monthlyBudget === 0 ? (
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>Đặt ngân sách trước</Text>
+            ) : null}
+          </View>
+          <Switch
+            value={settings.budgetAlertsEnabled}
+            disabled={settings.monthlyBudget === 0}
+            onValueChange={(v) => update('budgetAlertsEnabled', v)}
+          />
+        </View>
 
         {/* GIAO DIỆN */}
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>GIAO DIỆN</Text>
