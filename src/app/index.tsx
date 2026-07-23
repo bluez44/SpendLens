@@ -245,21 +245,26 @@ function CameraPage({
       </View>
       {noteFocused && (
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'position' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.noteInputOverlay}
         >
-          <TextInput
-            autoFocus
-            value={note}
-            onChangeText={setNote}
-            onBlur={() => setNoteFocused(false)}
-            placeholder="Thêm ghi chú..."
-            placeholderTextColor="rgba(255,255,255,0.5)"
-            returnKeyType="done"
-            onSubmitEditing={() => setNoteFocused(false)}
-            maxLength={140}
-            style={styles.noteInput}
-          />
+          <Pressable style={styles.noteBackdrop} onPress={() => setNoteFocused(false)} />
+          <View style={styles.noteCard}>
+            <Text style={styles.noteCardLabel}>Ghi chú</Text>
+            <TextInput
+              autoFocus
+              value={note}
+              onChangeText={setNote}
+              onBlur={() => setNoteFocused(false)}
+              placeholder="VD: Cà phê Highlands"
+              placeholderTextColor="rgba(255,255,255,0.4)"
+              returnKeyType="done"
+              onSubmitEditing={() => setNoteFocused(false)}
+              maxLength={140}
+              style={styles.noteCardInput}
+            />
+            <Text style={styles.noteCardHint}>Nhấn Done hoặc bên ngoài để đóng</Text>
+          </View>
         </KeyboardAvoidingView>
       )}
     </View>
@@ -352,14 +357,33 @@ const styles = StyleSheet.create({
   },
   notePreviewText: { fontSize: 13, fontWeight: '600', color: '#fff' },
   noteInputOverlay: {
-    position: 'absolute',
-    left: 0, right: 0, bottom: 0,
-    padding: 12,
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+    justifyContent: 'center', alignItems: 'center',
     zIndex: 30,
   },
-  noteInput: {
-    padding: 12, borderRadius: 16, fontSize: 15, fontWeight: '500',
-    backgroundColor: 'rgba(0,0,0,0.75)', color: '#fff',
+  noteBackdrop: {
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  noteCard: {
+    width: '85%',
+    padding: 20, borderRadius: 20,
+    backgroundColor: '#1D1D1D',
+    gap: 8,
+  },
+  noteCardLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12, fontWeight: '700', letterSpacing: 0.5,
+  },
+  noteCardInput: {
+    fontSize: 18, fontWeight: '600', color: '#fff',
+    padding: 12, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    minHeight: 48,
+  },
+  noteCardHint: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 11, fontWeight: '500',
   },
   captureArea: {
     alignItems: 'center',
