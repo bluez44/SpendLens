@@ -254,38 +254,46 @@ function CameraPage({
             </View>
           )}
 
-          <Pressable
-            style={styles.noteTapZone}
-            onPress={() => setNoteFocused(true)}
-            pointerEvents={noteFocused ? 'none' : 'auto'}
-          />
+          {granted && (
+            <>
+              <Pressable
+                style={styles.noteTapZone}
+                onPress={() => setNoteFocused(true)}
+                pointerEvents={noteFocused ? 'none' : 'auto'}
+              />
 
-          {note && !noteFocused ? (
-            <Pressable style={styles.notePreview} onPress={() => setNoteFocused(true)}>
-              <Icon name="edit" size={12} color="rgba(255,255,255,0.85)" />
-              <Text numberOfLines={1} style={styles.notePreviewText}>{note}</Text>
-            </Pressable>
-          ) : null}
+              {note && !noteFocused ? (
+                <Pressable style={styles.notePreview} onPress={() => setNoteFocused(true)}>
+                  <Icon name="edit" size={12} color="rgba(255,255,255,0.85)" />
+                  <Text numberOfLines={1} style={styles.notePreviewText}>{note}</Text>
+                </Pressable>
+              ) : null}
+            </>
+          )}
 
         </View>
       </View>
 
       {/* Capture area — minus the "vuốt lên" hint */}
       <View style={[styles.captureArea, { paddingBottom: insets.bottom + 24 }]}>
-        <View style={styles.captureRow}>
-          <View style={styles.sideSlot} />
-          <Shutter onPress={capture} />
-          <Pressable
-            style={[styles.sideSlot, styles.circleBtn]}
-            onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}>
-            <Icon name="flip" size={22} color="#fff" />
-          </Pressable>
-        </View>
+        {granted ? (
+          <View style={styles.captureRow}>
+            <View style={styles.sideSlot} />
+            <Shutter onPress={capture} />
+            <Pressable
+              style={[styles.sideSlot, styles.circleBtn]}
+              onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}>
+              <Icon name="flip" size={22} color="#fff" />
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.captureRow} />
+        )}
         <View style={styles.chevron}>
           <Icon name="arrow-up" size={14} color="rgba(255,255,255,0.42)" />
         </View>
       </View>
-      {noteFocused && (
+      {granted && noteFocused && (
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.noteInputOverlay}
