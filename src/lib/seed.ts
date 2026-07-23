@@ -5,6 +5,11 @@ import { db as defaultDb } from './db';
 import { toDateKey } from './format';
 import { countTransactions, insertTransaction } from './transactions';
 
+/**
+ * DEV-ONLY seed utility. Not called automatically anywhere in the app.
+ * Call `seedIfEmpty(db)` manually from a dev script or React Native debugger
+ * when you need sample data. Production users start with an empty database.
+ */
 const PHOTO = {
   food: '1504674900247-0877df9cc836',
   coffee: '1461023058943-07fcbe16d735',

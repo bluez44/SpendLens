@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { db } from './db';
-import { seedIfEmpty } from './seed';
 import type { NewTxn, Txn } from './transactions';
 import {
   deleteTransaction,
@@ -32,7 +31,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
-    seedIfEmpty(db);
     refresh();
     setReady(true);
   }, [refresh]);
