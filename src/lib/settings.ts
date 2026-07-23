@@ -9,6 +9,7 @@ export interface Settings {
   themeMode: 'auto' | 'light' | 'dark';
   budgetAlertsEnabled: boolean;
   budgetNotifiedMonth: string;
+  language: 'auto' | 'vi' | 'en';
 }
 
 export const DEFAULTS: Settings = {
@@ -18,6 +19,7 @@ export const DEFAULTS: Settings = {
   themeMode: 'auto',
   budgetAlertsEnabled: true,
   budgetNotifiedMonth: '',
+  language: 'auto',
 };
 
 type Row = { key: string; value: string };
@@ -35,6 +37,8 @@ function encode<K extends keyof Settings>(key: K, value: Settings[K]): string {
     case 'budgetAlertsEnabled':
       return (value as boolean) ? '1' : '0';
     case 'budgetNotifiedMonth':
+      return value as string;
+    case 'language':
       return value as string;
     default: {
       const _exhaustive: never = key;
@@ -57,6 +61,8 @@ function decode(map: Map<string, string>): Settings {
   if (alerts !== undefined) result.budgetAlertsEnabled = alerts === '1';
   const notifiedMonth = map.get('budgetNotifiedMonth');
   if (notifiedMonth !== undefined) result.budgetNotifiedMonth = notifiedMonth;
+  const lang = map.get('language');
+  if (lang === 'auto' || lang === 'vi' || lang === 'en') result.language = lang;
   return result;
 }
 

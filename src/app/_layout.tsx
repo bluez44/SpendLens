@@ -1,3 +1,4 @@
+import '@/lib/i18n';
 import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,

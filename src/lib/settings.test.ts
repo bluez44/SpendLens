@@ -30,6 +30,7 @@ describe('loadSettings', () => {
       themeMode: 'dark',
       budgetAlertsEnabled: false,
       budgetNotifiedMonth: '2026-07:100',
+      language: 'auto',
     });
   });
 
@@ -72,5 +73,28 @@ describe('resetSettings', () => {
     updateSetting('monthlyBudget', 1_000_000, db);
     resetSettings(db);
     expect(loadSettings(db)).toEqual(DEFAULTS);
+  });
+});
+
+describe('language setting', () => {
+  it('defaults to auto', () => {
+    const s = loadSettings(freshDb());
+    expect(s.language).toBe('auto');
+  });
+
+  it('round-trips vi / en / auto', () => {
+    const d = freshDb();
+    updateSetting('language', 'vi', d);
+    expect(loadSettings(d).language).toBe('vi');
+    updateSetting('language', 'en', d);
+    expect(loadSettings(d).language).toBe('en');
+    updateSetting('language', 'auto', d);
+    expect(loadSettings(d).language).toBe('auto');
+  });
+
+  it('unknown value falls back to auto', () => {
+    const d = freshDb();
+    d.runSync('INSERT INTO settings (key, value) VALUES (?, ?)', 'language', 'zh');
+    expect(loadSettings(d).language).toBe('auto');
   });
 });
