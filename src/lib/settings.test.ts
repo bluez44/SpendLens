@@ -21,11 +21,15 @@ describe('loadSettings', () => {
     updateSetting('reminderEnabled', true, db);
     updateSetting('reminderHHMM', '21:00', db);
     updateSetting('themeMode', 'dark', db);
+    updateSetting('budgetAlertsEnabled', false, db);
+    updateSetting('budgetNotifiedMonth', '2026-07:100', db);
     expect(loadSettings(db)).toEqual({
       monthlyBudget: 3_000_000,
       reminderEnabled: true,
       reminderHHMM: '21:00',
       themeMode: 'dark',
+      budgetAlertsEnabled: false,
+      budgetNotifiedMonth: '2026-07:100',
     });
   });
 
@@ -34,6 +38,31 @@ describe('loadSettings', () => {
     updateSetting('reminderEnabled', false, db);
     const row = db.getFirstSync<{ value: string }>('SELECT value FROM settings WHERE key = ?', ['reminderEnabled']);
     expect(row?.value).toBe('0');
+  });
+
+  it('round-trips budgetAlertsEnabled (default true)', () => {
+    const db = freshDb();
+    expect(loadSettings(db).budgetAlertsEnabled).toBe(true);
+    updateSetting('budgetAlertsEnabled', false, db);
+    expect(loadSettings(db).budgetAlertsEnabled).toBe(false);
+    updateSetting('budgetAlertsEnabled', true, db);
+    expect(loadSettings(db).budgetAlertsEnabled).toBe(true);
+  });
+
+  it('encodes budgetAlertsEnabled as "0"/"1"', () => {
+    const db = freshDb();
+    updateSetting('budgetAlertsEnabled', false, db);
+    const row = db.getFirstSync<{ value: string }>('SELECT value FROM settings WHERE key = ?', ['budgetAlertsEnabled']);
+    expect(row?.value).toBe('0');
+  });
+
+  it('round-trips budgetNotifiedMonth (default "")', () => {
+    const db = freshDb();
+    expect(loadSettings(db).budgetNotifiedMonth).toBe('');
+    updateSetting('budgetNotifiedMonth', '2026-07:80', db);
+    expect(loadSettings(db).budgetNotifiedMonth).toBe('2026-07:80');
+    updateSetting('budgetNotifiedMonth', '2026-07:100', db);
+    expect(loadSettings(db).budgetNotifiedMonth).toBe('2026-07:100');
   });
 });
 

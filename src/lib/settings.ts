@@ -7,6 +7,8 @@ export interface Settings {
   reminderEnabled: boolean;
   reminderHHMM: string | null;
   themeMode: 'auto' | 'light' | 'dark';
+  budgetAlertsEnabled: boolean;
+  budgetNotifiedMonth: string;
 }
 
 export const DEFAULTS: Settings = {
@@ -14,6 +16,8 @@ export const DEFAULTS: Settings = {
   reminderEnabled: false,
   reminderHHMM: null,
   themeMode: 'auto',
+  budgetAlertsEnabled: true,
+  budgetNotifiedMonth: '',
 };
 
 type Row = { key: string; value: string };
@@ -27,6 +31,10 @@ function encode<K extends keyof Settings>(key: K, value: Settings[K]): string {
     case 'reminderHHMM':
       return (value as string | null) ?? '';
     case 'themeMode':
+      return value as string;
+    case 'budgetAlertsEnabled':
+      return (value as boolean) ? '1' : '0';
+    case 'budgetNotifiedMonth':
       return value as string;
     default: {
       const _exhaustive: never = key;
@@ -45,6 +53,10 @@ function decode(map: Map<string, string>): Settings {
   if (hhmm !== undefined) result.reminderHHMM = hhmm === '' ? null : hhmm;
   const theme = map.get('themeMode');
   if (theme === 'auto' || theme === 'light' || theme === 'dark') result.themeMode = theme;
+  const alerts = map.get('budgetAlertsEnabled');
+  if (alerts !== undefined) result.budgetAlertsEnabled = alerts === '1';
+  const notifiedMonth = map.get('budgetNotifiedMonth');
+  if (notifiedMonth !== undefined) result.budgetNotifiedMonth = notifiedMonth;
   return result;
 }
 
