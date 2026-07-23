@@ -34,7 +34,7 @@ export default function EntryScreen() {
   const [isIncome, setIsIncome] = useState(existing?.isIncome ?? false);
   const [amount, setAmount] = useState(existing?.amount ?? 0);
   const [category, setCategory] = useState<CategoryId>(existing?.category ?? 'food');
-  const [note, setNote] = useState(existing?.note ?? params.note ?? '');
+  const [note, setNote] = useState(existing?.name ?? params.note ?? '');
 
   const accent = isIncome ? Money.income : Money.expense;
 
@@ -44,8 +44,8 @@ export default function EntryScreen() {
       date: editing && existing ? existing.date : toDateKey(new Date()),
       time: editing && existing ? existing.time : nowTime(),
       category: isIncome ? 'other' : category,
-      name: isIncome ? 'Thu nhập' : categoryOf(category).label,
-      note: note.trim() || null,
+      name: note.trim() || (isIncome ? 'Thu nhập' : categoryOf(category).label),
+      note: null,
       amount,
       isIncome,
       photoPath: photoUri ?? null,
