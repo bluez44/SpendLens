@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { DateRangeModal } from '@/components/sl/date-range-modal';
 import { GradientButton } from '@/components/sl/gradient';
@@ -202,26 +202,30 @@ export default function SettingsScreen() {
       {/* Budget keypad modal */}
       <Modal visible={budgetOpen} transparent animationType="slide" onRequestClose={() => setBudgetOpen(false)}>
         <View style={styles.backdrop}>
-          <View style={[styles.sheet, { backgroundColor: colors.card }]}>
-            <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>Ngân sách tháng</Text>
-            <TextInput
-              value={budgetDraft}
-              onChangeText={(t) => setBudgetDraft(t.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              placeholder="0"
-              placeholderTextColor={colors.textSecondary}
-              style={[styles.input, { color: colors.text, borderColor: colors.hairline }]}
-            />
-            <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
-              {formatVND(Number(budgetDraft) || 0)}
-            </Text>
-            <View style={styles.actions}>
-              <Pressable onPress={() => setBudgetOpen(false)} style={{ padding: 12 }}>
-                <Text style={{ color: colors.text, fontWeight: '600' }}>Huỷ</Text>
-              </Pressable>
-              <GradientButton label="Lưu" onPress={saveBudget} />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ width: '100%' }}>
+            <View style={[styles.sheet, { backgroundColor: colors.card }]}>
+              <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>Ngân sách tháng</Text>
+              <TextInput
+                value={budgetDraft}
+                onChangeText={(t) => setBudgetDraft(t.replace(/\D/g, ''))}
+                keyboardType="number-pad"
+                placeholder="0"
+                placeholderTextColor={colors.textSecondary}
+                style={[styles.input, { color: colors.text, borderColor: colors.hairline }]}
+              />
+              <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
+                {formatVND(Number(budgetDraft) || 0)}
+              </Text>
+              <View style={styles.actions}>
+                <Pressable onPress={() => setBudgetOpen(false)} style={{ padding: 12 }}>
+                  <Text style={{ color: colors.text, fontWeight: '600' }}>Huỷ</Text>
+                </Pressable>
+                <GradientButton label="Lưu" onPress={saveBudget} />
+              </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>
