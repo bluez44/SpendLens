@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './text';
 
 import { categoryOf, categoryLabel, INCOME_LABEL_KEY } from '@/lib/categories';
+import type { Category } from '@/lib/categories';
 import { i18n } from '@/lib/i18n';
 import type { Txn } from '@/lib/transactions';
 import { signedVND } from '@/lib/format';
@@ -14,13 +15,15 @@ export function TransactionRow({
   txn,
   tileSize = 56,
   onPress,
+  extras = [],
 }: {
   txn: Txn;
   tileSize?: number;
   onPress?: () => void;
+  extras?: Category[];
 }) {
   const c = useColors();
-  const label = txn.isIncome ? i18n.t(INCOME_LABEL_KEY) : categoryLabel(categoryOf(txn.category));
+  const label = txn.isIncome ? i18n.t(INCOME_LABEL_KEY) : categoryLabel(categoryOf(txn.category, extras));
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, { opacity: pressed ? 0.6 : 1 }]}>
       <PhotoTile uri={txn.photoPath} size={tileSize} radius={Radius.tile} />

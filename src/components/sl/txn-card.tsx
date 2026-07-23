@@ -6,13 +6,16 @@ import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/sl/text';
 import { TodayBadge } from '@/components/sl/today-badge';
 import { categoryOf, categoryLabel } from '@/lib/categories';
+import type { Category } from '@/lib/categories';
 import { formatVND } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import type { Txn } from '@/lib/transactions';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
-export function TxnCard({ txn }: { txn: Txn }) {
-  const cat = categoryOf(txn.category);
+export function TxnCard({ txn, extras = [] }: { txn: Txn; extras?: Category[] }) {
+  const { t } = useT();
+  const cat = categoryOf(txn.category, extras);
   const sign = txn.isIncome ? '+' : '−';
 
   return (
@@ -36,7 +39,7 @@ export function TxnCard({ txn }: { txn: Txn }) {
         </View>
         <Text style={styles.amount}>{sign + formatVND(txn.amount)}</Text>
         <Text style={styles.note} numberOfLines={2}>{txn.note ?? txn.name}</Text>
-        <Text style={styles.tapHint}>Chạm để xem chi tiết →</Text>
+        <Text style={styles.tapHint}>{t('txn.tap_hint')}</Text>
       </View>
     </Pressable>
   );

@@ -47,7 +47,7 @@ export function dayLabel(dateKey: string, todayKey: string): string {
   if (dateKey === todayKey) return i18n.t('day.today');
   if (dateKey === shiftDateKey(todayKey, -1)) return i18n.t('day.yesterday');
   const [, m, d] = dateKey.split('-').map(Number);
-  return `${d} Th${m}`;
+  return `${d} ${i18n.t('format.month_abbrev', { month: m })}`;
 }
 
 export function monthKey(dateKey: string): string {

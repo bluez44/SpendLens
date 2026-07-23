@@ -38,7 +38,7 @@ export default function EntryScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ photo?: string; note?: string; id?: string }>();
   const { photo, id } = params;
-  const { add, update, getById, transactions } = useTransactions();
+  const { add, update, getById, transactions, refreshUserCategories } = useTransactions();
   const { settings, update: updateSettings } = useSettings();
 
   const scrollRef = useRef<ScrollView>(null);
@@ -63,10 +63,6 @@ export default function EntryScreen() {
   const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
   const [customInput, setCustomInput] = useState('');
 
-  function refreshUserCategories() {
-    setUserCategories(listUserCategories());
-  }
-
   const accent = isIncome ? Money.income : Money.expense;
 
   function scrollToOffset(y: number) {
@@ -84,8 +80,15 @@ export default function EntryScreen() {
       setUserCategories((prev) => [...prev, uc]);
       setCategory(uc.id);
       setCustomInput('');
+      refreshUserCategories();
     } catch (err) {
-      console.warn('Failed to add category', err);
+      const existingUC = listUserCategories().find((c) => c.label === name);
+      if (existingUC) {
+        setCategory(existingUC.id);
+        setCustomInput('');
+      } else {
+        console.warn('Failed to add category', err);
+      }
     }
   }
 
@@ -102,6 +105,7 @@ export default function EntryScreen() {
             deleteUserCategory(uc.id);
             setUserCategories((prev) => prev.filter((c) => c.id !== uc.id));
             if (category === uc.id) setCategory('food');
+            refreshUserCategories();
           },
         },
       ],
@@ -118,6 +122,7 @@ export default function EntryScreen() {
         const uc = insertUserCategory(customInput.trim());
         setUserCategories((prev) => [...prev, uc]);
         effectiveCategory = uc.id;
+        refreshUserCategories();
       } catch (err) {
         // duplicate label: find existing and use its id
         const existingUC = listUserCategories().find((c) => c.label === customInput.trim());

@@ -13,14 +13,16 @@ import { categoryOf, categoryLabel, INCOME_LABEL_KEY } from '@/lib/categories';
 import { i18n, useT } from '@/lib/i18n';
 import { dayLabel, signedVND, toDateKey } from '@/lib/format';
 import { useTransactions } from '@/lib/transactions-context';
+import { toCategoryObj } from '@/lib/user-categories';
 
 export default function TransactionDetailScreen() {
   const c = useColors();
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getById, remove } = useTransactions();
+  const { getById, remove, userCategories } = useTransactions();
   const txn = getById(Number(id));
+  const categoryExtras = userCategories.map(toCategoryObj);
 
   if (!txn) {
     return (
@@ -45,7 +47,7 @@ export default function TransactionDetailScreen() {
     ]);
   };
 
-  const cat = categoryOf(txn.category);
+  const cat = categoryOf(txn.category, categoryExtras);
   const chipBg = txn.isIncome ? '#D1FAE5' : cat.chip;
   const chipFg = txn.isIncome ? Money.income : cat.fg;
   const accent = txn.isIncome ? Money.income : Money.expense;

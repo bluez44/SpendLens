@@ -15,6 +15,7 @@ import { exportAndShareCsv } from '@/lib/export';
 import { useT } from '@/lib/i18n';
 import { filterRange, groupByDay, summarize, type Range } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
+import { toCategoryObj } from '@/lib/user-categories';
 
 const RANGES: Range[] = ['day', 'week', 'month'];
 
@@ -22,7 +23,8 @@ export default function HistoryScreen() {
   const c = useColors();
   const { t } = useT();
   const insets = useSafeAreaInsets();
-  const { transactions } = useTransactions();
+  const { transactions, userCategories } = useTransactions();
+  const categoryExtras = userCategories.map(toCategoryObj);
   const [rangeIndex, setRangeIndex] = useState(1);
   const range = RANGES[rangeIndex];
   const exportSheetRef = useRef<DateRangeSheetHandle>(null);
@@ -92,7 +94,7 @@ export default function HistoryScreen() {
             </View>
             <View style={{ gap: 11 }}>
               {g.items.map((txn) => (
-                <TransactionRow key={txn.id} txn={txn} tileSize={48} onPress={() => router.push(`/transaction/${txn.id}`)} />
+                <TransactionRow key={txn.id} txn={txn} tileSize={48} extras={categoryExtras} onPress={() => router.push(`/transaction/${txn.id}`)} />
               ))}
             </View>
           </View>
@@ -112,7 +114,7 @@ export default function HistoryScreen() {
         initialTo={toDateKey(new Date())}
         onExport={async (from, to) => {
           const filtered = transactions.filter((tx) => tx.date >= from && tx.date <= to);
-          await exportAndShareCsv(filtered);
+          await exportAndShareCsv(filtered, categoryExtras);
         }}
       />
     </View>

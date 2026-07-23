@@ -5,6 +5,7 @@ import { db as defaultDb } from './db';
 import type { CategoryId } from './categories';
 import { STATIC_CATEGORIES, categoryLabel } from './categories';
 import { monthKey, toDateKey } from './format';
+import { i18n } from './i18n';
 
 export interface Txn {
   id: number;
@@ -193,7 +194,7 @@ export function monthlyExpenseSeries(
     const total = txns
       .filter((t) => !t.isIncome && monthKey(t.date) === key)
       .reduce((s, t) => s + t.amount, 0);
-    bars.push({ label: `T${d.getMonth() + 1}`, monthKey: key, total, isCurrent: key === currentKey });
+    bars.push({ label: i18n.t('format.month_abbrev', { month: d.getMonth() + 1 }), monthKey: key, total, isCurrent: key === currentKey });
   }
   return bars;
 }

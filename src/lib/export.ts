@@ -2,6 +2,7 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 import { categoryOf, categoryLabel } from './categories';
+import type { Category } from './categories';
 import { i18n } from './i18n';
 import type { Txn } from './transactions';
 
@@ -14,12 +15,12 @@ function csvEscape(value: string): string {
   return value;
 }
 
-export function buildTransactionsCsv(txns: Txn[]): string {
+export function buildTransactionsCsv(txns: Txn[], extras: Category[] = []): string {
   const header = ['Date', 'Time', 'Category', 'Name', 'Amount', 'Type'];
   const rows = txns.map((t) => [
     t.date,
     t.time,
-    categoryLabel(categoryOf(t.category)),
+    categoryLabel(categoryOf(t.category, extras)),
     t.name,
     t.amount.toFixed(2),
     t.isIncome ? 'Income' : 'Expense',
@@ -30,9 +31,9 @@ export function buildTransactionsCsv(txns: Txn[]): string {
   return BOM + body;
 }
 
-export async function exportAndShareCsv(txns: Txn[]): Promise<boolean> {
+export async function exportAndShareCsv(txns: Txn[], extras: Category[] = []): Promise<boolean> {
   if (!(await Sharing.isAvailableAsync())) return false;
-  const csv = buildTransactionsCsv(txns);
+  const csv = buildTransactionsCsv(txns, extras);
   const file = new File(Paths.cache, `spendlens-export-${Date.now()}.csv`);
   try {
     file.create();

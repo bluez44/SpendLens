@@ -19,6 +19,7 @@ import { formatVND, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import type { Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
+import { toCategoryObj } from '@/lib/user-categories';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -27,7 +28,8 @@ export default function CameraScreen() {
   const { t } = useT();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
-  const { transactions } = useTransactions();
+  const { transactions, userCategories } = useTransactions();
+  const categoryExtras = userCategories.map(toCategoryObj);
   const [facing, setFacing] = useState<'back' | 'front'>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
   const [note, setNote] = useState('');
@@ -69,7 +71,7 @@ export default function CameraScreen() {
     []
   );
 
-  const capture = async () => {
+  const capture = useCallback(async () => {
     const currentNote = note;
     setNoteFocused(false);
     try {
@@ -83,7 +85,7 @@ export default function CameraScreen() {
     } catch {
       router.push({ pathname: '/entry', params: currentNote ? { note: currentNote } : {} });
     }
-  };
+  }, [note]);
 
   const granted = permission?.granted ?? false;
 
@@ -109,8 +111,8 @@ export default function CameraScreen() {
         />
       );
     if (item.type === 'empty') return <EmptyTodayCard />;
-    return <TxnCard txn={item.txn} />;
-  }, [insets, permission, requestPermission, granted, facing, flash, note, noteFocused, todayExpense, capture]);
+    return <TxnCard txn={item.txn} extras={categoryExtras} />;
+  }, [insets, permission, requestPermission, granted, facing, flash, note, noteFocused, todayExpense, capture, categoryExtras]);
 
   return (
     <View style={styles.root}>

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/sl/text';
 import { useColors } from '@/constants/tokens';
 import { formatVND } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   spent: number;
@@ -18,6 +19,7 @@ function pickColor(pct: number): string {
 
 export function BudgetBar({ spent, budget, onSetBudget }: Props) {
   const colors = useColors();
+  const { t } = useT();
 
   if (budget <= 0) {
     return (
@@ -25,7 +27,7 @@ export function BudgetBar({ spent, budget, onSetBudget }: Props) {
         onPress={onSetBudget}
         style={[styles.cta, { borderColor: colors.hairline }]}>
         <Text style={{ color: colors.text, fontWeight: '500' }}>
-          Đặt ngân sách tháng →
+          {t('budget.set_cta')}
         </Text>
       </Pressable>
     );
@@ -39,7 +41,7 @@ export function BudgetBar({ spent, budget, onSetBudget }: Props) {
     <View style={styles.wrap}>
       <View style={styles.row}>
         <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
-          Đã chi tháng này
+          {t('budget.spent_this_month')}
         </Text>
         <Text style={{ color: colors.text, fontWeight: '600' }}>{pct}%</Text>
       </View>

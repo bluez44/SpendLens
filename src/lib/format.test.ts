@@ -72,8 +72,14 @@ describe('dayLabel', () => {
     expect(dayLabel('2026-07-16', '2026-07-17')).toBe('Hôm qua');
   });
 
-  it('labels older dates as "D ThM"', () => {
+  it('labels older dates as "D ThM" (VI)', () => {
     expect(dayLabel('2026-07-10', '2026-07-17')).toBe('10 Th7');
+  });
+
+  it('labels older dates as "D MM" in EN locale', async () => {
+    await i18n.changeLanguage('en');
+    expect(dayLabel('2026-07-10', '2026-07-17')).toBe('10 M7');
+    await i18n.changeLanguage('vi');
   });
 });
 

@@ -9,6 +9,7 @@ import {
   listTransactions,
   updateTransaction,
 } from './transactions';
+import { listUserCategories, type UserCategory } from './user-categories';
 
 interface TransactionsContextValue {
   transactions: Txn[];
@@ -18,6 +19,8 @@ interface TransactionsContextValue {
   remove: (id: number) => void;
   getById: (id: number) => Txn | undefined;
   refresh: () => void;
+  userCategories: UserCategory[];
+  refreshUserCategories: () => void;
 }
 
 const TransactionsContext = createContext<TransactionsContextValue | null>(null);
@@ -25,9 +28,14 @@ const TransactionsContext = createContext<TransactionsContextValue | null>(null)
 export function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState<Txn[]>([]);
   const [ready, setReady] = useState(false);
+  const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
 
   const refresh = useCallback(() => {
     setTransactions(listTransactions(db));
+  }, []);
+
+  const refreshUserCategories = useCallback(() => {
+    setUserCategories(listUserCategories());
   }, []);
 
   useEffect(() => {
@@ -66,8 +74,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
   );
 
   const value = useMemo<TransactionsContextValue>(
-    () => ({ transactions, ready, add, update, remove, getById, refresh }),
-    [transactions, ready, add, update, remove, getById, refresh]
+    () => ({ transactions, ready, add, update, remove, getById, refresh, userCategories, refreshUserCategories }),
+    [transactions, ready, add, update, remove, getById, refresh, userCategories, refreshUserCategories]
   );
 
   return <TransactionsContext.Provider value={value}>{children}</TransactionsContext.Provider>;

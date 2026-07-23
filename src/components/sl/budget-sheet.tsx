@@ -65,7 +65,7 @@ export const BudgetSheet = forwardRef<BudgetSheetHandle, Props>(
           <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>{t('settings.budget_row')}</Text>
           <BottomSheetTextInput
             value={draft}
-            onChangeText={(t) => setDraft(t.replace(/\D/g, ''))}
+            onChangeText={(text) => setDraft(text.replace(/\D/g, ''))}
             keyboardType="number-pad"
             placeholder="0"
             placeholderTextColor={colors.textSecondary}

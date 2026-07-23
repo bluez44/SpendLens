@@ -130,5 +130,11 @@
     "delete_title": "Xoá giao dịch",
     "delete_body": "Bạn có chắc muốn xoá khoản này?"
   },
-  "export": { "share_dialog_title": "Xuất SpendLens" }
+  "export": { "share_dialog_title": "Xuất SpendLens" },
+  "txn": { "tap_hint": "Chạm để xem chi tiết →" },
+  "budget": {
+    "set_cta": "Đặt ngân sách tháng →",
+    "spent_this_month": "Đã chi tháng này"
+  },
+  "format": { "month_abbrev": "Th{{month}}" }
 }

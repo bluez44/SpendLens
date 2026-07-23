@@ -16,6 +16,7 @@ import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@
 import { useSettings } from '@/lib/settings-context';
 import { resetTransactions } from '@/lib/transactions';
 import { resetUserCategories } from '@/lib/user-categories';
+import { toCategoryObj } from '@/lib/user-categories';
 import { useTransactions } from '@/lib/transactions-context';
 
 const THEME_MODES = ['auto', 'light', 'dark'] as const;
@@ -25,7 +26,8 @@ export default function SettingsScreen() {
   const colors = useColors();
   const { t } = useT();
   const { settings, update, reset } = useSettings();
-  const { transactions, refresh } = useTransactions();
+  const { transactions, refresh, userCategories, refreshUserCategories } = useTransactions();
+  const categoryExtras = userCategories.map(toCategoryObj);
   const exportSheetRef = useRef<DateRangeSheetHandle>(null);
   const budgetSheetRef = useRef<BudgetSheetHandle>(null);
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
@@ -168,6 +170,7 @@ export default function SettingsScreen() {
                   reset();
                   await cancelDailyReminder();
                   refresh();
+                  refreshUserCategories();
                 },
               },
             ])
@@ -210,8 +213,8 @@ export default function SettingsScreen() {
         initialFrom={toDateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1))}
         initialTo={toDateKey(new Date())}
         onExport={async (from, to) => {
-          const filtered = transactions.filter((t) => t.date >= from && t.date <= to);
-          await exportAndShareCsv(filtered);
+          const filtered = transactions.filter((tx) => tx.date >= from && tx.date <= to);
+          await exportAndShareCsv(filtered, categoryExtras);
         }}
       />
 
