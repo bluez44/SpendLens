@@ -35,7 +35,6 @@ export default function CameraScreen() {
   const [isSnapping, setIsSnapping] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
-  const [zoom, setZoom] = useState(0);
 
   const todayKey = toDateKey(new Date());
   const todayTxns = useMemo(
@@ -88,6 +87,31 @@ export default function CameraScreen() {
 
   const granted = permission?.granted ?? false;
 
+  const renderItem = useCallback(({ item }: { item: PageItem }) => {
+    if (item.type === 'camera')
+      return (
+        <CameraPage
+          insets={insets}
+          permission={permission}
+          requestPermission={requestPermission}
+          granted={granted}
+          facing={facing}
+          setFacing={setFacing}
+          flash={flash}
+          setFlash={setFlash}
+          cameraRef={cameraRef}
+          capture={capture}
+          note={note}
+          noteFocused={noteFocused}
+          setNote={setNote}
+          setNoteFocused={setNoteFocused}
+          todayExpense={todayExpense}
+        />
+      );
+    if (item.type === 'empty') return <EmptyTodayCard />;
+    return <TxnCard txn={item.txn} />;
+  }, [insets, permission, requestPermission, granted, facing, flash, note, noteFocused, todayExpense, capture]);
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -95,32 +119,7 @@ export default function CameraScreen() {
         ref={flatListRef}
         data={pages}
         keyExtractor={keyExtractor}
-        renderItem={({ item }) => {
-          if (item.type === 'camera')
-            return (
-              <CameraPage
-                insets={insets}
-                permission={permission}
-                requestPermission={requestPermission}
-                granted={granted}
-                facing={facing}
-                setFacing={setFacing}
-                flash={flash}
-                setFlash={setFlash}
-                cameraRef={cameraRef}
-                capture={capture}
-                note={note}
-                noteFocused={noteFocused}
-                setNote={setNote}
-                setNoteFocused={setNoteFocused}
-                todayExpense={todayExpense}
-                zoom={zoom}
-                setZoom={setZoom}
-              />
-            );
-          if (item.type === 'empty') return <EmptyTodayCard />;
-          return <TxnCard txn={item.txn} />;
-        }}
+        renderItem={renderItem}
         pagingEnabled
         snapToInterval={SCREEN_HEIGHT}
         snapToAlignment="start"
@@ -166,7 +165,7 @@ function CameraPage({
   facing, setFacing, flash, setFlash,
   cameraRef, capture,
   note, noteFocused, setNote, setNoteFocused,
-  todayExpense, zoom, setZoom,
+  todayExpense,
 }: {
   insets: EdgeInsets;
   permission: ReturnType<typeof useCameraPermissions>[0];
@@ -183,10 +182,9 @@ function CameraPage({
   setNote: (v: string) => void;
   setNoteFocused: (v: boolean) => void;
   todayExpense: number;
-  zoom: number;
-  setZoom: (v: number) => void;
 }) {
   const { t } = useT();
+  const [zoom, setZoom] = useState(0);
   const initialZoomRef = useRef(0);
   const zoomRef = useRef(zoom);
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
@@ -197,6 +195,10 @@ function CameraPage({
       .onUpdate((e) => {
         const next = Math.max(0, Math.min(1, initialZoomRef.current + (e.scale - 1) * 0.5));
         runOnJS(setZoom)(next);
+      })
+      .onEnd(() => {
+        // commit final baseline so the next pinch starts from the correct value
+        initialZoomRef.current = zoomRef.current;
       });
     const doubleTap = Gesture.Tap()
       .numberOfTaps(2)
