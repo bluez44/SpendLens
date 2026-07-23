@@ -2,10 +2,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
+import { BudgetSheet, type BudgetSheetHandle } from '@/components/sl/budget-sheet';
 import { DateRangeSheet, type DateRangeSheetHandle } from '@/components/sl/date-range-sheet';
-import { GradientButton } from '@/components/sl/gradient';
 import { Segmented } from '@/components/sl/segmented';
 import { Text } from '@/components/sl/text';
 import { useColors } from '@/constants/tokens';
@@ -25,23 +25,11 @@ export default function SettingsScreen() {
   const { t } = useT();
   const { settings, update, reset } = useSettings();
   const { transactions, refresh } = useTransactions();
-  const [budgetOpen, setBudgetOpen] = useState(false);
   const exportSheetRef = useRef<DateRangeSheetHandle>(null);
-  const [budgetDraft, setBudgetDraft] = useState(String(settings.monthlyBudget || ''));
+  const budgetSheetRef = useRef<BudgetSheetHandle>(null);
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
 
   const themeLabels = [t('settings.theme_auto'), t('settings.theme_light'), t('settings.theme_dark')];
-
-  const saveBudget = () => {
-    const n = Number(budgetDraft.replace(/\D/g, '')) || 0;
-    update('monthlyBudget', n);
-    setBudgetOpen(false);
-  };
-
-  const openBudget = () => {
-    setBudgetDraft(String(settings.monthlyBudget || ''));
-    setBudgetOpen(true);
-  };
 
   const onToggleReminder = async (v: boolean) => {
     if (!v) {
@@ -85,7 +73,7 @@ export default function SettingsScreen() {
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>
           {t('settings.section_budget')}
         </Text>
-        <Pressable style={[styles.row, { borderColor: colors.hairline }]} onPress={openBudget}>
+        <Pressable style={[styles.row, { borderColor: colors.hairline }]} onPress={() => budgetSheetRef.current?.present(settings.monthlyBudget)}>
           <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.budget_row')}</Text>
           <Text style={{ color: colors.text, fontWeight: '600' }}>
             {settings.monthlyBudget > 0 ? formatVND(settings.monthlyBudget) : t('settings.budget_not_set')}
@@ -225,35 +213,10 @@ export default function SettingsScreen() {
         }}
       />
 
-      {/* Budget keypad modal */}
-      <Modal visible={budgetOpen} transparent animationType="slide" onRequestClose={() => setBudgetOpen(false)}>
-        <View style={styles.backdrop}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={{ width: '100%' }}>
-            <View style={[styles.sheet, { backgroundColor: colors.card }]}>
-              <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>{t('settings.budget_row')}</Text>
-              <TextInput
-                value={budgetDraft}
-                onChangeText={(v) => setBudgetDraft(v.replace(/\D/g, ''))}
-                keyboardType="number-pad"
-                placeholder="0"
-                placeholderTextColor={colors.textSecondary}
-                style={[styles.input, { color: colors.text, borderColor: colors.hairline }]}
-              />
-              <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
-                {formatVND(Number(budgetDraft) || 0)}
-              </Text>
-              <View style={styles.actions}>
-                <Pressable onPress={() => setBudgetOpen(false)} style={{ padding: 12 }}>
-                  <Text style={{ color: colors.text, fontWeight: '600' }}>{t('settings.cancel')}</Text>
-                </Pressable>
-                <GradientButton label={t('settings.save')} onPress={saveBudget} />
-              </View>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
-      </Modal>
+      <BudgetSheet
+        ref={budgetSheetRef}
+        onSave={(n) => update('monthlyBudget', n)}
+      />
     </View>
   );
 }
@@ -269,8 +232,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
   },
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: '#0006' },
-  sheet: { padding: 20, gap: 16, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
-  input: { borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 20 },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, alignItems: 'center' },
 });
