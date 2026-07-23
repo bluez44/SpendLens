@@ -6,6 +6,7 @@ import { GradientButton } from '@/components/sl/gradient';
 import { Text } from '@/components/sl/text';
 import { useColors } from '@/constants/tokens';
 import { shiftDateKey, toDateKey } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   visible: boolean;
@@ -24,6 +25,7 @@ function firstOfMonth(dateKey: string): string {
 
 export function DateRangeModal({ visible, initialFrom, initialTo, onCancel, onExport }: Props) {
   const colors = useColors();
+  const { t } = useT();
   const [from, setFrom] = useState(initialFrom);
   const [to, setTo] = useState(initialTo);
   const [picker, setPicker] = useState<'from' | 'to' | null>(null);
@@ -48,11 +50,15 @@ export function DateRangeModal({ visible, initialFrom, initialTo, onCancel, onEx
     }
   };
 
-  const quickLabels: Record<Quick, string> = {
-    thisMonth: 'Tháng này',
-    lastMonth: 'Tháng trước',
-    threeMonths: '3 tháng',
-    all: 'Toàn bộ',
+  const quickKeys: Quick[] = ['thisMonth', 'lastMonth', 'threeMonths', 'all'];
+
+  const quickLabel = (q: Quick): string => {
+    switch (q) {
+      case 'thisMonth': return t('history.range_this_month');
+      case 'lastMonth': return t('history.range_last_month');
+      case 'threeMonths': return t('history.range_three_months');
+      case 'all': return t('history.range_all');
+    }
   };
 
   return (
@@ -60,28 +66,28 @@ export function DateRangeModal({ visible, initialFrom, initialTo, onCancel, onEx
       <View style={styles.backdrop}>
         <View style={[styles.sheet, { backgroundColor: colors.bg }]}>
           <Text style={{ fontWeight: '700', color: colors.text, fontSize: 18 }}>
-            Xuất CSV theo khoảng thời gian
+            {t('history.export_range_title')}
           </Text>
 
           <View style={styles.row}>
             <Pressable style={[styles.field, { borderColor: colors.hairline }]} onPress={() => setPicker('from')}>
-              <Text style={{ fontWeight: '500', color: colors.textSecondary }}>Từ</Text>
+              <Text style={{ fontWeight: '500', color: colors.textSecondary }}>{t('history.from')}</Text>
               <Text style={{ fontWeight: '600', color: colors.text }}>{from}</Text>
             </Pressable>
             <Pressable style={[styles.field, { borderColor: colors.hairline }]} onPress={() => setPicker('to')}>
-              <Text style={{ fontWeight: '500', color: colors.textSecondary }}>Đến</Text>
+              <Text style={{ fontWeight: '500', color: colors.textSecondary }}>{t('history.to')}</Text>
               <Text style={{ fontWeight: '600', color: colors.text }}>{to}</Text>
             </Pressable>
           </View>
 
           <View style={styles.chips}>
-            {(['thisMonth', 'lastMonth', 'threeMonths', 'all'] as Quick[]).map((q) => (
+            {quickKeys.map((q) => (
               <Pressable
                 key={q}
                 onPress={() => applyQuick(q)}
                 style={[styles.chip, { borderColor: colors.hairline, backgroundColor: colors.chipBg }]}>
                 <Text style={{ fontWeight: '500', color: colors.chipText }}>
-                  {quickLabels[q]}
+                  {quickLabel(q)}
                 </Text>
               </Pressable>
             ))}
@@ -104,9 +110,9 @@ export function DateRangeModal({ visible, initialFrom, initialTo, onCancel, onEx
 
           <View style={styles.actions}>
             <Pressable onPress={onCancel} style={styles.cancel}>
-              <Text style={{ fontWeight: '600', color: colors.text }}>Huỷ</Text>
+              <Text style={{ fontWeight: '600', color: colors.text }}>{t('settings.cancel')}</Text>
             </Pressable>
-            <GradientButton label="Xuất" onPress={() => onExport(from, to)} />
+            <GradientButton label={t('history.export_button')} onPress={() => onExport(from, to)} />
           </View>
         </View>
       </View>

@@ -16,6 +16,7 @@ import { TodayBadge } from '@/components/sl/today-badge';
 import { TxnCard } from '@/components/sl/txn-card';
 import { Money, W, useColors } from '@/constants/tokens';
 import { formatVND, toDateKey } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import type { Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 
@@ -23,6 +24,7 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 export default function CameraScreen() {
   const insets = useSafeAreaInsets();
+  const { t } = useT();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const { transactions } = useTransactions();
@@ -37,14 +39,14 @@ export default function CameraScreen() {
 
   const todayKey = toDateKey(new Date());
   const todayTxns = useMemo(
-    () => transactions.filter((t) => t.date === todayKey),
+    () => transactions.filter((tx) => tx.date === todayKey),
     [transactions, todayKey]
   );
 
   const todayExpense = useMemo(
     () => transactions
-      .filter((t) => t.date === todayKey && !t.isIncome)
-      .reduce((s, t) => s + t.amount, 0),
+      .filter((tx) => tx.date === todayKey && !tx.isIncome)
+      .reduce((s, tx) => s + tx.amount, 0),
     [transactions, todayKey]
   );
 
@@ -57,7 +59,7 @@ export default function CameraScreen() {
     () => (
       todayTxns.length === 0
         ? [{ type: 'camera' }, { type: 'empty' }]
-        : [{ type: 'camera' }, ...todayTxns.map((t) => ({ type: 'txn' as const, txn: t }))]
+        : [{ type: 'camera' }, ...todayTxns.map((tx) => ({ type: 'txn' as const, txn: tx }))]
     ),
     [todayTxns]
   );
@@ -141,7 +143,7 @@ export default function CameraScreen() {
         <Pressable
           style={[styles.backToCamera, { bottom: insets.bottom + 24 }]}
           onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
-          accessibilityLabel="Về camera">
+          accessibilityLabel={t('nav.back_to_camera')}>
           <Icon name="camera" size={22} color="#fff" />
         </Pressable>
       )}
@@ -184,6 +186,7 @@ function CameraPage({
   zoom: number;
   setZoom: (v: number) => void;
 }) {
+  const { t } = useT();
   const initialZoomRef = useRef(0);
   const zoomRef = useRef(zoom);
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
@@ -207,7 +210,7 @@ function CameraPage({
       <View style={[styles.nav, { paddingTop: insets.top + 8 }]}>
         <RoundButton onPress={() => router.push('/home')}><Icon name="home" /></RoundButton>
         <View style={styles.totalPill}>
-          <Text style={{ fontSize: 12, fontWeight: W.semibold, color: 'rgba(255,255,255,0.65)' }}>Hôm nay</Text>
+          <Text style={{ fontSize: 12, fontWeight: W.semibold, color: 'rgba(255,255,255,0.65)' }}>{t('nav.today')}</Text>
           <Text style={{ fontSize: 15, fontWeight: W.extrabold, color: Money.expenseOnDark }}>
             −{formatVND(todayExpense)}
           </Text>
@@ -241,10 +244,10 @@ function CameraPage({
           ) : (
             <View style={[StyleSheet.absoluteFill, styles.permission]}>
               <Text style={styles.permissionText}>
-                {permission ? 'Cần quyền camera để chụp khoản chi' : 'Đang tải camera…'}
+                {permission ? t('camera.permission_needed') : t('camera.permission_loading')}
               </Text>
               {permission && !granted ? (
-                <GradientButton label="Cho phép camera" onPress={requestPermission} style={{ marginTop: 16 }} />
+                <GradientButton label={t('camera.permission_grant')} onPress={requestPermission} style={{ marginTop: 16 }} />
               ) : null}
             </View>
           )}
@@ -287,20 +290,20 @@ function CameraPage({
         >
           <Pressable style={styles.noteBackdrop} onPress={() => setNoteFocused(false)} />
           <View style={styles.noteCard}>
-            <Text style={styles.noteCardLabel}>Ghi chú</Text>
+            <Text style={styles.noteCardLabel}>{t('camera.note_label')}</Text>
             <TextInput
               autoFocus
               value={note}
               onChangeText={setNote}
               onBlur={() => setNoteFocused(false)}
-              placeholder="VD: Cà phê Highlands"
+              placeholder={t('camera.note_placeholder')}
               placeholderTextColor="rgba(255,255,255,0.4)"
               returnKeyType="done"
               onSubmitEditing={() => setNoteFocused(false)}
               maxLength={140}
               style={styles.noteCardInput}
             />
-            <Text style={styles.noteCardHint}>Nhấn Done hoặc bên ngoài để đóng</Text>
+            <Text style={styles.noteCardHint}>{t('camera.note_hint')}</Text>
           </View>
         </KeyboardAvoidingView>
       )}
@@ -310,6 +313,7 @@ function CameraPage({
 
 function EmptyTodayCard() {
   const colors = useColors();
+  const { t } = useT();
   return (
     <View
       style={{
@@ -322,10 +326,10 @@ function EmptyTodayCard() {
       <TodayBadge />
       <Text style={{ fontSize: 48, marginBottom: 12 }}>✨</Text>
       <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text, textAlign: 'center' }}>
-        Chưa có giao dịch nào hôm nay
+        {t('camera.today_no_txn')}
       </Text>
       <Text style={{ fontSize: 14, color: colors.textSecondary, marginTop: 6, textAlign: 'center' }}>
-        Chụp bill đầu tiên nhé!
+        {t('camera.today_no_txn_hint')}
       </Text>
     </View>
   );

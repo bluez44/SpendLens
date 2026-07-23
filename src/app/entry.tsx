@@ -16,7 +16,7 @@ import type { CategoryId } from '@/lib/categories';
 import { dayLabel, formatVND, toDateKey } from '@/lib/format';
 import { decideBudgetAlert } from '@/lib/budget-alert';
 import { fireBudgetAlert } from '@/lib/notifications';
-import { i18n } from '@/lib/i18n';
+import { i18n, useT } from '@/lib/i18n';
 import type { NewTxn, Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 import { useSettings } from '@/lib/settings-context';
@@ -31,6 +31,7 @@ function mergeExisting(existing: Txn | undefined): string {
 
 export default function EntryScreen() {
   const c = useColors();
+  const { t } = useT();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ photo?: string; note?: string; id?: string }>();
   const { photo, id } = params;
@@ -84,8 +85,8 @@ export default function EntryScreen() {
         if (budget > 0 && settings.budgetAlertsEnabled) {
           const currentMonth = toDateKey(new Date()).slice(0, 7);
           const spent = transactions
-            .filter((t) => !t.isIncome && t.date.slice(0, 7) === currentMonth)
-            .reduce((s, t) => s + t.amount, 0) + amount;
+            .filter((tx) => !tx.isIncome && tx.date.slice(0, 7) === currentMonth)
+            .reduce((s, tx) => s + tx.amount, 0) + amount;
           const fireLevel = decideBudgetAlert({
             spent,
             budget,
@@ -128,7 +129,7 @@ export default function EntryScreen() {
 
         {/* Chi / Thu */}
         <View style={{ marginTop: 16 }}>
-          <Segmented options={['Chi', 'Thu']} value={isIncome ? 1 : 0} onChange={(i) => setIsIncome(i === 1)} />
+          <Segmented options={[t('entry.tab_expense'), t('entry.tab_income')]} value={isIncome ? 1 : 0} onChange={(i) => setIsIncome(i === 1)} />
         </View>
 
         {/* Amount */}
@@ -136,11 +137,11 @@ export default function EntryScreen() {
           style={styles.amountBlock}
           onLayout={(e) => { amountOffsetRef.current = e.nativeEvent.layout.y; }}
         >
-          <Text style={{ fontSize: 12, fontWeight: W.semibold, color: c.textSecondary, letterSpacing: 0.3 }}>SỐ TIỀN</Text>
+          <Text style={{ fontSize: 12, fontWeight: W.semibold, color: c.textSecondary, letterSpacing: 0.3 }}>{t('entry.amount_label')}</Text>
           <View style={styles.amountRow}>
             <TextInput
               value={amount ? formatVND(amount).slice(0, -1) : ''}
-              onChangeText={(t) => setAmount(Number(t.replace(/\D/g, '')) || 0)}
+              onChangeText={(v) => setAmount(Number(v.replace(/\D/g, '')) || 0)}
               keyboardType="number-pad"
               placeholder="0"
               placeholderTextColor={c.textSecondary}
@@ -165,11 +166,11 @@ export default function EntryScreen() {
           style={[styles.field, { backgroundColor: c.card, borderColor: c.cardBorder }]}
           onLayout={(e) => { noteOffsetRef.current = e.nativeEvent.layout.y; }}
         >
-          <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>GHI CHÚ</Text>
+          <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>{t('entry.note_label')}</Text>
           <TextInput
             value={note}
             onChangeText={setNote}
-            placeholder={isIncome ? 'Lương, thưởng…' : 'Bún bò Huế · gần công ty'}
+            placeholder={isIncome ? t('entry.note_placeholder_income') : t('entry.note_placeholder_expense')}
             placeholderTextColor={c.textSecondary}
             onFocus={() => scrollToOffset(noteOffsetRef.current)}
             style={{ fontSize: 14.5, fontWeight: W.semibold, color: c.text, padding: 0 }}
@@ -178,14 +179,14 @@ export default function EntryScreen() {
 
         {/* Date */}
         <View style={[styles.dateRow, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-          <Text style={{ fontSize: 13, fontWeight: W.semibold, color: c.textSecondary }}>Ngày giờ</Text>
+          <Text style={{ fontSize: 13, fontWeight: W.semibold, color: c.textSecondary }}>{t('entry.date_label')}</Text>
           <Text style={{ fontSize: 14, fontWeight: W.bold, color: c.text }}>
-            {editing && existing ? `${dayLabel(existing.date, toDateKey(new Date()))} · ${existing.time}` : nowLabel()}
+            {editing && existing ? `${dayLabel(existing.date, toDateKey(new Date()))} · ${existing.time}` : `${t('day.today')} · ${nowTime()}`}
           </Text>
         </View>
 
         <GradientButton
-          label={editing ? 'Cập nhật' : isIncome ? 'Lưu khoản thu' : 'Lưu khoản chi'}
+          label={editing ? t('entry.save_update') : isIncome ? t('entry.save_income') : t('entry.save_expense')}
           onPress={save}
           disabled={amount <= 0}
           colors={isIncome ? (['#34C79A', '#1FA07A'] as const) : undefined}
@@ -202,10 +203,6 @@ function nowTime(): string {
   const hh = d.getHours().toString().padStart(2, '0');
   const mm = d.getMinutes().toString().padStart(2, '0');
   return `${hh}:${mm}`;
-}
-
-function nowLabel(): string {
-  return `Hôm nay · ${nowTime()}`;
 }
 
 const styles = StyleSheet.create({

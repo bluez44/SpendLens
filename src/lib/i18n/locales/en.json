@@ -1,6 +1,6 @@
 {
   "app": { "name": "SpendLens" },
-  "nav": { "today": "Today" },
+  "nav": { "today": "Today", "back_to_camera": "Back to camera" },
   "day": { "today": "Today", "yesterday": "Yesterday" },
   "category": {
     "food": "Food",
@@ -17,7 +17,10 @@
     "permission_loading": "Loading camera…",
     "permission_grant": "Allow camera",
     "note_placeholder": "e.g. Highlands coffee",
-    "note_label": "Note"
+    "note_label": "Note",
+    "today_no_txn": "No transactions today",
+    "today_no_txn_hint": "Snap your first receipt!",
+    "note_hint": "Tap Done or outside to close"
   },
   "entry": {
     "amount_label": "AMOUNT",
@@ -31,7 +34,9 @@
     "custom_category_placeholder": "New category name",
     "custom_category_delete_title": "Delete category?",
     "custom_category_delete_body": "The category will be deleted permanently. Existing transactions remain.",
-    "required_asterisk": "*"
+    "required_asterisk": "*",
+    "tab_expense": "Expense",
+    "tab_income": "Income"
   },
   "settings": {
     "title": "Settings",
@@ -72,7 +77,25 @@
     "permission_needed_title": "Notification permission needed",
     "permission_needed_body": "Enable notification permission in system settings."
   },
-  "history": { "title": "History", "empty": "No transactions yet" },
+  "history": {
+    "title": "History",
+    "empty": "No transactions yet",
+    "header": "Income & Expenses",
+    "income_label": "Income",
+    "expense_label": "Expense",
+    "net_label": "Net",
+    "gallery_fab": "Gallery",
+    "empty_period": "No transactions in this period.",
+    "export_range_title": "Export CSV by date range",
+    "from": "From",
+    "to": "To",
+    "range_this_month": "This month",
+    "range_last_month": "Last month",
+    "range_three_months": "3 months",
+    "range_all": "All time",
+    "export_button": "Export",
+    "export_a11y": "Export CSV"
+  },
   "notif": {
     "reminder_title": "SpendLens",
     "reminder_body": "Log today's expenses?",
@@ -80,6 +103,32 @@
     "budget_80_body": "You've spent over 80% of this month's budget.",
     "budget_100_title": "Over budget!",
     "budget_100_body": "You've exceeded 100% of this month's budget."
+  },
+  "home": {
+    "header": "Overview",
+    "settings_a11y": "Settings",
+    "close_a11y": "Close",
+    "range_day": "Day",
+    "range_week": "Week",
+    "range_month": "Month",
+    "balance_label": "Balance",
+    "balance_label_today": "Balance today",
+    "balance_label_week": "Balance this week",
+    "balance_label_month": "Balance this month",
+    "income_label": "Income",
+    "expense_label": "Expense",
+    "monthly_chart_title": "Monthly spending"
+  },
+  "transaction": {
+    "not_found": "Transaction not found.",
+    "note_label": "Note",
+    "date_label": "Date",
+    "type_label": "Type",
+    "type_income": "Income",
+    "type_expense": "Expense",
+    "delete_btn": "Delete transaction",
+    "delete_title": "Delete transaction",
+    "delete_body": "Are you sure you want to delete this transaction?"
   },
   "export": { "share_dialog_title": "Export SpendLens" }
 }

@@ -1,6 +1,6 @@
 {
   "app": { "name": "SpendLens" },
-  "nav": { "today": "Hôm nay" },
+  "nav": { "today": "Hôm nay", "back_to_camera": "Về camera" },
   "day": { "today": "Hôm nay", "yesterday": "Hôm qua" },
   "category": {
     "food": "Ăn uống",
@@ -17,7 +17,10 @@
     "permission_loading": "Đang tải camera…",
     "permission_grant": "Cho phép camera",
     "note_placeholder": "VD: Cà phê Highlands",
-    "note_label": "Ghi chú"
+    "note_label": "Ghi chú",
+    "today_no_txn": "Chưa có giao dịch nào hôm nay",
+    "today_no_txn_hint": "Chụp bill đầu tiên nhé!",
+    "note_hint": "Nhấn Done hoặc bên ngoài để đóng"
   },
   "entry": {
     "amount_label": "SỐ TIỀN",
@@ -31,7 +34,9 @@
     "custom_category_placeholder": "Tên danh mục mới",
     "custom_category_delete_title": "Xoá danh mục?",
     "custom_category_delete_body": "Danh mục sẽ bị xoá vĩnh viễn. Các giao dịch cũ vẫn giữ.",
-    "required_asterisk": "*"
+    "required_asterisk": "*",
+    "tab_expense": "Chi",
+    "tab_income": "Thu"
   },
   "settings": {
     "title": "Cài đặt",
@@ -72,7 +77,25 @@
     "permission_needed_title": "Cần quyền thông báo",
     "permission_needed_body": "Hãy bật quyền thông báo trong Cài đặt hệ thống."
   },
-  "history": { "title": "Lịch sử", "empty": "Chưa có giao dịch" },
+  "history": {
+    "title": "Lịch sử",
+    "empty": "Chưa có giao dịch",
+    "header": "Thu chi",
+    "income_label": "Thu",
+    "expense_label": "Chi",
+    "net_label": "Chênh lệch",
+    "gallery_fab": "Thư viện",
+    "empty_period": "Chưa có giao dịch trong kỳ này.",
+    "export_range_title": "Xuất CSV theo khoảng thời gian",
+    "from": "Từ",
+    "to": "Đến",
+    "range_this_month": "Tháng này",
+    "range_last_month": "Tháng trước",
+    "range_three_months": "3 tháng",
+    "range_all": "Toàn bộ",
+    "export_button": "Xuất",
+    "export_a11y": "Xuất CSV"
+  },
   "notif": {
     "reminder_title": "SpendLens",
     "reminder_body": "Ghi lại chi tiêu hôm nay?",
@@ -80,6 +103,32 @@
     "budget_80_body": "Bạn đã chi hơn 80% ngân sách tháng này.",
     "budget_100_title": "Vượt ngân sách!",
     "budget_100_body": "Bạn đã chi vượt 100% ngân sách tháng này."
+  },
+  "home": {
+    "header": "Tổng quan",
+    "settings_a11y": "Cài đặt",
+    "close_a11y": "Đóng",
+    "range_day": "Ngày",
+    "range_week": "Tuần",
+    "range_month": "Tháng",
+    "balance_label": "Số dư",
+    "balance_label_today": "Số dư hôm nay",
+    "balance_label_week": "Số dư tuần này",
+    "balance_label_month": "Số dư tháng",
+    "income_label": "Thu",
+    "expense_label": "Chi",
+    "monthly_chart_title": "Chi tiêu theo tháng"
+  },
+  "transaction": {
+    "not_found": "Không tìm thấy giao dịch.",
+    "note_label": "Ghi chú",
+    "date_label": "Ngày",
+    "type_label": "Loại",
+    "type_income": "Khoản thu",
+    "type_expense": "Khoản chi",
+    "delete_btn": "Xoá giao dịch",
+    "delete_title": "Xoá giao dịch",
+    "delete_body": "Bạn có chắc muốn xoá khoản này?"
   },
   "export": { "share_dialog_title": "Xuất SpendLens" }
 }

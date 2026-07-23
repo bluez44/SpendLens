@@ -10,12 +10,13 @@ import { Icon } from '@/components/sl/icons';
 import { PhotoTile } from '@/components/sl/photo-tile';
 import { Money, useColors, W } from '@/constants/tokens';
 import { categoryOf, categoryLabel, INCOME_LABEL_KEY } from '@/lib/categories';
-import { i18n } from '@/lib/i18n';
+import { i18n, useT } from '@/lib/i18n';
 import { dayLabel, signedVND, toDateKey } from '@/lib/format';
 import { useTransactions } from '@/lib/transactions-context';
 
 export default function TransactionDetailScreen() {
   const c = useColors();
+  const { t } = useT();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getById, remove } = useTransactions();
@@ -24,16 +25,16 @@ export default function TransactionDetailScreen() {
   if (!txn) {
     return (
       <View style={[styles.missing, { backgroundColor: c.bg }]}>
-        <Text style={{ color: c.textSecondary, fontWeight: W.semibold }}>Không tìm thấy giao dịch.</Text>
+        <Text style={{ color: c.textSecondary, fontWeight: W.semibold }}>{t('transaction.not_found')}</Text>
       </View>
     );
   }
 
   const confirmDelete = () => {
-    Alert.alert('Xoá giao dịch', 'Bạn có chắc muốn xoá khoản này?', [
-      { text: 'Huỷ', style: 'cancel' },
+    Alert.alert(t('transaction.delete_title'), t('transaction.delete_body'), [
+      { text: t('settings.cancel'), style: 'cancel' },
       {
-        text: 'Xoá',
+        text: t('settings.delete'),
         style: 'destructive',
         onPress: () => {
           remove(txn.id);
@@ -84,13 +85,17 @@ export default function TransactionDetailScreen() {
         <Text style={{ fontSize: 17, fontWeight: W.bold, marginTop: 6, color: c.text }}>{txn.name}</Text>
 
         <View style={{ alignSelf: 'stretch', marginTop: 24 }}>
-          {txn.note ? <DetailRow label="Ghi chú" value={txn.note} border /> : null}
-          <DetailRow label="Ngày" value={`${dayLabel(txn.date, todayKey)} · ${txn.time}`} border />
-          <DetailRow label="Loại" value={txn.isIncome ? 'Khoản thu' : 'Khoản chi'} valueColor={accent} />
+          {txn.note ? <DetailRow label={t('transaction.note_label')} value={txn.note} border /> : null}
+          <DetailRow label={t('transaction.date_label')} value={`${dayLabel(txn.date, todayKey)} · ${txn.time}`} border />
+          <DetailRow
+            label={t('transaction.type_label')}
+            value={txn.isIncome ? t('transaction.type_income') : t('transaction.type_expense')}
+            valueColor={accent}
+          />
         </View>
 
         <Pressable onPress={confirmDelete} style={styles.deleteBtn}>
-          <Text style={{ fontSize: 14, fontWeight: W.bold, color: Money.expense }}>Xoá giao dịch</Text>
+          <Text style={{ fontSize: 14, fontWeight: W.bold, color: Money.expense }}>{t('transaction.delete_btn')}</Text>
         </Pressable>
       </View>
     </View>

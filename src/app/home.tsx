@@ -13,6 +13,7 @@ import { Icon } from '@/components/sl/icons';
 import { Segmented } from '@/components/sl/segmented';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
 import { compactTr, formatVND, monthKey, toDateKey } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import {
   categoryBreakdown,
   filterRange,
@@ -27,6 +28,7 @@ const RANGES: Range[] = ['day', 'week', 'month'];
 
 export default function HomeScreen() {
   const c = useColors();
+  const { t } = useT();
   const insets = useSafeAreaInsets();
   const { transactions } = useTransactions();
   const { settings } = useSettings();
@@ -36,8 +38,8 @@ export default function HomeScreen() {
 
   const currentMonthKey = monthKey(toDateKey(new Date()));
   const spentThisMonth = transactions
-    .filter((t) => !t.isIncome && monthKey(t.date) === currentMonthKey)
-    .reduce((sum, t) => sum + t.amount, 0);
+    .filter((tx) => !tx.isIncome && monthKey(tx.date) === currentMonthKey)
+    .reduce((sum, tx) => sum + tx.amount, 0);
 
   const ranged = useMemo(() => filterRange(transactions, range), [transactions, range]);
   const sum = useMemo(() => summarize(ranged), [ranged]);
@@ -47,24 +49,30 @@ export default function HomeScreen() {
   const incomeColor = isDark ? '#fff' : Money.income;
   const expenseColor = isDark ? '#fff' : Money.expenseOnDark;
 
+  const rangeBalanceLabel = range === 'day'
+    ? t('home.balance_label_today')
+    : range === 'week'
+      ? t('home.balance_label_week')
+      : t('home.balance_label_month');
+
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 28 }}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={{ fontSize: 22, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>Tổng quan</Text>
+          <Text style={{ fontSize: 22, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>{t('home.header')}</Text>
           <View style={styles.headerActions}>
             <Pressable
               onPress={() => router.push('/settings')}
               hitSlop={8}
-              accessibilityLabel="Cài đặt"
+              accessibilityLabel={t('home.settings_a11y')}
               style={[styles.iconBtn, { backgroundColor: c.segment }]}>
               <Icon name="settings" size={18} color={c.text} />
             </Pressable>
             <Pressable
               onPress={goBack}
               hitSlop={8}
-              accessibilityLabel="Đóng"
+              accessibilityLabel={t('home.close_a11y')}
               style={[styles.iconBtn, { backgroundColor: c.segment }]}>
               <Icon name="close" size={18} color={c.text} />
             </Pressable>
@@ -72,26 +80,30 @@ export default function HomeScreen() {
         </View>
 
         <View style={{ marginTop: 14 }}>
-          <Segmented options={['Ngày', 'Tuần', 'Tháng']} value={rangeIndex} onChange={setRangeIndex} />
+          <Segmented
+            options={[t('home.range_day'), t('home.range_week'), t('home.range_month')]}
+            value={rangeIndex}
+            onChange={setRangeIndex}
+          />
         </View>
 
         {/* Balance card */}
         <View style={styles.summaryCard}>
           <GradientFill colors={c.summaryCard} />
           <Text style={{ fontSize: 12.5, fontWeight: W.semibold, color: 'rgba(255,255,255,0.7)' }}>
-            Số dư {rangeLabel(range)}
+            {rangeBalanceLabel}
           </Text>
           <Text style={{ fontSize: 34, fontWeight: W.extrabold, color: '#fff', letterSpacing: -0.5, marginTop: 2 }}>
             {(sum.net >= 0 ? '+' : '−') + formatVND(sum.net)}
           </Text>
           <View style={styles.summaryStats}>
             <View>
-              <Text style={styles.summaryLabel}>Thu</Text>
+              <Text style={styles.summaryLabel}>{t('home.income_label')}</Text>
               <Text style={[styles.summaryValue, { color: incomeColor }]}>{formatVND(sum.income)}</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View>
-              <Text style={styles.summaryLabel}>Chi</Text>
+              <Text style={styles.summaryLabel}>{t('home.expense_label')}</Text>
               <Text style={[styles.summaryValue, { color: expenseColor }]}>{formatVND(sum.expense)}</Text>
             </View>
           </View>
@@ -106,7 +118,7 @@ export default function HomeScreen() {
 
         {/* Monthly bars */}
         <View style={[styles.card, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-          <Text style={{ fontSize: 13.5, fontWeight: W.extrabold, color: c.text }}>Chi tiêu theo tháng</Text>
+          <Text style={{ fontSize: 13.5, fontWeight: W.extrabold, color: c.text }}>{t('home.monthly_chart_title')}</Text>
           <BarChart data={bars} />
         </View>
 
@@ -115,7 +127,7 @@ export default function HomeScreen() {
           <View style={[styles.card, styles.donutCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
             <Donut
               slices={breakdown.map((b) => ({ color: b.color, pct: b.pct }))}
-              centerTop="Chi"
+              centerTop={t('home.expense_label')}
               centerMain={compactTr(sum.expense)}
             />
             <View style={{ flex: 1, gap: 7 }}>
@@ -132,12 +144,6 @@ export default function HomeScreen() {
       </ScrollView>
     </View>
   );
-}
-
-function rangeLabel(range: Range): string {
-  if (range === 'day') return 'hôm nay';
-  if (range === 'week') return 'tuần này';
-  return `tháng ${new Date().getMonth() + 1}`;
 }
 
 function goBack() {

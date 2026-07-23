@@ -12,6 +12,7 @@ import { TransactionRow } from '@/components/sl/transaction-row';
 import { Money, useColors, W } from '@/constants/tokens';
 import { compactK, dayLabel, formatVND, toDateKey } from '@/lib/format';
 import { exportAndShareCsv } from '@/lib/export';
+import { useT } from '@/lib/i18n';
 import { filterRange, groupByDay, summarize, type Range } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 
@@ -19,6 +20,7 @@ const RANGES: Range[] = ['day', 'week', 'month'];
 
 export default function HistoryScreen() {
   const c = useColors();
+  const { t } = useT();
   const insets = useSafeAreaInsets();
   const { transactions } = useTransactions();
   const [rangeIndex, setRangeIndex] = useState(1);
@@ -34,19 +36,19 @@ export default function HistoryScreen() {
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
       <View style={{ paddingHorizontal: 20 }}>
         <View style={styles.header}>
-          <Text style={{ fontSize: 22, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>Thu chi</Text>
+          <Text style={{ fontSize: 22, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>{t('history.header')}</Text>
           <View style={styles.headerActions}>
             <Pressable
               onPress={() => setExportOpen(true)}
               hitSlop={8}
-              accessibilityLabel="Xuất CSV"
+              accessibilityLabel={t('history.export_a11y')}
               style={[styles.iconBtn, { backgroundColor: c.segment }]}>
               <Icon name="share" size={18} color={c.text} />
             </Pressable>
             <Pressable
               onPress={goBack}
               hitSlop={8}
-              accessibilityLabel="Đóng"
+              accessibilityLabel={t('home.close_a11y')}
               style={[styles.iconBtn, { backgroundColor: c.segment }]}>
               <Icon name="close" size={18} color={c.text} />
             </Pressable>
@@ -54,16 +56,20 @@ export default function HistoryScreen() {
         </View>
 
         <View style={{ marginTop: 12 }}>
-          <Segmented options={['Ngày', 'Tuần', 'Tháng']} value={rangeIndex} onChange={setRangeIndex} />
+          <Segmented
+            options={[t('home.range_day'), t('home.range_week'), t('home.range_month')]}
+            value={rangeIndex}
+            onChange={setRangeIndex}
+          />
         </View>
 
         <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-          <SummaryCell label="Thu" value={'+' + compactK(sum.income)} color={Money.income} />
+          <SummaryCell label={t('history.income_label')} value={'+' + compactK(sum.income)} color={Money.income} />
           <View style={[styles.vline, { backgroundColor: c.cardBorder }]} />
-          <SummaryCell label="Chi" value={'−' + compactK(sum.expense)} color={Money.expense} />
+          <SummaryCell label={t('history.expense_label')} value={'−' + compactK(sum.expense)} color={Money.expense} />
           <View style={[styles.vline, { backgroundColor: c.cardBorder }]} />
           <SummaryCell
-            label="Chênh lệch"
+            label={t('history.net_label')}
             value={(sum.net >= 0 ? '+' : '−') + compactK(sum.net)}
             color={c.text}
           />
@@ -73,7 +79,7 @@ export default function HistoryScreen() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 24 }}>
         {groups.length === 0 ? (
           <Text style={{ marginTop: 40, textAlign: 'center', color: c.textSecondary, fontWeight: W.medium }}>
-            Chưa có giao dịch trong kỳ này.
+            {t('history.empty_period')}
           </Text>
         ) : null}
         {groups.map((g) => (
@@ -97,7 +103,7 @@ export default function HistoryScreen() {
         style={[styles.galleryFab, { bottom: insets.bottom + 18, backgroundColor: c.scheme === 'dark' ? '#fff' : '#1A1A1A' }]}
         onPress={() => router.push('/gallery')}>
         <Icon name="grid" size={17} color={c.scheme === 'dark' ? '#111' : '#fff'} />
-        <Text style={{ fontSize: 13, fontWeight: W.bold, color: c.scheme === 'dark' ? '#111' : '#fff' }}>Thư viện</Text>
+        <Text style={{ fontSize: 13, fontWeight: W.bold, color: c.scheme === 'dark' ? '#111' : '#fff' }}>{t('history.gallery_fab')}</Text>
       </Pressable>
 
       <DateRangeModal
@@ -107,7 +113,7 @@ export default function HistoryScreen() {
         onCancel={() => setExportOpen(false)}
         onExport={async (from, to) => {
           setExportOpen(false);
-          const filtered = transactions.filter((t) => t.date >= from && t.date <= to);
+          const filtered = transactions.filter((tx) => tx.date >= from && tx.date <= to);
           await exportAndShareCsv(filtered);
         }}
       />

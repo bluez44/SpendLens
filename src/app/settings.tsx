@@ -11,22 +11,26 @@ import { Text } from '@/components/sl/text';
 import { useColors } from '@/constants/tokens';
 import { exportAndShareCsv } from '@/lib/export';
 import { formatVND, toDateKey } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@/lib/notifications';
 import { useSettings } from '@/lib/settings-context';
 import { resetTransactions } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 
 const THEME_MODES = ['auto', 'light', 'dark'] as const;
-const THEME_LABELS = ['Auto', 'Sáng', 'Tối'];
+const LANGUAGE_MODES = ['auto', 'vi', 'en'] as const;
 
 export default function SettingsScreen() {
   const colors = useColors();
+  const { t } = useT();
   const { settings, update, reset } = useSettings();
   const { transactions, refresh } = useTransactions();
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState(String(settings.monthlyBudget || ''));
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
+
+  const themeLabels = [t('settings.theme_auto'), t('settings.theme_light'), t('settings.theme_dark')];
 
   const saveBudget = () => {
     const n = Number(budgetDraft.replace(/\D/g, '')) || 0;
@@ -47,7 +51,7 @@ export default function SettingsScreen() {
     }
     const granted = await requestPermission();
     if (!granted) {
-      Alert.alert('Cần quyền thông báo', 'Hãy bật quyền thông báo trong Cài đặt hệ thống.');
+      Alert.alert(t('settings.permission_needed_title'), t('settings.permission_needed_body'));
       return;
     }
     setTimePicker('first');
@@ -66,6 +70,7 @@ export default function SettingsScreen() {
   };
 
   const themeIndex = THEME_MODES.indexOf(settings.themeMode);
+  const languageIndex = LANGUAGE_MODES.indexOf(settings.language ?? 'auto');
 
   const [hh, mm] = (settings.reminderHHMM ?? '21:00').split(':').map(Number);
   const initialTime = new Date();
@@ -73,43 +78,43 @@ export default function SettingsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <Stack.Screen options={{ title: 'Cài đặt', headerShown: true }} />
+      <Stack.Screen options={{ title: t('settings.title'), headerShown: true }} />
       <ScrollView contentContainerStyle={styles.body}>
 
         {/* NGÂN SÁCH */}
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>
-          NGÂN SÁCH
+          {t('settings.section_budget')}
         </Text>
         <Pressable style={[styles.row, { borderColor: colors.hairline }]} onPress={openBudget}>
-          <Text style={{ color: colors.text, fontWeight: '500' }}>Ngân sách tháng</Text>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.budget_row')}</Text>
           <Text style={{ color: colors.text, fontWeight: '600' }}>
-            {settings.monthlyBudget > 0 ? formatVND(settings.monthlyBudget) : 'Chưa đặt'}
+            {settings.monthlyBudget > 0 ? formatVND(settings.monthlyBudget) : t('settings.budget_not_set')}
           </Text>
         </Pressable>
 
         {/* NHẮC NHỞ */}
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>
-          NHẮC NHỞ
+          {t('settings.section_reminder')}
         </Text>
         <View style={[styles.row, { borderColor: colors.hairline }]}>
-          <Text style={{ color: colors.text, fontWeight: '500' }}>Nhắc chụp bill cuối ngày</Text>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.reminder_row')}</Text>
           <Switch value={settings.reminderEnabled} onValueChange={onToggleReminder} />
         </View>
         {settings.reminderEnabled && (
           <Pressable
             style={[styles.row, { borderColor: colors.hairline }]}
             onPress={() => setTimePicker('change')}>
-            <Text style={{ color: colors.text, fontWeight: '500' }}>Giờ nhắc</Text>
+            <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.reminder_time')}</Text>
             <Text style={{ color: colors.text, fontWeight: '600' }}>
-              {settings.reminderHHMM ?? 'Chưa đặt'}
+              {settings.reminderHHMM ?? t('settings.reminder_not_set')}
             </Text>
           </Pressable>
         )}
         <View style={[styles.row, { borderColor: colors.hairline, opacity: settings.monthlyBudget > 0 ? 1 : 0.5 }]}>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.text, fontWeight: '500' }}>Cảnh báo vượt ngân sách</Text>
+            <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.budget_alerts_row')}</Text>
             {settings.monthlyBudget === 0 ? (
-              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>Đặt ngân sách trước</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>{t('settings.budget_alerts_hint')}</Text>
             ) : null}
           </View>
           <Switch
@@ -119,27 +124,37 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* GIAO DIỆN */}
-        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>GIAO DIỆN</Text>
+        {/* NGÔN NGỮ */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>
+          {t('settings.section_language')}
+        </Text>
         <Segmented
-          options={THEME_LABELS}
+          options={[t('settings.language_auto'), t('settings.language_vi'), t('settings.language_en')]}
+          value={languageIndex >= 0 ? languageIndex : 0}
+          onChange={(i) => update('language', LANGUAGE_MODES[i])}
+        />
+
+        {/* GIAO DIỆN */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>{t('settings.section_theme')}</Text>
+        <Segmented
+          options={themeLabels}
           value={themeIndex >= 0 ? themeIndex : 0}
           onChange={(i) => update('themeMode', THEME_MODES[i])}
         />
 
         {/* DỮ LIỆU */}
-        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>DỮ LIỆU</Text>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>{t('settings.section_data')}</Text>
         <Pressable style={[styles.row, { borderColor: colors.hairline }]} onPress={() => setExportOpen(true)}>
-          <Text style={{ color: colors.text, fontWeight: '500' }}>Xuất CSV</Text>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.export_row')}</Text>
           <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>›</Text>
         </Pressable>
         <Pressable
           style={[styles.row, { borderColor: colors.hairline }]}
           onPress={() =>
-            Alert.alert('Xoá giao dịch', 'Tất cả giao dịch và ảnh sẽ bị xoá vĩnh viễn.', [
-              { text: 'Huỷ', style: 'cancel' },
+            Alert.alert(t('settings.reset_txns_title'), t('settings.reset_txns_body'), [
+              { text: t('settings.cancel'), style: 'cancel' },
               {
-                text: 'Xoá',
+                text: t('settings.delete'),
                 style: 'destructive',
                 onPress: () => {
                   resetTransactions();
@@ -148,15 +163,15 @@ export default function SettingsScreen() {
               },
             ])
           }>
-          <Text style={{ color: '#FB5B4D', fontWeight: '500' }}>Xoá giao dịch</Text>
+          <Text style={{ color: '#FB5B4D', fontWeight: '500' }}>{t('settings.reset_txns_row')}</Text>
         </Pressable>
         <Pressable
           style={[styles.row, { borderColor: colors.hairline }]}
           onPress={() =>
-            Alert.alert('Reset về mặc định', 'Tất cả giao dịch, ảnh và cài đặt sẽ được đưa về mặc định.', [
-              { text: 'Huỷ', style: 'cancel' },
+            Alert.alert(t('settings.reset_all_title'), t('settings.reset_all_body'), [
+              { text: t('settings.cancel'), style: 'cancel' },
               {
-                text: 'Reset',
+                text: t('settings.reset'),
                 style: 'destructive',
                 onPress: async () => {
                   resetTransactions();
@@ -167,13 +182,13 @@ export default function SettingsScreen() {
               },
             ])
           }>
-          <Text style={{ color: '#FB5B4D', fontWeight: '500' }}>Reset về mặc định</Text>
+          <Text style={{ color: '#FB5B4D', fontWeight: '500' }}>{t('settings.reset_all_row')}</Text>
         </Pressable>
 
         {/* THÔNG TIN */}
-        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>THÔNG TIN</Text>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>{t('settings.section_info')}</Text>
         <View style={[styles.row, { borderColor: colors.hairline }]}>
-          <Text style={{ color: colors.text, fontWeight: '500' }}>Phiên bản</Text>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.version_row')}</Text>
           <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
             {Constants.expoConfig?.version ?? '1.0.0'}
           </Text>
@@ -181,17 +196,17 @@ export default function SettingsScreen() {
         <Pressable
           style={[styles.row, { borderColor: colors.hairline }]}
           onPress={() => Linking.openURL('https://github.com/bluez44/SpendLens')}>
-          <Text style={{ color: colors.text, fontWeight: '500' }}>GitHub</Text>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.github_row')}</Text>
           <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>›</Text>
         </Pressable>
         <Pressable
           style={[styles.row, { borderColor: colors.hairline }]}
           onPress={() => Linking.openURL('https://github.com/bluez44/SpendLens/issues')}>
-          <Text style={{ color: colors.text, fontWeight: '500' }}>Báo lỗi</Text>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.bug_row')}</Text>
           <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>›</Text>
         </Pressable>
         <View style={[styles.row, { borderColor: colors.hairline }]}>
-          <Text style={{ color: colors.text, fontWeight: '500' }}>Giấy phép</Text>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.license_row')}</Text>
           <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>MIT</Text>
         </View>
       </ScrollView>
@@ -219,10 +234,10 @@ export default function SettingsScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ width: '100%' }}>
             <View style={[styles.sheet, { backgroundColor: colors.card }]}>
-              <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>Ngân sách tháng</Text>
+              <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>{t('settings.budget_row')}</Text>
               <TextInput
                 value={budgetDraft}
-                onChangeText={(t) => setBudgetDraft(t.replace(/\D/g, ''))}
+                onChangeText={(v) => setBudgetDraft(v.replace(/\D/g, ''))}
                 keyboardType="number-pad"
                 placeholder="0"
                 placeholderTextColor={colors.textSecondary}
@@ -233,9 +248,9 @@ export default function SettingsScreen() {
               </Text>
               <View style={styles.actions}>
                 <Pressable onPress={() => setBudgetOpen(false)} style={{ padding: 12 }}>
-                  <Text style={{ color: colors.text, fontWeight: '600' }}>Huỷ</Text>
+                  <Text style={{ color: colors.text, fontWeight: '600' }}>{t('settings.cancel')}</Text>
                 </Pressable>
-                <GradientButton label="Lưu" onPress={saveBudget} />
+                <GradientButton label={t('settings.save')} onPress={saveBudget} />
               </View>
             </View>
           </KeyboardAvoidingView>
