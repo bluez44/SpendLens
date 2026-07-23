@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Text, TextInput } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +13,8 @@ import { Segmented } from '@/components/sl/segmented';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
 import { STATIC_CATEGORIES } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
+import { deleteUserCategory, insertUserCategory, listUserCategories, toCategoryObj } from '@/lib/user-categories';
+import type { UserCategory } from '@/lib/user-categories';
 import { dayLabel, formatVND, toDateKey } from '@/lib/format';
 import { decideBudgetAlert } from '@/lib/budget-alert';
 import { fireBudgetAlert } from '@/lib/notifications';
@@ -53,6 +55,12 @@ export default function EntryScreen() {
   const [amount, setAmount] = useState(existing?.amount ?? 0);
   const [category, setCategory] = useState<CategoryId>(existing?.category ?? 'food');
   const [note, setNote] = useState(mergeExisting(existing) || params.note || '');
+  const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
+  const [customInput, setCustomInput] = useState('');
+
+  function refreshUserCategories() {
+    setUserCategories(listUserCategories());
+  }
 
   const accent = isIncome ? Money.income : Money.expense;
 
@@ -63,14 +71,59 @@ export default function EntryScreen() {
     }, 250);
   }
 
+  function tryAddCustomCategory() {
+    const name = customInput.trim();
+    if (!name) return;
+    try {
+      const uc = insertUserCategory(name);
+      setUserCategories((prev) => [...prev, uc]);
+      setCategory(uc.id);
+      setCustomInput('');
+    } catch (err) {
+      console.warn('Failed to add category', err);
+    }
+  }
+
+  function confirmDeleteUserCategory(uc: UserCategory) {
+    Alert.alert(
+      t('entry.custom_category_delete_title'),
+      t('entry.custom_category_delete_body'),
+      [
+        { text: t('settings.cancel'), style: 'cancel' },
+        {
+          text: t('settings.delete'),
+          style: 'destructive',
+          onPress: () => {
+            deleteUserCategory(uc.id);
+            setUserCategories((prev) => prev.filter((c) => c.id !== uc.id));
+            if (category === uc.id) setCategory('food');
+          },
+        },
+      ],
+    );
+  }
+
   const canSave = amount > 0 && note.trim() !== '';
 
   const save = async () => {
     if (!canSave) return;
+    let effectiveCategory: CategoryId = isIncome ? 'other' : category;
+    if (!isIncome && category === 'other' && customInput.trim() !== '') {
+      try {
+        const uc = insertUserCategory(customInput.trim());
+        setUserCategories((prev) => [...prev, uc]);
+        effectiveCategory = uc.id;
+      } catch (err) {
+        // duplicate label: find existing and use its id
+        const existingUC = listUserCategories().find((c) => c.label === customInput.trim());
+        if (existingUC) effectiveCategory = existingUC.id;
+        else console.warn('Failed to auto-create category', err);
+      }
+    }
     const payload: NewTxn = {
       date: editing && existing ? existing.date : toDateKey(new Date()),
       time: editing && existing ? existing.time : nowTime(),
-      category: isIncome ? 'other' : category,
+      category: effectiveCategory,
       name: note.trim(),
       note: null,
       amount,
@@ -156,11 +209,49 @@ export default function EntryScreen() {
 
         {/* Categories (expense only) */}
         {!isIncome ? (
-          <View style={styles.chips}>
-            {STATIC_CATEGORIES.map((cat) => (
-              <CategoryChip key={cat.id} category={cat} selected={category === cat.id} onPress={() => setCategory(cat.id)} />
-            ))}
-          </View>
+          <>
+            <View style={styles.chips}>
+              {STATIC_CATEGORIES.map((cat) => (
+                <CategoryChip
+                  key={cat.id}
+                  category={cat}
+                  selected={category === cat.id}
+                  onPress={() => setCategory(cat.id)}
+                />
+              ))}
+              {userCategories.map((uc) => {
+                const cat = toCategoryObj(uc);
+                return (
+                  <Pressable
+                    key={cat.id}
+                    onLongPress={() => confirmDeleteUserCategory(uc)}
+                    delayLongPress={500}
+                  >
+                    <CategoryChip
+                      category={cat}
+                      selected={category === cat.id}
+                      onPress={() => setCategory(cat.id)}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {category === 'other' && (
+              <View style={[styles.field, { backgroundColor: c.card, borderColor: c.cardBorder, flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
+                <TextInput
+                  value={customInput}
+                  onChangeText={setCustomInput}
+                  placeholder={t('entry.custom_category_placeholder')}
+                  placeholderTextColor={c.textSecondary}
+                  style={{ flex: 1, fontSize: 14, color: c.text, padding: 0 }}
+                />
+                <Pressable onPress={tryAddCustomCategory} disabled={customInput.trim() === ''}>
+                  <Icon name="check" size={20} color={customInput.trim() === '' ? c.textSecondary : c.text} />
+                </Pressable>
+              </View>
+            )}
+          </>
         ) : null}
 
         {/* Note */}

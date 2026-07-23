@@ -15,6 +15,7 @@ import { useT } from '@/lib/i18n';
 import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@/lib/notifications';
 import { useSettings } from '@/lib/settings-context';
 import { resetTransactions } from '@/lib/transactions';
+import { resetUserCategories } from '@/lib/user-categories';
 import { useTransactions } from '@/lib/transactions-context';
 
 const THEME_MODES = ['auto', 'light', 'dark'] as const;
@@ -163,6 +164,7 @@ export default function SettingsScreen() {
                 style: 'destructive',
                 onPress: async () => {
                   resetTransactions();
+                  resetUserCategories();
                   reset();
                   await cancelDailyReminder();
                   refresh();

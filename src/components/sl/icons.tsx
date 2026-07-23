@@ -14,7 +14,8 @@ export type IconName =
   | 'flash-off'
   | 'settings'
   | 'share'
-  | 'camera';
+  | 'camera'
+  | 'check';
 
 export function Icon({
   name,
@@ -99,6 +100,7 @@ export function Icon({
           <Circle cx={12} cy={13} r={3.2} {...p} strokeWidth={2} />
         </>
       )}
+      {name === 'check' && <Path d="M5 12l4 4 10-10" {...p} strokeWidth={2.2} />}
     </Svg>
   );
 }
