@@ -66,6 +66,8 @@ describe('setNotificationHandler', () => {
     const arg = (mocked.setNotificationHandler as jest.Mock).mock.calls[0][0];
     return expect(arg.handleNotification()).resolves.toEqual({
       shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
       shouldPlaySound: true,
       shouldSetBadge: false,
     });
