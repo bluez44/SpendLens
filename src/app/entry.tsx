@@ -11,12 +11,12 @@ import { Icon } from '@/components/sl/icons';
 import { PhotoTile } from '@/components/sl/photo-tile';
 import { Segmented } from '@/components/sl/segmented';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
-import { STATIC_CATEGORIES, categoryOf, categoryLabel, INCOME_LABEL_KEY } from '@/lib/categories';
+import { STATIC_CATEGORIES } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
 import { dayLabel, formatVND, toDateKey } from '@/lib/format';
 import { decideBudgetAlert } from '@/lib/budget-alert';
 import { fireBudgetAlert } from '@/lib/notifications';
-import { i18n, useT } from '@/lib/i18n';
+import { useT } from '@/lib/i18n';
 import type { NewTxn, Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 import { useSettings } from '@/lib/settings-context';
@@ -63,13 +63,15 @@ export default function EntryScreen() {
     }, 250);
   }
 
+  const canSave = amount > 0 && note.trim() !== '';
+
   const save = async () => {
-    if (amount <= 0) return;
+    if (!canSave) return;
     const payload: NewTxn = {
       date: editing && existing ? existing.date : toDateKey(new Date()),
       time: editing && existing ? existing.time : nowTime(),
       category: isIncome ? 'other' : category,
-      name: note.trim() || (isIncome ? i18n.t(INCOME_LABEL_KEY) : categoryLabel(categoryOf(category))),
+      name: note.trim(),
       note: null,
       amount,
       isIncome,
@@ -137,7 +139,7 @@ export default function EntryScreen() {
           style={styles.amountBlock}
           onLayout={(e) => { amountOffsetRef.current = e.nativeEvent.layout.y; }}
         >
-          <Text style={{ fontSize: 12, fontWeight: W.semibold, color: c.textSecondary, letterSpacing: 0.3 }}>{t('entry.amount_label')}</Text>
+          <Text style={{ fontSize: 12, fontWeight: W.semibold, color: c.textSecondary, letterSpacing: 0.3 }}>{t('entry.amount_label')} <Text style={{ color: '#FB5B4D' }}>*</Text></Text>
           <View style={styles.amountRow}>
             <TextInput
               value={amount ? formatVND(amount).slice(0, -1) : ''}
@@ -166,7 +168,7 @@ export default function EntryScreen() {
           style={[styles.field, { backgroundColor: c.card, borderColor: c.cardBorder }]}
           onLayout={(e) => { noteOffsetRef.current = e.nativeEvent.layout.y; }}
         >
-          <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>{t('entry.note_label')}</Text>
+          <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>{t('entry.note_label')} <Text style={{ color: '#FB5B4D' }}>*</Text></Text>
           <TextInput
             value={note}
             onChangeText={setNote}
@@ -188,7 +190,7 @@ export default function EntryScreen() {
         <GradientButton
           label={editing ? t('entry.save_update') : isIncome ? t('entry.save_income') : t('entry.save_expense')}
           onPress={save}
-          disabled={amount <= 0}
+          disabled={!canSave}
           colors={isIncome ? (['#34C79A', '#1FA07A'] as const) : undefined}
           style={{ marginTop: 20, marginBottom: insets.bottom + 12 }}
         />
