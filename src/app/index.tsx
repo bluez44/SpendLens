@@ -28,6 +28,9 @@ export default function CameraScreen() {
   const [flash, setFlash] = useState<'off' | 'on'>('off');
   const [note, setNote] = useState('');
   const [noteFocused, setNoteFocused] = useState(false);
+  const [isSnapping, setIsSnapping] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
 
   const todayKey = toDateKey(new Date());
   const todayTxns = useMemo(
@@ -84,6 +87,7 @@ export default function CameraScreen() {
     <View style={styles.root}>
       <StatusBar style="light" />
       <FlatList
+        ref={flatListRef}
         data={pages}
         keyExtractor={keyExtractor}
         renderItem={({ item }) => {
@@ -112,10 +116,26 @@ export default function CameraScreen() {
         }}
         pagingEnabled
         snapToInterval={SCREEN_HEIGHT}
+        snapToAlignment="start"
         decelerationRate="fast"
+        disableIntervalMomentum
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!noteFocused}
+        scrollEnabled={!noteFocused && !isSnapping}
+        onMomentumScrollBegin={() => setIsSnapping(true)}
+        onMomentumScrollEnd={(e) => {
+          setIsSnapping(false);
+          setCurrentIndex(Math.round(e.nativeEvent.contentOffset.y / SCREEN_HEIGHT));
+        }}
+        scrollEventThrottle={16}
       />
+      {currentIndex > 0 && (
+        <Pressable
+          style={[styles.backToCamera, { bottom: insets.bottom + 24 }]}
+          onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+          accessibilityLabel="Về camera">
+          <Icon name="camera" size={22} color="#fff" />
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -373,5 +393,13 @@ const styles = StyleSheet.create({
   chevron: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  backToCamera: {
+    position: 'absolute',
+    alignSelf: 'center',
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center', justifyContent: 'center',
+    zIndex: 20,
   },
 });
