@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Text, TextInput } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -59,8 +59,12 @@ export default function EntryScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {/* Photo */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={insets.top}
+        style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {/* Photo */}
         <View style={styles.photoWrap}>
           <PhotoTile uri={photoUri} width="100%" height={150} radius={Radius.cardLg} />
           <Pressable style={styles.close} onPress={() => router.back()}>
@@ -126,6 +130,7 @@ export default function EntryScreen() {
           style={{ marginTop: 20, marginBottom: insets.bottom + 12 }}
         />
       </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
