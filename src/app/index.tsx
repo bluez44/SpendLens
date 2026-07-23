@@ -2,7 +2,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +21,9 @@ export default function CameraScreen() {
   const { transactions } = useTransactions();
   const [facing, setFacing] = useState<'back' | 'front'>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
-  const note = '';  // wired to state in Task 4
+  const [note, setNote] = useState('');
+  const [noteFocused, setNoteFocused] = useState(false);
+  const noteInputRef = useRef<TextInput>(null);
 
   const todayExpense = useMemo(
     () => filterRange(transactions, 'day').filter((t) => !t.isIncome).reduce((s, t) => s + t.amount, 0),
@@ -30,6 +32,7 @@ export default function CameraScreen() {
 
   const capture = async () => {
     const currentNote = note;
+    noteInputRef.current?.blur();
     try {
       const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7, shutterSound: false });
       router.push({
@@ -87,9 +90,38 @@ export default function CameraScreen() {
               ) : null}
             </View>
           )}
-          <View style={styles.caption}>
-            <Text style={{ fontSize: 14, fontWeight: W.medium, color: 'rgba(255,255,255,0.72)' }}>Thêm ghi chú…</Text>
-          </View>
+          <Pressable
+            style={styles.noteTapZone}
+            onPress={() => noteInputRef.current?.focus()}
+            pointerEvents={noteFocused ? 'none' : 'auto'}
+          />
+
+          {note && !noteFocused ? (
+            <Pressable style={styles.notePreview} onPress={() => noteInputRef.current?.focus()}>
+              <Icon name="edit" size={12} color="rgba(255,255,255,0.85)" />
+              <Text numberOfLines={1} style={styles.notePreviewText}>{note}</Text>
+            </Pressable>
+          ) : null}
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.noteInputWrap}
+            pointerEvents={noteFocused ? 'auto' : 'none'}
+          >
+            <TextInput
+              ref={noteInputRef}
+              value={note}
+              onChangeText={setNote}
+              onFocus={() => setNoteFocused(true)}
+              onBlur={() => setNoteFocused(false)}
+              placeholder="Thêm ghi chú..."
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              returnKeyType="done"
+              onSubmitEditing={() => noteInputRef.current?.blur()}
+              maxLength={140}
+              style={styles.noteInput}
+            />
+          </KeyboardAvoidingView>
         </View>
       </View>
 
@@ -175,12 +207,25 @@ const styles = StyleSheet.create({
     fontWeight: W.medium,
     textAlign: 'center',
   },
-  caption: {
-    margin: 12,
-    paddingVertical: 13,
-    paddingHorizontal: 17,
-    borderRadius: 20,
-    backgroundColor: 'rgba(18,18,18,0.42)',
+  noteTapZone: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    height: '50%', zIndex: 5,
+  },
+  notePreview: {
+    position: 'absolute', bottom: 14, alignSelf: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18,
+    backgroundColor: 'rgba(18,18,18,0.55)',
+    maxWidth: '80%', zIndex: 6,
+  },
+  notePreviewText: { fontSize: 13, fontWeight: '600', color: '#fff' },
+  noteInputWrap: {
+    position: 'absolute', left: 12, right: 12, bottom: 12,
+    zIndex: 10,
+  },
+  noteInput: {
+    padding: 12, borderRadius: 16, fontSize: 15, fontWeight: '500',
+    backgroundColor: 'rgba(0,0,0,0.65)', color: '#fff',
   },
   captureArea: {
     alignItems: 'center',
