@@ -34,7 +34,7 @@ const SEED: SeedItem[] = [
   // Hôm nay
   { dayOffset: 0, time: '08:10', category: 'transport', name: 'Grab tới công ty', amount: 32000, photo: 'grab' },
   { dayOffset: 0, time: '09:15', category: 'food', name: 'Cà phê Highlands', amount: 55000, photo: 'coffee' },
-  { dayOffset: 0, time: '12:30', category: 'food', name: 'Bún bò Huế', note: 'Gần công ty, ăn trưa', amount: 45000, photo: 'food' },
+  { dayOffset: 0, time: '12:30', category: 'food', name: 'Bún bò Huế · Gần công ty, ăn trưa', amount: 45000, photo: 'food' },
   { dayOffset: 0, time: '15:40', category: 'food', name: 'Trà sữa Phúc Long', amount: 45000, photo: 'tea' },
   { dayOffset: 0, time: '17:20', category: 'food', name: 'Đi chợ chiều', amount: 53000, photo: 'market' },
   // Hôm qua
