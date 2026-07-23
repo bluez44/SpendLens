@@ -26,6 +26,11 @@ const SCHEMA = `
     avatar_url TEXT,
     created_at INTEGER NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS categories (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL UNIQUE,
+    created_at INTEGER NOT NULL
+  );
 `;
 
 export function createDb(name: string): SQLiteDatabase {
