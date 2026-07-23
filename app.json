@@ -37,7 +37,11 @@
       ],
       "expo-sharing",
       "@react-native-community/datetimepicker",
-      ["expo-notifications", {}]
+      [
+        "expo-notifications",
+        {}
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -51,6 +51,10 @@ describe('scheduleDailyReminder', () => {
     expect(mocked.scheduleNotificationAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         identifier: REMINDER_ID,
+        content: expect.objectContaining({
+          title: 'SpendLens',
+          body: 'Ghi lại chi tiêu hôm nay?',
+        }),
         trigger: expect.objectContaining({ type: 'daily', hour: 21, minute: 30 }),
       }),
     );
