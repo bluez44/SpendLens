@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Text, TextInput } from '@/components/sl/text';
@@ -14,8 +14,10 @@ import { Money, Radius, useColors, W } from '@/constants/tokens';
 import { CATEGORIES, categoryOf } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
 import { dayLabel, formatVND, toDateKey } from '@/lib/format';
+import { fireBudgetAlert } from '@/lib/notifications';
 import type { NewTxn, Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
+import { useSettings } from '@/lib/settings-context';
 
 function mergeExisting(existing: Txn | undefined): string {
   if (!existing) return '';
@@ -30,7 +32,12 @@ export default function EntryScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ photo?: string; note?: string; id?: string }>();
   const { photo, id } = params;
-  const { add, update, getById } = useTransactions();
+  const { add, update, getById, transactions } = useTransactions();
+  const { settings, update: updateSettings } = useSettings();
+
+  const scrollRef = useRef<ScrollView>(null);
+  const amountOffsetRef = useRef(0);
+  const noteOffsetRef = useRef(0);
 
   const editing = id != null;
   const existing = useMemo(
@@ -46,7 +53,13 @@ export default function EntryScreen() {
 
   const accent = isIncome ? Money.income : Money.expense;
 
-  const save = () => {
+  function scrollToOffset(y: number) {
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 20), animated: true });
+    }, 100);
+  }
+
+  const save = async () => {
     if (amount <= 0) return;
     const payload: NewTxn = {
       date: editing && existing ? existing.date : toDateKey(new Date()),
@@ -63,6 +76,28 @@ export default function EntryScreen() {
       router.back();
     } else {
       add(payload);
+      if (!editing && !isIncome) {
+        const budget = settings.monthlyBudget;
+        if (budget > 0 && settings.budgetAlertsEnabled) {
+          const currentMonth = toDateKey(new Date()).slice(0, 7);
+          const spent = transactions
+            .filter((t) => !t.isIncome && t.date.slice(0, 7) === currentMonth)
+            .reduce((s, t) => s + t.amount, 0) + amount;
+          const pct = (spent / budget) * 100;
+          const [lastMonth, lastLevel] = settings.budgetNotifiedMonth.split(':');
+          const lastLevelNum = Number(lastLevel) || 0;
+          const sameMonth = lastMonth === currentMonth;
+
+          let fireLevel: 80 | 100 | null = null;
+          if (pct >= 100 && !(sameMonth && lastLevelNum >= 100)) fireLevel = 100;
+          else if (pct >= 80 && !(sameMonth && lastLevelNum >= 80)) fireLevel = 80;
+
+          if (fireLevel) {
+            await fireBudgetAlert(fireLevel);
+            updateSettings('budgetNotifiedMonth', `${currentMonth}:${fireLevel}`);
+          }
+        }
+      }
       router.replace('/history');
     }
   };
@@ -71,9 +106,14 @@ export default function EntryScreen() {
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={insets.top}
+        keyboardVerticalOffset={0}
         style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets
+        >
           {/* Photo */}
         <View style={styles.photoWrap}>
           <PhotoTile uri={photoUri} width="100%" height={150} radius={Radius.cardLg} />
@@ -88,7 +128,10 @@ export default function EntryScreen() {
         </View>
 
         {/* Amount */}
-        <View style={styles.amountBlock}>
+        <View
+          style={styles.amountBlock}
+          onLayout={(e) => { amountOffsetRef.current = e.nativeEvent.layout.y; }}
+        >
           <Text style={{ fontSize: 12, fontWeight: W.semibold, color: c.textSecondary, letterSpacing: 0.3 }}>SỐ TIỀN</Text>
           <View style={styles.amountRow}>
             <TextInput
@@ -97,6 +140,7 @@ export default function EntryScreen() {
               keyboardType="number-pad"
               placeholder="0"
               placeholderTextColor={c.textSecondary}
+              onFocus={() => scrollToOffset(amountOffsetRef.current)}
               style={[styles.amountInput, { color: c.text }]}
             />
             <Text style={[styles.dong, { color: accent }]}>₫</Text>
@@ -113,13 +157,17 @@ export default function EntryScreen() {
         ) : null}
 
         {/* Note */}
-        <View style={[styles.field, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
+        <View
+          style={[styles.field, { backgroundColor: c.card, borderColor: c.cardBorder }]}
+          onLayout={(e) => { noteOffsetRef.current = e.nativeEvent.layout.y; }}
+        >
           <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>GHI CHÚ</Text>
           <TextInput
             value={note}
             onChangeText={setNote}
             placeholder={isIncome ? 'Lương, thưởng…' : 'Bún bò Huế · gần công ty'}
             placeholderTextColor={c.textSecondary}
+            onFocus={() => scrollToOffset(noteOffsetRef.current)}
             style={{ fontSize: 14.5, fontWeight: W.semibold, color: c.text, padding: 0 }}
           />
         </View>
