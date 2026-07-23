@@ -16,6 +16,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { getColors } from '@/constants/tokens';
 import { SettingsProvider, useSettings } from '@/lib/settings-context';
+import { ThemeProvider as SLThemeProvider } from '@/lib/theme-context';
 import { TransactionsProvider } from '@/lib/transactions-context';
 import { scheduleDailyReminder } from '@/lib/notifications';
 
@@ -23,7 +24,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
   const { settings } = useSettings();
-  const effective = settings.themeMode === 'auto' ? scheme : settings.themeMode;
+  const rawEffective = settings.themeMode === 'auto' ? scheme : settings.themeMode;
+  const effective: 'light' | 'dark' = rawEffective === 'dark' ? 'dark' : 'light';
   const colors = getColors(effective);
 
   useEffect(() => {
@@ -35,21 +37,23 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
   }, [settings.reminderEnabled, settings.reminderHHMM]);
 
   return (
-    <ThemeProvider value={effective === 'dark' ? DarkTheme : DefaultTheme}>
-      <StatusBar style="auto" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.bg },
-        }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="home" />
-        <Stack.Screen name="history" />
-        <Stack.Screen name="gallery" />
-        <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="transaction/[id]" />
-      </Stack>
-    </ThemeProvider>
+    <SLThemeProvider value={effective}>
+      <ThemeProvider value={effective === 'dark' ? DarkTheme : DefaultTheme}>
+        <StatusBar style={effective === 'dark' ? 'light' : 'dark'} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.bg },
+          }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="home" />
+          <Stack.Screen name="history" />
+          <Stack.Screen name="gallery" />
+          <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="transaction/[id]" />
+        </Stack>
+      </ThemeProvider>
+    </SLThemeProvider>
   );
 }
 

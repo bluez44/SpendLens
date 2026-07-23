@@ -3,7 +3,7 @@
  * Derived from the SpendLens.dc.html hi-fi mockup: warm peach→coral accent,
  * expense = coral, income = mint, camera-first dark surfaces.
  */
-import { useColorScheme } from 'react-native';
+import { useEffectiveScheme } from '@/lib/theme-context';
 
 /** Signature warm gradient used for shutter, primary buttons, active states. */
 export const AccentGradient = ['#FFB37B', '#FF6B6B'] as const;
@@ -95,9 +95,9 @@ export function getColors(scheme: string | null | undefined): SLColors {
   return scheme === 'dark' ? dark : light;
 }
 
-/** Hook: current SpendLens palette based on the device color scheme. */
+/** Hook: current SpendLens palette. Honors settings.themeMode via ThemeContext. */
 export function useColors(): SLColors {
-  const scheme = useColorScheme();
+  const scheme = useEffectiveScheme();
   return getColors(scheme);
 }
 
