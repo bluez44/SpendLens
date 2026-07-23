@@ -20,7 +20,8 @@ import { useTransactions } from '@/lib/transactions-context';
 export default function EntryScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  const { photo, id } = useLocalSearchParams<{ photo?: string; id?: string }>();
+  const params = useLocalSearchParams<{ photo?: string; note?: string; id?: string }>();
+  const { photo, id } = params;
   const { add, update, getById } = useTransactions();
 
   const editing = id != null;
@@ -31,6 +32,7 @@ export default function EntryScreen() {
   const [amount, setAmount] = useState(existing?.amount ?? 0);
   const [category, setCategory] = useState<CategoryId>(existing?.category ?? 'food');
   const [name, setName] = useState(existing?.name ?? '');
+  const [note, setNote] = useState(existing?.note ?? params.note ?? '');
 
   const accent = isIncome ? Money.income : Money.expense;
 
@@ -41,7 +43,7 @@ export default function EntryScreen() {
       time: editing && existing ? existing.time : nowTime(),
       category: isIncome ? 'other' : category,
       name: name.trim() || (isIncome ? 'Thu nhập' : categoryOf(category).label),
-      note: existing?.note ?? null,
+      note: note.trim() || null,
       amount,
       isIncome,
       photoPath: photoUri ?? null,

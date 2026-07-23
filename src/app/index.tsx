@@ -21,6 +21,7 @@ export default function CameraScreen() {
   const { transactions } = useTransactions();
   const [facing, setFacing] = useState<'back' | 'front'>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
+  const note = '';  // wired to state in Task 4
 
   const todayExpense = useMemo(
     () => filterRange(transactions, 'day').filter((t) => !t.isIncome).reduce((s, t) => s + t.amount, 0),
@@ -28,11 +29,17 @@ export default function CameraScreen() {
   );
 
   const capture = async () => {
+    const currentNote = note;
     try {
-      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7 });
-      router.push(photo?.uri ? { pathname: '/entry', params: { photo: photo.uri } } : '/entry');
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7, shutterSound: false });
+      router.push({
+        pathname: '/entry',
+        params: photo?.uri
+          ? { photo: photo.uri, note: currentNote }
+          : currentNote ? { note: currentNote } : {},
+      });
     } catch {
-      router.push('/entry');
+      router.push({ pathname: '/entry', params: currentNote ? { note: currentNote } : {} });
     }
   };
 
