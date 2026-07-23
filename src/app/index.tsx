@@ -124,7 +124,7 @@ export default function CameraScreen() {
         pagingEnabled
         snapToInterval={SCREEN_HEIGHT}
         snapToAlignment="start"
-        decelerationRate="normal"
+        decelerationRate={0.5}
         disableIntervalMomentum
         showsVerticalScrollIndicator={false}
         scrollEnabled={!noteFocused && !isSnapping}
