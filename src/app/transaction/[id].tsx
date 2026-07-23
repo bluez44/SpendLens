@@ -9,7 +9,8 @@ import { CategoryIcon } from '@/components/expense/category-icon';
 import { Icon } from '@/components/sl/icons';
 import { PhotoTile } from '@/components/sl/photo-tile';
 import { Money, useColors, W } from '@/constants/tokens';
-import { categoryOf, INCOME_LABEL } from '@/lib/categories';
+import { categoryOf, categoryLabel, INCOME_LABEL_KEY } from '@/lib/categories';
+import { i18n } from '@/lib/i18n';
 import { dayLabel, signedVND, toDateKey } from '@/lib/format';
 import { useTransactions } from '@/lib/transactions-context';
 
@@ -73,7 +74,7 @@ export default function TransactionDetailScreen() {
         <View style={[styles.chip, { backgroundColor: chipBg }]}>
           {!txn.isIncome ? <CategoryIcon category={txn.category} color={chipFg} size={14} /> : null}
           <Text style={{ fontSize: 12.5, fontWeight: W.bold, color: chipFg }}>
-            {txn.isIncome ? INCOME_LABEL : cat.label}
+            {txn.isIncome ? i18n.t(INCOME_LABEL_KEY) : categoryLabel(cat)}
           </Text>
         </View>
 

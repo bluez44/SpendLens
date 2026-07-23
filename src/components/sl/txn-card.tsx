@@ -5,7 +5,7 @@ import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
 import { TodayBadge } from '@/components/sl/today-badge';
-import { categoryOf } from '@/lib/categories';
+import { categoryOf, categoryLabel } from '@/lib/categories';
 import { formatVND } from '@/lib/format';
 import type { Txn } from '@/lib/transactions';
 
@@ -32,7 +32,7 @@ export function TxnCard({ txn }: { txn: Txn }) {
 
       <View style={styles.info}>
         <View style={[styles.categoryChip, { backgroundColor: cat.chip }]}>
-          <Text style={[styles.categoryText, { color: cat.fg }]}>{cat.label}</Text>
+          <Text style={[styles.categoryText, { color: cat.fg }]}>{categoryLabel(cat)}</Text>
         </View>
         <Text style={styles.amount}>{sign + formatVND(txn.amount)}</Text>
         <Text style={styles.note} numberOfLines={2}>{txn.note ?? txn.name}</Text>

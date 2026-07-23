@@ -3,7 +3,7 @@ import { File } from 'expo-file-system';
 
 import { db as defaultDb } from './db';
 import type { CategoryId } from './categories';
-import { CATEGORIES } from './categories';
+import { STATIC_CATEGORIES, categoryLabel } from './categories';
 import { monthKey, toDateKey } from './format';
 
 export interface Txn {
@@ -215,10 +215,10 @@ export function categoryBreakdown(txns: Txn[]): CategorySlice[] {
     totals.set(t.category, (totals.get(t.category) ?? 0) + t.amount);
     grand += t.amount;
   }
-  return CATEGORIES.filter((c) => totals.has(c.id))
+  return STATIC_CATEGORIES.filter((c) => totals.has(c.id))
     .map((c) => {
       const amount = totals.get(c.id) ?? 0;
-      return { id: c.id, label: c.label, color: c.fg, amount, pct: grand ? (amount / grand) * 100 : 0 };
+      return { id: c.id, label: categoryLabel(c), color: c.fg, amount, pct: grand ? (amount / grand) * 100 : 0 };
     })
     .sort((a, b) => b.amount - a.amount);
 }

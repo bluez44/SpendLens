@@ -1,4 +1,7 @@
+import { i18n } from './i18n';
 import { buildTransactionsCsv } from './export';
+
+beforeAll(async () => { await i18n.changeLanguage('vi'); });
 
 describe('buildTransactionsCsv', () => {
   it('starts with a UTF-8 BOM and header row', () => {

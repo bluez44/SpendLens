@@ -1,7 +1,8 @@
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
-import { categoryOf } from './categories';
+import { categoryOf, categoryLabel } from './categories';
+import { i18n } from './i18n';
 import type { Txn } from './transactions';
 
 const BOM = '﻿';
@@ -18,7 +19,7 @@ export function buildTransactionsCsv(txns: Txn[]): string {
   const rows = txns.map((t) => [
     t.date,
     t.time,
-    categoryOf(t.category).label,
+    categoryLabel(categoryOf(t.category)),
     t.name,
     t.amount.toFixed(2),
     t.isIncome ? 'Income' : 'Expense',
@@ -38,7 +39,7 @@ export async function exportAndShareCsv(txns: Txn[]): Promise<boolean> {
     file.write(csv);
     await Sharing.shareAsync(file.uri, {
       mimeType: 'text/csv',
-      dialogTitle: 'Xuất SpendLens',
+      dialogTitle: i18n.t('export.share_dialog_title'),
     });
   } finally {
     try { file.delete(); } catch { /* best-effort */ }

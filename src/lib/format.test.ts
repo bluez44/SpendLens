@@ -1,3 +1,4 @@
+import { i18n } from './i18n';
 import {
   compactK,
   compactTr,
@@ -9,6 +10,8 @@ import {
   signedVND,
   toDateKey,
 } from './format';
+
+beforeEach(async () => { await i18n.changeLanguage('vi'); });
 
 describe('formatCurrency', () => {
   it('formats with two decimals and thousands separators', () => {

@@ -1,3 +1,5 @@
+import { i18n } from './i18n';
+
 jest.mock('expo-notifications', () => ({
   __esModule: true,
   SchedulableTriggerInputTypes: { DAILY: 'daily' },
@@ -19,6 +21,8 @@ import {
 } from './notifications';
 
 const mocked = Notifications as jest.Mocked<typeof Notifications>;
+
+beforeAll(async () => { await i18n.changeLanguage('vi'); });
 
 beforeEach(() => {
   // Clear all mocks EXCEPT setNotificationHandler, which should only be called once at module load

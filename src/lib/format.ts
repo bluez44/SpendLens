@@ -1,3 +1,5 @@
+import { i18n } from './i18n';
+
 function groupThousands(n: number): string {
   return Math.abs(Math.round(n))
     .toString()
@@ -42,8 +44,8 @@ export function shiftDateKey(dateKey: string, days: number): string {
 }
 
 export function dayLabel(dateKey: string, todayKey: string): string {
-  if (dateKey === todayKey) return 'Hôm nay';
-  if (dateKey === shiftDateKey(todayKey, -1)) return 'Hôm qua';
+  if (dateKey === todayKey) return i18n.t('day.today');
+  if (dateKey === shiftDateKey(todayKey, -1)) return i18n.t('day.yesterday');
   const [, m, d] = dateKey.split('-').map(Number);
   return `${d} Th${m}`;
 }

@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { i18n } from './i18n';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -21,8 +22,8 @@ export async function scheduleDailyReminder(hh: number, mm: number): Promise<voi
   await Notifications.scheduleNotificationAsync({
     identifier: REMINDER_ID,
     content: {
-      title: 'SpendLens',
-      body: 'Ghi lại chi tiêu hôm nay?',
+      title: i18n.t('notif.reminder_title'),
+      body: i18n.t('notif.reminder_body'),
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -39,10 +40,8 @@ export async function cancelDailyReminder(): Promise<void> {
 export async function fireBudgetAlert(level: 80 | 100): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: level === 100 ? 'Vượt ngân sách!' : 'Sắp vượt ngân sách',
-      body: level === 100
-        ? 'Bạn đã chi vượt 100% ngân sách tháng này.'
-        : 'Bạn đã chi hơn 80% ngân sách tháng này.',
+      title: level === 100 ? i18n.t('notif.budget_100_title') : i18n.t('notif.budget_80_title'),
+      body: level === 100 ? i18n.t('notif.budget_100_body') : i18n.t('notif.budget_80_body'),
     },
     trigger: null,
   });

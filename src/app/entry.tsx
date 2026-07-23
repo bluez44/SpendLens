@@ -11,7 +11,7 @@ import { Icon } from '@/components/sl/icons';
 import { PhotoTile } from '@/components/sl/photo-tile';
 import { Segmented } from '@/components/sl/segmented';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
-import { CATEGORIES, categoryOf } from '@/lib/categories';
+import { STATIC_CATEGORIES, categoryOf, categoryLabel } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
 import { dayLabel, formatVND, toDateKey } from '@/lib/format';
 import { decideBudgetAlert } from '@/lib/budget-alert';
@@ -67,7 +67,7 @@ export default function EntryScreen() {
       date: editing && existing ? existing.date : toDateKey(new Date()),
       time: editing && existing ? existing.time : nowTime(),
       category: isIncome ? 'other' : category,
-      name: note.trim() || (isIncome ? 'Thu nhập' : categoryOf(category).label),
+      name: note.trim() || (isIncome ? 'Thu nhập' : categoryLabel(categoryOf(category))),
       note: null,
       amount,
       isIncome,
@@ -153,7 +153,7 @@ export default function EntryScreen() {
         {/* Categories (expense only) */}
         {!isIncome ? (
           <View style={styles.chips}>
-            {CATEGORIES.map((cat) => (
+            {STATIC_CATEGORIES.map((cat) => (
               <CategoryChip key={cat.id} category={cat} selected={category === cat.id} onPress={() => setCategory(cat.id)} />
             ))}
           </View>

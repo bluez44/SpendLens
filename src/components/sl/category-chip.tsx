@@ -4,6 +4,7 @@ import { Text } from './text';
 
 import { CategoryIcon } from '@/components/expense/category-icon';
 import type { Category } from '@/lib/categories';
+import { categoryLabel } from '@/lib/categories';
 import { Radius, useColors, W } from '@/constants/tokens';
 
 export function CategoryChip({
@@ -25,7 +26,7 @@ export function CategoryChip({
       ]}>
       <CategoryIcon category={category.id} color={selected ? category.fg : c.chipText} size={15} />
       <Text style={{ fontSize: 13, fontWeight: selected ? W.bold : W.semibold, color: selected ? category.fg : c.chipText }}>
-        {category.label}
+        {categoryLabel(category)}
       </Text>
     </Pressable>
   );
