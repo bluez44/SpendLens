@@ -45,6 +45,11 @@ describe('TxnCard', () => {
     expect(getByText('Latte size L')).toBeTruthy();
   });
 
+  it('renders name when note is null', async () => {
+    const { getByText } = await render(<TxnCard txn={{ ...baseTxn, note: null }} />);
+    expect(getByText('Cà phê')).toBeTruthy();
+  });
+
   it('shows the tap hint', async () => {
     const { getByText } = await render(<TxnCard txn={baseTxn} />);
     expect(getByText('Chạm để xem chi tiết →')).toBeTruthy();

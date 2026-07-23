@@ -14,13 +14,12 @@ function csvEscape(value: string): string {
 }
 
 export function buildTransactionsCsv(txns: Txn[]): string {
-  const header = ['Date', 'Time', 'Category', 'Name', 'Note', 'Amount', 'Type'];
+  const header = ['Date', 'Time', 'Category', 'Name', 'Amount', 'Type'];
   const rows = txns.map((t) => [
     t.date,
     t.time,
     categoryOf(t.category).label,
     t.name,
-    t.note ?? '',
     t.amount.toFixed(2),
     t.isIncome ? 'Income' : 'Expense',
   ]);

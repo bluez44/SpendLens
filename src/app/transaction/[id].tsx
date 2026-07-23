@@ -83,7 +83,7 @@ export default function TransactionDetailScreen() {
         <Text style={{ fontSize: 17, fontWeight: W.bold, marginTop: 6, color: c.text }}>{txn.name}</Text>
 
         <View style={{ alignSelf: 'stretch', marginTop: 24 }}>
-          <DetailRow label="Ghi chú" value={txn.note ?? txn.name} border />
+          {txn.note ? <DetailRow label="Ghi chú" value={txn.note} border /> : null}
           <DetailRow label="Ngày" value={`${dayLabel(txn.date, todayKey)} · ${txn.time}`} border />
           <DetailRow label="Loại" value={txn.isIncome ? 'Khoản thu' : 'Khoản chi'} valueColor={accent} />
         </View>

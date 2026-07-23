@@ -121,6 +121,10 @@ export default function CameraScreen() {
         disableIntervalMomentum
         showsVerticalScrollIndicator={false}
         scrollEnabled={!noteFocused && !isSnapping}
+        onScroll={(e) => {
+          const idx = Math.round(e.nativeEvent.contentOffset.y / SCREEN_HEIGHT);
+          if (idx !== currentIndex) setCurrentIndex(idx);
+        }}
         onMomentumScrollBegin={() => setIsSnapping(true)}
         onMomentumScrollEnd={(e) => {
           setIsSnapping(false);
@@ -241,7 +245,7 @@ function CameraPage({
       </View>
       {noteFocused && (
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'position' : 'height'}
           style={styles.noteInputOverlay}
         >
           <TextInput

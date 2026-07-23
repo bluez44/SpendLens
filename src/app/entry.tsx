@@ -14,8 +14,16 @@ import { Money, Radius, useColors, W } from '@/constants/tokens';
 import { CATEGORIES, categoryOf } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
 import { dayLabel, formatVND, toDateKey } from '@/lib/format';
-import type { NewTxn } from '@/lib/transactions';
+import type { NewTxn, Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
+
+function mergeExisting(existing: Txn | undefined): string {
+  if (!existing) return '';
+  const name = existing.name?.trim() ?? '';
+  const note = existing.note?.trim() ?? '';
+  if (name && note && name !== note) return `${name} · ${note}`;
+  return name || note;
+}
 
 export default function EntryScreen() {
   const c = useColors();
@@ -34,7 +42,7 @@ export default function EntryScreen() {
   const [isIncome, setIsIncome] = useState(existing?.isIncome ?? false);
   const [amount, setAmount] = useState(existing?.amount ?? 0);
   const [category, setCategory] = useState<CategoryId>(existing?.category ?? 'food');
-  const [note, setNote] = useState(existing?.name ?? params.note ?? '');
+  const [note, setNote] = useState(mergeExisting(existing) || params.note || '');
 
   const accent = isIncome ? Money.income : Money.expense;
 

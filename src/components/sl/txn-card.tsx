@@ -35,9 +35,7 @@ export function TxnCard({ txn }: { txn: Txn }) {
           <Text style={[styles.categoryText, { color: cat.fg }]}>{cat.label}</Text>
         </View>
         <Text style={styles.amount}>{sign + formatVND(txn.amount)}</Text>
-        {txn.note ? (
-          <Text style={styles.note} numberOfLines={2}>{txn.note}</Text>
-        ) : null}
+        <Text style={styles.note} numberOfLines={2}>{txn.note ?? txn.name}</Text>
         <Text style={styles.tapHint}>Chạm để xem chi tiết →</Text>
       </View>
     </Pressable>
