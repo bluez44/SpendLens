@@ -1,3 +1,4 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -50,6 +51,10 @@ export default function EntryScreen() {
     [editing, id, getById]
   );
   const photoUri = photo ?? existing?.photoPath ?? undefined;
+
+  const initialSelected = editing && existing ? new Date(existing.createdAt) : new Date();
+  const [selectedDate, setSelectedDate] = useState<Date>(initialSelected);
+  const [pickerStep, setPickerStep] = useState<'idle' | 'date' | 'time' | 'datetime'>('idle');
 
   const [isIncome, setIsIncome] = useState(existing?.isIncome ?? false);
   const [amount, setAmount] = useState(existing?.amount ?? 0);
@@ -121,8 +126,9 @@ export default function EntryScreen() {
       }
     }
     const payload: NewTxn = {
-      date: editing && existing ? existing.date : toDateKey(new Date()),
-      time: editing && existing ? existing.time : nowTime(),
+      date: editing && existing ? existing.date : toDateKey(selectedDate),
+      time: editing && existing ? existing.time : formatHHMM(selectedDate),
+      createdAt: editing && existing ? existing.createdAt : selectedDate.getTime(),
       category: effectiveCategory,
       name: note.trim(),
       note: null,
@@ -271,12 +277,53 @@ export default function EntryScreen() {
         </View>
 
         {/* Date */}
-        <View style={[styles.dateRow, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
+        <Pressable
+          style={[styles.dateRow, { backgroundColor: c.card, borderColor: c.cardBorder }]}
+          onPress={() => setPickerStep(Platform.OS === 'ios' ? 'datetime' : 'date')}
+        >
           <Text style={{ fontSize: 13, fontWeight: W.semibold, color: c.textSecondary }}>{t('entry.date_label')}</Text>
           <Text style={{ fontSize: 14, fontWeight: W.bold, color: c.text }}>
-            {editing && existing ? `${dayLabel(existing.date, toDateKey(new Date()))} · ${existing.time}` : `${t('day.today')} · ${nowTime()}`}
+            {`${dayLabel(toDateKey(selectedDate), toDateKey(new Date()))} · ${formatHHMM(selectedDate)}`}
           </Text>
-        </View>
+        </Pressable>
+
+        {pickerStep === 'datetime' && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="datetime"
+            onChange={(_, d) => {
+              setPickerStep('idle');
+              if (d) setSelectedDate(d);
+            }}
+          />
+        )}
+        {pickerStep === 'date' && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            onChange={(_, d) => {
+              if (!d) { setPickerStep('idle'); return; }
+              const merged = new Date(d);
+              merged.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+              setSelectedDate(merged);
+              setPickerStep('time');
+            }}
+          />
+        )}
+        {pickerStep === 'time' && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="time"
+            is24Hour
+            onChange={(_, d) => {
+              setPickerStep('idle');
+              if (!d) return;
+              const merged = new Date(selectedDate);
+              merged.setHours(d.getHours(), d.getMinutes());
+              setSelectedDate(merged);
+            }}
+          />
+        )}
 
         <GradientButton
           label={editing ? t('entry.save_update') : isIncome ? t('entry.save_income') : t('entry.save_expense')}
@@ -291,11 +338,8 @@ export default function EntryScreen() {
   );
 }
 
-function nowTime(): string {
-  const d = new Date();
-  const hh = d.getHours().toString().padStart(2, '0');
-  const mm = d.getMinutes().toString().padStart(2, '0');
-  return `${hh}:${mm}`;
+function formatHHMM(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 const styles = StyleSheet.create({
