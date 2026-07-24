@@ -33,7 +33,7 @@ Both are native modules. The project already builds a custom dev client (`expo-d
 ## Entry points
 
 **`src/components/sl/txn-card.tsx`**
-- Add a round icon button (style consistent with `index.tsx`'s `notePreview`/`headerBtn`-style buttons: `rgba(0,0,0,0.35)` background, white `share` icon) positioned top-right (`position: 'absolute', top: <safe padding>, right: 14`).
+- Add a round icon button (style consistent with `index.tsx`'s `notePreview`/`headerBtn`-style buttons: `rgba(0,0,0,0.35)` background, white `share` icon) positioned top-right: `position: 'absolute', top: 60, right: 20` — same fixed offset `TodayBadge` already uses on the opposite (top-left) corner, so the two badges/buttons align visually.
 - Rendered only when `txn.photoPath` is truthy.
 - `TxnCard` gains an `onShare?: (txn: Txn) => void` prop. The button's `onPress` calls `onShare?.(txn)` and must stop propagation so it doesn't also trigger the card's own `onPress` (navigate to detail) — implemented as a sibling `Pressable` positioned above the card's base `Pressable`, same pattern as the existing `notePreview` button in `index.tsx` sitting outside `noteTapZone`.
 - `ShareSheet` itself is mounted once in `src/app/index.tsx` (`CameraScreen`), not per-card. `CameraScreen` holds a `shareSheetRef` and passes `onShare={(txn) => shareSheetRef.current?.present(txn)}` down through `renderItem`.
@@ -63,13 +63,14 @@ Layout inside `BottomSheetModal` (`enableDynamicSizing`, same `BottomSheetBackdr
 2. **Preview card** — fixed `aspectRatio: 9/16`, width `Math.min(screenWidth - 48, 300)`, rounded corners, wrapped in `<ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>`:
    - `expo-image` `Image` from `txn.photoPath`, `contentFit="cover"` fills the 9:16 frame (crop-to-fill handled automatically by `contentFit`, no manual crop math).
    - Bottom `LinearGradient` fade (same colors as `TxnCard.bottomFade`).
-   - Overlay content, reusing `TxnCard`'s visual language, ordered top-to-bottom from the bottom edge:
+   - Overlay content sits in a bottom-anchored info block (like `TxnCard.info`), reusing `TxnCard`'s visual language. Within that block, items stack top-to-bottom in this order:
      - Category chip (`showCategory`) — same chip/label styling as `TxnCard`.
      - Amount (`showAmount`) — `signedVND(txn.amount, txn.isIncome)`, large bold text.
      - Name/note (`showName`) — `txn.note ?? txn.name`, `numberOfLines={2}`.
      - Date/time (`showDate`) — new line not present in `TxnCard`: `${dayLabel(txn.date, todayKey)} · ${txn.time}`, smaller/dimmer text below the name.
    - Export resolution follows the on-screen rendered size × device pixel ratio (view-shot default) — no forced 1080×1920, sufficiently sharp on modern devices.
 3. Four toggle rows (label + `Switch`, pattern matching toggles already used in `settings.tsx`): `share.toggle_date`, `share.toggle_amount`, `share.toggle_category`, `share.toggle_name`. Flipping a switch re-renders the preview immediately.
+   - Note: `share.toggle_category` is labelled "Danh mục" (not "Loại") to avoid colliding with `transaction.type_label` ("Loại"), which already means Income/Expense elsewhere in the app — this toggle is about the spending category chip (Ăn uống, Di chuyển, …), a different concept.
 4. `GradientButton` labeled `share.share_btn` at the bottom, triggers the share action.
 
 ## Share action & error handling
@@ -93,7 +94,7 @@ Add a `share` namespace to both `src/lib/i18n/locales/vi.json` and `en.json`:
   "sheet_title": "Chia sẻ giao dịch",
   "toggle_date": "Ngày giờ",
   "toggle_amount": "Giá tiền",
-  "toggle_category": "Loại",
+  "toggle_category": "Danh mục",
   "toggle_name": "Tên",
   "share_btn": "Chia sẻ",
   "error_title": "Không thể chia sẻ",
