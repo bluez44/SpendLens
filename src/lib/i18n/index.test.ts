@@ -20,8 +20,12 @@ describe('i18n', () => {
     expect(i18n.t('does.not.exist')).toBe('does.not.exist');
   });
 
-  it('resolves the share namespace in both languages', () => {
+  it('resolves the share namespace in both languages', async () => {
     expect(i18n.t('share.sheet_title')).toBe('Chia sẻ giao dịch');
     expect(i18n.t('share.share_btn')).toBe('Chia sẻ');
+    await i18n.changeLanguage('en');
+    expect(i18n.t('share.sheet_title')).toBe('Share transaction');
+    expect(i18n.t('share.share_btn')).toBe('Share');
+    await i18n.changeLanguage('vi');
   });
 });
