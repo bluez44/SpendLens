@@ -12,6 +12,8 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { GradientButton, Shutter } from '@/components/sl/gradient';
 import { Icon } from '@/components/sl/icons';
+import { ShareSheet } from '@/components/sl/share-sheet';
+import type { ShareSheetHandle } from '@/components/sl/share-sheet';
 import { TodayBadge } from '@/components/sl/today-badge';
 import { TxnCard } from '@/components/sl/txn-card';
 import { Money, W, useColors } from '@/constants/tokens';
@@ -37,6 +39,7 @@ export default function CameraScreen() {
   const [isSnapping, setIsSnapping] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const shareSheetRef = useRef<ShareSheetHandle>(null);
 
   const todayKey = toDateKey(new Date());
   const todayTxns = useMemo(
@@ -111,7 +114,13 @@ export default function CameraScreen() {
         />
       );
     if (item.type === 'empty') return <EmptyTodayCard />;
-    return <TxnCard txn={item.txn} extras={categoryExtras} />;
+    return (
+      <TxnCard
+        txn={item.txn}
+        extras={categoryExtras}
+        onShare={(t) => shareSheetRef.current?.present(t)}
+      />
+    );
   }, [insets, permission, requestPermission, granted, facing, flash, note, noteFocused, todayExpense, capture, categoryExtras]);
 
   return (
@@ -148,6 +157,7 @@ export default function CameraScreen() {
           <Icon name="camera" size={22} color="#fff" />
         </Pressable>
       )}
+      <ShareSheet ref={shareSheetRef} extras={categoryExtras} />
     </View>
   );
 }
