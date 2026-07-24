@@ -136,6 +136,17 @@
   },
   "export": { "share_dialog_title": "Export SpendLens" },
   "txn": { "tap_hint": "Tap to view details →" },
+  "share": {
+    "sheet_title": "Share transaction",
+    "toggle_date": "Date & time",
+    "toggle_amount": "Amount",
+    "toggle_category": "Category",
+    "toggle_name": "Name",
+    "share_btn": "Share",
+    "error_title": "Couldn't share",
+    "error_body": "Something went wrong creating the image. Please try again.",
+    "a11y_share": "Share transaction"
+  },
   "budget": {
     "set_cta": "Set monthly budget →",
     "spent_this_month": "Spent this month"

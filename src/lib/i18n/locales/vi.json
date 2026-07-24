@@ -136,6 +136,17 @@
   },
   "export": { "share_dialog_title": "Xuất SpendLens" },
   "txn": { "tap_hint": "Chạm để xem chi tiết →" },
+  "share": {
+    "sheet_title": "Chia sẻ giao dịch",
+    "toggle_date": "Ngày giờ",
+    "toggle_amount": "Giá tiền",
+    "toggle_category": "Danh mục",
+    "toggle_name": "Tên",
+    "share_btn": "Chia sẻ",
+    "error_title": "Không thể chia sẻ",
+    "error_body": "Đã có lỗi khi tạo ảnh, vui lòng thử lại.",
+    "a11y_share": "Chia sẻ giao dịch"
+  },
   "budget": {
     "set_cta": "Đặt ngân sách tháng →",
     "spent_this_month": "Đã chi tháng này"

@@ -19,4 +19,9 @@ describe('i18n', () => {
   it('missing key returns the key itself (returnNull=false)', () => {
     expect(i18n.t('does.not.exist')).toBe('does.not.exist');
   });
+
+  it('resolves the share namespace in both languages', () => {
+    expect(i18n.t('share.sheet_title')).toBe('Chia sẻ giao dịch');
+    expect(i18n.t('share.share_btn')).toBe('Chia sẻ');
+  });
 });
