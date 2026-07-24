@@ -1,8 +1,11 @@
+import { useRef } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
+import { ShareSheet } from '@/components/sl/share-sheet';
+import type { ShareSheetHandle } from '@/components/sl/share-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryIcon } from '@/components/expense/category-icon';
@@ -19,6 +22,7 @@ export default function TransactionDetailScreen() {
   const c = useColors();
   const { t } = useT();
   const insets = useSafeAreaInsets();
+  const shareSheetRef = useRef<ShareSheetHandle>(null);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getById, remove, userCategories } = useTransactions();
   const txn = getById(Number(id));
@@ -64,11 +68,21 @@ export default function TransactionDetailScreen() {
           <Pressable style={styles.headerBtn} onPress={goBack}>
             <Icon name="back" size={20} color="#fff" />
           </Pressable>
-          <Pressable
-            style={styles.headerBtn}
-            onPress={() => router.push({ pathname: '/entry', params: { id: String(txn.id) } })}>
-            <Icon name="edit" size={19} color="#fff" />
-          </Pressable>
+          <View style={styles.headerRightGroup}>
+            {txn.photoPath ? (
+              <Pressable
+                style={styles.headerBtn}
+                accessibilityLabel={t('share.a11y_share')}
+                onPress={() => shareSheetRef.current?.present(txn)}>
+                <Icon name="share" size={19} color="#fff" />
+              </Pressable>
+            ) : null}
+            <Pressable
+              style={styles.headerBtn}
+              onPress={() => router.push({ pathname: '/entry', params: { id: String(txn.id) } })}>
+              <Icon name="edit" size={19} color="#fff" />
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -100,6 +114,7 @@ export default function TransactionDetailScreen() {
           <Text style={{ fontSize: 14, fontWeight: W.bold, color: Money.expense }}>{t('transaction.delete_btn')}</Text>
         </Pressable>
       </View>
+      <ShareSheet ref={shareSheetRef} extras={categoryExtras} />
     </View>
   );
 }
@@ -143,6 +158,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     paddingHorizontal: 20,
+  },
+  headerRightGroup: {
+    flexDirection: 'row',
+    gap: 10,
   },
   headerBtn: {
     width: 40,
