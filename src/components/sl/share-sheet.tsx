@@ -1,16 +1,17 @@
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
-  BottomSheetView,
+  BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { Alert, Dimensions, StyleSheet, Switch, View } from 'react-native';
+import { Alert, Dimensions, Pressable, StyleSheet, Switch, View } from 'react-native';
 import ViewShot from 'react-native-view-shot';
 
 import { GradientButton } from '@/components/sl/gradient';
+import { Icon } from '@/components/sl/icons';
 import { Text } from '@/components/sl/text';
 import { useColors, W } from '@/constants/tokens';
 import { categoryOf } from '@/lib/categories';
@@ -37,6 +38,7 @@ interface Props {
 
 const PREVIEW_WIDTH = Math.min(Dimensions.get('window').width - 48, 300);
 const PREVIEW_HEIGHT = PREVIEW_WIDTH * (16 / 9);
+const MAX_SHEET_HEIGHT = Dimensions.get('window').height * 0.85;
 
 export const ShareSheet = forwardRef<ShareSheetHandle, Props>(
   function ShareSheet({ extras = [] }, ref) {
@@ -81,15 +83,29 @@ export const ShareSheet = forwardRef<ShareSheetHandle, Props>(
       <BottomSheetModal
         ref={sheetRef}
         enableDynamicSizing
+        maxDynamicContentSize={MAX_SHEET_HEIGHT}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
-        backgroundStyle={{ backgroundColor: colors.bg }}>
-        <BottomSheetView style={[styles.body, { backgroundColor: colors.bg }]}>
+        backgroundStyle={{ backgroundColor: colors.bg }}
+        handleIndicatorStyle={{ backgroundColor: colors.hairline }}
+        handleStyle={{ backgroundColor: colors.bg }}>
+        <BottomSheetScrollView
+          style={{ backgroundColor: colors.bg }}
+          contentContainerStyle={styles.body}>
           {txn && txn.photoPath && cat && overlay ? (
             <>
-              <Text style={{ fontSize: 18, fontWeight: W.bold, color: colors.text }}>
-                {t('share.sheet_title')}
-              </Text>
+              <View style={styles.header}>
+                <Pressable
+                  style={[styles.closeBtn, { backgroundColor: colors.segment }]}
+                  hitSlop={8}
+                  accessibilityLabel={t('share.close_a11y')}
+                  onPress={() => sheetRef.current?.dismiss()}>
+                  <Icon name="close" size={16} color={colors.text} />
+                </Pressable>
+                <Text style={{ fontSize: 18, fontWeight: W.bold, color: colors.text }}>
+                  {t('share.sheet_title')}
+                </Text>
+              </View>
 
               <ViewShot
                 ref={viewShotRef}
@@ -139,7 +155,7 @@ export const ShareSheet = forwardRef<ShareSheetHandle, Props>(
               <GradientButton label={t('share.share_btn')} onPress={onShare} />
             </>
           ) : null}
-        </BottomSheetView>
+        </BottomSheetScrollView>
       </BottomSheetModal>
     );
   },
@@ -165,6 +181,8 @@ function ToggleRow({
 
 const styles = StyleSheet.create({
   body: { padding: 20, gap: 16, alignItems: 'center' },
+  header: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 12 },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   preview: { borderRadius: 20, overflow: 'hidden', backgroundColor: '#111' },
   bottomFade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '45%' },
   overlayInfo: { position: 'absolute', left: 16, right: 16, bottom: 16, gap: 6 },

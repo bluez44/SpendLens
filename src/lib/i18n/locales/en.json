@@ -145,7 +145,8 @@
     "share_btn": "Share",
     "error_title": "Couldn't share",
     "error_body": "Something went wrong creating the image. Please try again.",
-    "a11y_share": "Share transaction"
+    "a11y_share": "Share transaction",
+    "close_a11y": "Close"
   },
   "budget": {
     "set_cta": "Set monthly budget →",

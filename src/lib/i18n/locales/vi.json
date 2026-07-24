@@ -145,7 +145,8 @@
     "share_btn": "Chia sẻ",
     "error_title": "Không thể chia sẻ",
     "error_body": "Đã có lỗi khi tạo ảnh, vui lòng thử lại.",
-    "a11y_share": "Chia sẻ giao dịch"
+    "a11y_share": "Chia sẻ giao dịch",
+    "close_a11y": "Đóng"
   },
   "budget": {
     "set_cta": "Đặt ngân sách tháng →",
