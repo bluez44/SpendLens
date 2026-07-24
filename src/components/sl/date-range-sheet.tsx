@@ -25,11 +25,24 @@ interface Props {
   onExport: (from: string, to: string) => void;
 }
 
-type Quick = 'thisMonth' | 'lastMonth' | 'threeMonths' | 'all';
+export type Quick = 'thisMonth' | 'lastMonth' | 'threeMonths' | 'all';
 
-function firstOfMonth(dateKey: string): string {
+export function firstOfMonth(dateKey: string): string {
   const [y, m] = dateKey.split('-').map(Number);
   return toDateKey(new Date(y, m - 1, 1));
+}
+
+/** Return the preset that exactly matches (from, to) given today, else null. */
+export function activeQuick(from: string, to: string, today: string): Quick | null {
+  const [y, m] = today.split('-').map(Number);
+  const thisMonthFrom = firstOfMonth(today);
+  if (from === thisMonthFrom && to === today) return 'thisMonth';
+  const lastMonthFrom = toDateKey(new Date(y, m - 2, 1));
+  const lastMonthTo = toDateKey(new Date(y, m - 1, 0));
+  if (from === lastMonthFrom && to === lastMonthTo) return 'lastMonth';
+  if (from === shiftDateKey(today, -90) && to === today) return 'threeMonths';
+  if (from === '2000-01-01' && to === today) return 'all';
+  return null;
 }
 
 export const DateRangeSheet = forwardRef<DateRangeSheetHandle, Props>(
@@ -71,6 +84,9 @@ export const DateRangeSheet = forwardRef<DateRangeSheetHandle, Props>(
       else { setFrom('2000-01-01'); setTo(today); }
     };
 
+    const todayKey = toDateKey(new Date());
+    const active = activeQuick(from, to, todayKey);
+
     return (
       <BottomSheetModal
         ref={sheetRef}
@@ -96,19 +112,28 @@ export const DateRangeSheet = forwardRef<DateRangeSheetHandle, Props>(
           </View>
 
           <View style={styles.chips}>
-            {(['thisMonth', 'lastMonth', 'threeMonths', 'all'] as Quick[]).map((q) => (
-              <Pressable
-                key={q}
-                onPress={() => applyQuick(q)}
-                style={[styles.chip, { borderColor: colors.hairline, backgroundColor: colors.chipBg }]}>
-                <Text style={{ fontWeight: '500', color: colors.chipText }}>
-                  {q === 'thisMonth' ? t('history.range_this_month')
-                   : q === 'lastMonth' ? t('history.range_last_month')
-                   : q === 'threeMonths' ? t('history.range_three_months')
-                   : t('history.range_all')}
-                </Text>
-              </Pressable>
-            ))}
+            {(['thisMonth', 'lastMonth', 'threeMonths', 'all'] as Quick[]).map((q) => {
+              const isActive = active === q;
+              return (
+                <Pressable
+                  key={q}
+                  onPress={() => applyQuick(q)}
+                  style={[
+                    styles.chip,
+                    { borderColor: colors.hairline, backgroundColor: isActive ? colors.text : colors.chipBg },
+                  ]}>
+                  <Text style={{
+                    fontWeight: isActive ? '700' : '500',
+                    color: isActive ? colors.bg : colors.chipText,
+                  }}>
+                    {q === 'thisMonth' ? t('history.range_this_month')
+                     : q === 'lastMonth' ? t('history.range_last_month')
+                     : q === 'threeMonths' ? t('history.range_three_months')
+                     : t('history.range_all')}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
 
           {picker !== null && (
