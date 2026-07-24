@@ -38,6 +38,10 @@
     "tab_expense": "Chi",
     "tab_income": "Thu"
   },
+  "gallery": {
+    "title": "Thư viện",
+    "subtitle": "{{count}} khoảnh khắc chi tiêu"
+  },
   "settings": {
     "title": "Cài đặt",
     "section_budget": "NGÂN SÁCH",

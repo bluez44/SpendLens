@@ -38,6 +38,10 @@
     "tab_expense": "Expense",
     "tab_income": "Income"
   },
+  "gallery": {
+    "title": "Gallery",
+    "subtitle": "{{count}} spending moments"
+  },
   "settings": {
     "title": "Settings",
     "section_budget": "BUDGET",

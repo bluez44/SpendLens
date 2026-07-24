@@ -8,6 +8,7 @@ import { Icon } from '@/components/sl/icons';
 import { PhotoTile } from '@/components/sl/photo-tile';
 import { useColors, W } from '@/constants/tokens';
 import { signedVND } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import { useTransactions } from '@/lib/transactions-context';
 
 const PADDING = 16;
@@ -17,6 +18,7 @@ export default function GalleryScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { transactions } = useTransactions();
+  const { t } = useT();
 
   const tile = (Dimensions.get('window').width - PADDING * 2 - GAP * 2) / 3;
 
@@ -27,9 +29,9 @@ export default function GalleryScreen() {
           <Icon name="back" size={20} color={c.text} />
         </Pressable>
         <View>
-          <Text style={{ fontSize: 19, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>Thư viện</Text>
+          <Text style={{ fontSize: 19, fontWeight: W.extrabold, color: c.text, letterSpacing: -0.3 }}>{t('gallery.title')}</Text>
           <Text style={{ fontSize: 12.5, fontWeight: W.medium, color: c.textSecondary }}>
-            {transactions.length} khoảnh khắc chi tiêu
+            {t('gallery.subtitle', { count: transactions.length })}
           </Text>
         </View>
       </View>
