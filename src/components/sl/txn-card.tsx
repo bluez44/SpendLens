@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 
+import { Icon } from '@/components/sl/icons';
 import { Text } from '@/components/sl/text';
 import { TodayBadge } from '@/components/sl/today-badge';
 import { categoryOf, categoryLabel } from '@/lib/categories';
@@ -13,7 +14,15 @@ import type { Txn } from '@/lib/transactions';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
-export function TxnCard({ txn, extras = [] }: { txn: Txn; extras?: Category[] }) {
+export function TxnCard({
+  txn,
+  extras = [],
+  onShare,
+}: {
+  txn: Txn;
+  extras?: Category[];
+  onShare?: (txn: Txn) => void;
+}) {
   const { t } = useT();
   const cat = categoryOf(txn.category, extras);
   const sign = txn.isIncome ? '+' : '−';
@@ -33,6 +42,16 @@ export function TxnCard({ txn, extras = [] }: { txn: Txn; extras?: Category[] })
 
       <TodayBadge />
 
+      {txn.photoPath ? (
+        <Pressable
+          style={styles.shareBtn}
+          hitSlop={8}
+          accessibilityLabel={t('share.a11y_share')}
+          onPress={() => onShare?.(txn)}>
+          <Icon name="share" size={18} color="#fff" />
+        </Pressable>
+      ) : null}
+
       <View style={styles.info}>
         <View style={[styles.categoryChip, { backgroundColor: cat.chip }]}>
           <Text style={[styles.categoryText, { color: cat.fg }]}>{categoryLabel(cat)}</Text>
@@ -49,6 +68,12 @@ const styles = StyleSheet.create({
   card: { height: SCREEN_HEIGHT, backgroundColor: '#111' },
   bottomFade: {
     position: 'absolute', left: 0, right: 0, bottom: 0, height: '50%',
+  },
+  shareBtn: {
+    position: 'absolute', top: 60, right: 20,
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center', justifyContent: 'center',
   },
   info: {
     position: 'absolute', left: 20, right: 20, bottom: 60, gap: 8,

@@ -21,6 +21,8 @@ const baseTxn = {
   amount: 45000, isIncome: false, photoPath: null,
 };
 
+const txnWithPhoto = { ...baseTxn, photoPath: '/tmp/photo.jpg' };
+
 beforeEach(() => mockRouterPush.mockClear());
 
 describe('TxnCard', () => {
@@ -59,5 +61,18 @@ describe('TxnCard', () => {
     const { getByText } = await render(<TxnCard txn={baseTxn} />);
     fireEvent.press(getByText('Chạm để xem chi tiết →'));
     expect(mockRouterPush).toHaveBeenCalledWith('/transaction/42');
+  });
+
+  it('does not render a share button when photoPath is null', async () => {
+    const { queryByLabelText } = await render(<TxnCard txn={baseTxn} />);
+    expect(queryByLabelText('Chia sẻ giao dịch')).toBeNull();
+  });
+
+  it('renders a share button and calls onShare with the txn when photoPath is set', async () => {
+    const onShare = jest.fn();
+    const { getByLabelText } = await render(<TxnCard txn={txnWithPhoto} onShare={onShare} />);
+    fireEvent.press(getByLabelText('Chia sẻ giao dịch'));
+    expect(onShare).toHaveBeenCalledWith(txnWithPhoto);
+    expect(mockRouterPush).not.toHaveBeenCalled();
   });
 });
