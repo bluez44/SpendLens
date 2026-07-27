@@ -152,5 +152,10 @@
     "set_cta": "Set monthly budget →",
     "spent_this_month": "Spent this month"
   },
+  "lock": {
+    "title": "Enter PIN",
+    "wrong_pin": "Wrong PIN, {{count}} attempts left",
+    "locked_message": "Try again in {{seconds}}s"
+  },
   "format": { "month_abbrev": "M{{month}}" }
 }
