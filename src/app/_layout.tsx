@@ -12,12 +12,14 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { getColors } from '@/constants/tokens';
+import { LockScreen } from '@/components/sl/lock-screen';
+import { AppLockProvider, useAppLock } from '@/lib/app-lock-context';
 import { SettingsProvider, useSettings } from '@/lib/settings-context';
 import { ThemeProvider as SLThemeProvider } from '@/lib/theme-context';
 import { TransactionsProvider } from '@/lib/transactions-context';
@@ -27,6 +29,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
   const { settings } = useSettings();
+  const { isLocked, unlock } = useAppLock();
   const rawEffective = settings.themeMode === 'auto' ? scheme : settings.themeMode;
   const effective: 'light' | 'dark' = rawEffective === 'dark' ? 'dark' : 'light';
   const colors = getColors(effective);
@@ -55,9 +58,15 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
           <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
           <Stack.Screen name="transaction/[id]" />
         </Stack>
+        {isLocked && <LockScreen biometricEnabled={settings.appLockBiometricEnabled} onUnlock={unlock} />}
       </ThemeProvider>
     </SLThemeProvider>
   );
+}
+
+function LockGate({ children }: { children: ReactNode }) {
+  const { settings } = useSettings();
+  return <AppLockProvider enabled={settings.appLockEnabled}>{children}</AppLockProvider>;
 }
 
 export default function RootLayout() {
@@ -83,7 +92,9 @@ export default function RootLayout() {
         <BottomSheetModalProvider>
           <SettingsProvider>
             <TransactionsProvider>
-              <ThemedShell scheme={scheme} />
+              <LockGate>
+                <ThemedShell scheme={scheme} />
+              </LockGate>
             </TransactionsProvider>
           </SettingsProvider>
         </BottomSheetModalProvider>
