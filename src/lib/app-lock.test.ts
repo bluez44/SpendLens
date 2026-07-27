@@ -143,6 +143,17 @@ describe('isBiometricAvailable', () => {
     (LocalAuthentication.isEnrolledAsync as jest.Mock).mockResolvedValue(true);
     expect(await isBiometricAvailable()).toBe(true);
   });
+
+  it('resolves false when hasHardwareAsync throws', async () => {
+    (LocalAuthentication.hasHardwareAsync as jest.Mock).mockRejectedValue(new Error('native boom'));
+    expect(await isBiometricAvailable()).toBe(false);
+  });
+
+  it('resolves false when isEnrolledAsync throws', async () => {
+    (LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(true);
+    (LocalAuthentication.isEnrolledAsync as jest.Mock).mockRejectedValue(new Error('native boom'));
+    expect(await isBiometricAvailable()).toBe(false);
+  });
 });
 
 describe('authenticateBiometric', () => {
@@ -159,6 +170,11 @@ describe('authenticateBiometric', () => {
       success: false,
       error: 'user_cancel',
     });
+    expect(await authenticateBiometric('Unlock SpendLens')).toBe(false);
+  });
+
+  it('resolves false when authenticateAsync throws', async () => {
+    (LocalAuthentication.authenticateAsync as jest.Mock).mockRejectedValue(new Error('native boom'));
     expect(await authenticateBiometric('Unlock SpendLens')).toBe(false);
   });
 });

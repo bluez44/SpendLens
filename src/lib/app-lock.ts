@@ -68,12 +68,20 @@ export function recordSuccess(): LockoutState {
 }
 
 export async function isBiometricAvailable(): Promise<boolean> {
-  const hasHardware = await LocalAuthentication.hasHardwareAsync();
-  if (!hasHardware) return false;
-  return LocalAuthentication.isEnrolledAsync();
+  try {
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    if (!hasHardware) return false;
+    return await LocalAuthentication.isEnrolledAsync();
+  } catch {
+    return false;
+  }
 }
 
 export async function authenticateBiometric(promptMessage: string): Promise<boolean> {
-  const result = await LocalAuthentication.authenticateAsync({ promptMessage });
-  return result.success;
+  try {
+    const result = await LocalAuthentication.authenticateAsync({ promptMessage });
+    return result.success;
+  } catch {
+    return false;
+  }
 }
