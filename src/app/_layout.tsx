@@ -46,19 +46,21 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
     <SLThemeProvider value={effective}>
       <ThemeProvider value={effective === 'dark' ? DarkTheme : DefaultTheme}>
         <StatusBar style={effective === 'dark' ? 'light' : 'dark'} />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.bg },
-          }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="home" />
-          <Stack.Screen name="history" />
-          <Stack.Screen name="gallery" />
-          <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="transaction/[id]" />
-        </Stack>
-        {isLocked && <LockScreen biometricEnabled={settings.appLockBiometricEnabled} onUnlock={unlock} />}
+        <BottomSheetModalProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
+            }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="home" />
+            <Stack.Screen name="history" />
+            <Stack.Screen name="gallery" />
+            <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="transaction/[id]" />
+          </Stack>
+          {isLocked && <LockScreen biometricEnabled={settings.appLockBiometricEnabled} onUnlock={unlock} />}
+        </BottomSheetModalProvider>
       </ThemeProvider>
     </SLThemeProvider>
   );
@@ -89,15 +91,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <BottomSheetModalProvider>
-          <SettingsProvider>
-            <TransactionsProvider>
-              <LockGate>
-                <ThemedShell scheme={scheme} />
-              </LockGate>
-            </TransactionsProvider>
-          </SettingsProvider>
-        </BottomSheetModalProvider>
+        <SettingsProvider>
+          <TransactionsProvider>
+            <LockGate>
+              <ThemedShell scheme={scheme} />
+            </LockGate>
+          </TransactionsProvider>
+        </SettingsProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
