@@ -87,7 +87,12 @@
     "applock_disable_title": "Tắt khoá app?",
     "applock_disable_body": "Bạn sẽ không cần PIN để mở app nữa.",
     "applock_biometric_unavailable_title": "Không khả dụng",
-    "applock_biometric_unavailable_body": "Thiết bị không hỗ trợ hoặc chưa cài sinh trắc học."
+    "applock_biometric_unavailable_body": "Thiết bị không hỗ trợ hoặc chưa cài sinh trắc học.",
+    "applock_biometric_verify_title": "Xác thực để bật sinh trắc học",
+    "applock_biometric_verify_failed_title": "Xác thực thất bại",
+    "applock_biometric_verify_failed_body": "Chưa bật sinh trắc học. Bạn có thể thử lại bất kỳ lúc nào.",
+    "applock_verify_disable_title": "Nhập PIN để tắt bảo mật",
+    "applock_verify_change_title": "Nhập PIN hiện tại"
   },
   "history": {
     "title": "Lịch sử",
@@ -166,7 +171,8 @@
     "locked_message": "Thử lại sau {{seconds}}s",
     "setup_title": "Đặt mã PIN",
     "setup_confirm_title": "Nhập lại mã PIN",
-    "setup_mismatch": "Mã PIN không khớp, thử lại"
+    "setup_mismatch": "Mã PIN không khớp, thử lại",
+    "verify_wrong_pin": "Sai PIN"
   },
   "format": { "month_abbrev": "Th{{month}}" }
 }

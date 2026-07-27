@@ -87,7 +87,12 @@
     "applock_disable_title": "Turn off app lock?",
     "applock_disable_body": "You won't need a PIN to open the app anymore.",
     "applock_biometric_unavailable_title": "Not available",
-    "applock_biometric_unavailable_body": "This device doesn't support biometrics or none are enrolled."
+    "applock_biometric_unavailable_body": "This device doesn't support biometrics or none are enrolled.",
+    "applock_biometric_verify_title": "Authenticate to enable biometrics",
+    "applock_biometric_verify_failed_title": "Authentication failed",
+    "applock_biometric_verify_failed_body": "Biometrics not enabled. You can try again anytime.",
+    "applock_verify_disable_title": "Enter PIN to disable lock",
+    "applock_verify_change_title": "Enter current PIN"
   },
   "history": {
     "title": "History",
@@ -166,7 +171,8 @@
     "locked_message": "Try again in {{seconds}}s",
     "setup_title": "Set a PIN",
     "setup_confirm_title": "Confirm your PIN",
-    "setup_mismatch": "PINs don't match, try again"
+    "setup_mismatch": "PINs don't match, try again",
+    "verify_wrong_pin": "Wrong PIN"
   },
   "format": { "month_abbrev": "M{{month}}" }
 }
