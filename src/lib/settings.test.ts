@@ -23,6 +23,8 @@ describe('loadSettings', () => {
     updateSetting('themeMode', 'dark', db);
     updateSetting('budgetAlertsEnabled', false, db);
     updateSetting('budgetNotifiedMonth', '2026-07:100', db);
+    updateSetting('appLockEnabled', true, db);
+    updateSetting('appLockBiometricEnabled', true, db);
     expect(loadSettings(db)).toEqual({
       monthlyBudget: 3_000_000,
       reminderEnabled: true,
@@ -31,6 +33,8 @@ describe('loadSettings', () => {
       budgetAlertsEnabled: false,
       budgetNotifiedMonth: '2026-07:100',
       language: 'auto',
+      appLockEnabled: true,
+      appLockBiometricEnabled: true,
     });
   });
 
@@ -96,5 +100,29 @@ describe('language setting', () => {
     const d = freshDb();
     d.runSync('INSERT INTO settings (key, value) VALUES (?, ?)', 'language', 'zh');
     expect(loadSettings(d).language).toBe('auto');
+  });
+});
+
+describe('app lock settings', () => {
+  it('default to false', () => {
+    const s = loadSettings(freshDb());
+    expect(s.appLockEnabled).toBe(false);
+    expect(s.appLockBiometricEnabled).toBe(false);
+  });
+
+  it('round-trip independently of each other', () => {
+    const db = freshDb();
+    updateSetting('appLockEnabled', true, db);
+    expect(loadSettings(db).appLockEnabled).toBe(true);
+    expect(loadSettings(db).appLockBiometricEnabled).toBe(false);
+    updateSetting('appLockBiometricEnabled', true, db);
+    expect(loadSettings(db).appLockBiometricEnabled).toBe(true);
+  });
+
+  it('encode as "0"/"1"', () => {
+    const db = freshDb();
+    updateSetting('appLockEnabled', true, db);
+    const row = db.getFirstSync<{ value: string }>('SELECT value FROM settings WHERE key = ?', ['appLockEnabled']);
+    expect(row?.value).toBe('1');
   });
 });

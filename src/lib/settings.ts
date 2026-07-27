@@ -10,6 +10,8 @@ export interface Settings {
   budgetAlertsEnabled: boolean;
   budgetNotifiedMonth: string;
   language: 'auto' | 'vi' | 'en';
+  appLockEnabled: boolean;
+  appLockBiometricEnabled: boolean;
 }
 
 export const DEFAULTS: Settings = {
@@ -20,6 +22,8 @@ export const DEFAULTS: Settings = {
   budgetAlertsEnabled: true,
   budgetNotifiedMonth: '',
   language: 'auto',
+  appLockEnabled: false,
+  appLockBiometricEnabled: false,
 };
 
 type Row = { key: string; value: string };
@@ -40,6 +44,10 @@ function encode<K extends keyof Settings>(key: K, value: Settings[K]): string {
       return value as string;
     case 'language':
       return value as string;
+    case 'appLockEnabled':
+      return (value as boolean) ? '1' : '0';
+    case 'appLockBiometricEnabled':
+      return (value as boolean) ? '1' : '0';
     default: {
       const _exhaustive: never = key;
       return _exhaustive;
@@ -63,6 +71,10 @@ function decode(map: Map<string, string>): Settings {
   if (notifiedMonth !== undefined) result.budgetNotifiedMonth = notifiedMonth;
   const lang = map.get('language');
   if (lang === 'auto' || lang === 'vi' || lang === 'en') result.language = lang;
+  const appLockEnabled = map.get('appLockEnabled');
+  if (appLockEnabled !== undefined) result.appLockEnabled = appLockEnabled === '1';
+  const appLockBiometricEnabled = map.get('appLockBiometricEnabled');
+  if (appLockBiometricEnabled !== undefined) result.appLockBiometricEnabled = appLockBiometricEnabled === '1';
   return result;
 }
 
