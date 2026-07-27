@@ -155,7 +155,10 @@
   "lock": {
     "title": "Enter PIN",
     "wrong_pin": "Wrong PIN, {{count}} attempts left",
-    "locked_message": "Try again in {{seconds}}s"
+    "locked_message": "Try again in {{seconds}}s",
+    "setup_title": "Set a PIN",
+    "setup_confirm_title": "Confirm your PIN",
+    "setup_mismatch": "PINs don't match, try again"
   },
   "format": { "month_abbrev": "M{{month}}" }
 }

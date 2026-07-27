@@ -155,7 +155,10 @@
   "lock": {
     "title": "Nhập mã PIN",
     "wrong_pin": "Sai mã PIN, còn {{count}} lần thử",
-    "locked_message": "Thử lại sau {{seconds}}s"
+    "locked_message": "Thử lại sau {{seconds}}s",
+    "setup_title": "Đặt mã PIN",
+    "setup_confirm_title": "Nhập lại mã PIN",
+    "setup_mismatch": "Mã PIN không khớp, thử lại"
   },
   "format": { "month_abbrev": "Th{{month}}" }
 }
