@@ -1,5 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 interface AppLockContextValue {
   isLocked: boolean;
@@ -10,20 +9,9 @@ const AppLockContext = createContext<AppLockContextValue | null>(null);
 
 export function AppLockProvider({ enabled, children }: { enabled: boolean; children: ReactNode }) {
   const [isLocked, setIsLocked] = useState(enabled);
-  const appState = useRef<AppStateStatus>(AppState.currentState);
 
   useEffect(() => {
     if (!enabled) setIsLocked(false);
-  }, [enabled]);
-
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (next) => {
-      if (enabled && appState.current !== 'background' && next === 'background') {
-        setIsLocked(true);
-      }
-      appState.current = next;
-    });
-    return () => sub.remove();
   }, [enabled]);
 
   const unlock = () => setIsLocked(false);

@@ -1,5 +1,5 @@
 import { act, render } from '@testing-library/react-native';
-import { AppState, Text } from 'react-native';
+import { Text } from 'react-native';
 
 import { AppLockProvider, useAppLock } from './app-lock-context';
 
@@ -15,30 +15,13 @@ function Probe() {
   );
 }
 
-async function emitAppState(state: 'active' | 'background' | 'inactive') {
-  const spy = AppState.addEventListener as jest.Mock;
-  const handler = spy.mock.calls[spy.mock.calls.length - 1][1];
-  await act(() => handler(state));
-}
-
-beforeEach(() => {
-  jest.spyOn(AppState, 'addEventListener').mockReturnValue({ remove: jest.fn() } as never);
-});
-
-afterEach(() => {
-  (AppState.addEventListener as jest.Mock).mockRestore();
-});
-
 describe('AppLockProvider — disabled', () => {
-  it('never locks, regardless of AppState transitions', async () => {
+  it('never locks', async () => {
     const { getByTestId } = await render(
       <AppLockProvider enabled={false}>
         <Probe />
       </AppLockProvider>,
     );
-    expect(getByTestId('locked').props.children).toBe('false');
-    await emitAppState('background');
-    await emitAppState('active');
     expect(getByTestId('locked').props.children).toBe('false');
   });
 });
@@ -53,7 +36,7 @@ describe('AppLockProvider — enabled', () => {
     expect(getByTestId('locked').props.children).toBe('true');
   });
 
-  it('unlock() clears the lock', async () => {
+  it('unlock() clears the lock and does not re-lock on its own', async () => {
     const { getByTestId } = await render(
       <AppLockProvider enabled>
         <Probe />
@@ -65,31 +48,20 @@ describe('AppLockProvider — enabled', () => {
     expect(getByTestId('locked').props.children).toBe('false');
   });
 
-  it('re-locks when the app goes to background and returns to active', async () => {
-    const { getByTestId } = await render(
+  it('unlocks when the enabled prop flips to false', async () => {
+    const { getByTestId, rerender } = await render(
       <AppLockProvider enabled>
         <Probe />
       </AppLockProvider>,
     );
-    await act(() => {
-      getByTestId('unlock').props.onPress();
-    });
-    expect(getByTestId('locked').props.children).toBe('false');
-    await emitAppState('background');
     expect(getByTestId('locked').props.children).toBe('true');
-  });
-
-  it('does not lock on a transient "inactive" transition', async () => {
-    const { getByTestId } = await render(
-      <AppLockProvider enabled>
-        <Probe />
-      </AppLockProvider>,
-    );
     await act(() => {
-      getByTestId('unlock').props.onPress();
+      rerender(
+        <AppLockProvider enabled={false}>
+          <Probe />
+        </AppLockProvider>,
+      );
     });
-    expect(getByTestId('locked').props.children).toBe('false');
-    await emitAppState('inactive');
     expect(getByTestId('locked').props.children).toBe('false');
   });
 });
