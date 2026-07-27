@@ -7,10 +7,11 @@ import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 
 import { BudgetSheet, type BudgetSheetHandle } from '@/components/sl/budget-sheet';
 import { DateRangeSheet, type DateRangeSheetHandle } from '@/components/sl/date-range-sheet';
 import { PinSetupSheet, type PinSetupSheetHandle } from '@/components/sl/pin-setup-sheet';
+import { VerifyPinSheet, type VerifyPinSheetHandle } from '@/components/sl/verify-pin-sheet';
 import { Segmented } from '@/components/sl/segmented';
 import { Text } from '@/components/sl/text';
 import { useColors } from '@/constants/tokens';
-import { clearPin, isBiometricAvailable } from '@/lib/app-lock';
+import { authenticateBiometric, clearPin, isBiometricAvailable } from '@/lib/app-lock';
 import { exportAndShareCsv } from '@/lib/export';
 import { formatVND, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
@@ -33,6 +34,8 @@ export default function SettingsScreen() {
   const exportSheetRef = useRef<DateRangeSheetHandle>(null);
   const budgetSheetRef = useRef<BudgetSheetHandle>(null);
   const pinSetupSheetRef = useRef<PinSetupSheetHandle>(null);
+  const verifyPinSheetRef = useRef<VerifyPinSheetHandle>(null);
+  const [verifyMode, setVerifyMode] = useState<'disable' | 'change'>('disable');
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
 
   const themeLabels = [t('settings.theme_auto'), t('settings.theme_light'), t('settings.theme_dark')];
@@ -141,22 +144,8 @@ export default function SettingsScreen() {
                 pinSetupSheetRef.current?.present();
                 return;
               }
-              Alert.alert(t('settings.applock_disable_title'), t('settings.applock_disable_body'), [
-                { text: t('settings.cancel'), style: 'cancel' },
-                {
-                  text: t('settings.delete'),
-                  style: 'destructive',
-                  onPress: async () => {
-                    try {
-                      await clearPin();
-                    } catch (err) {
-                      console.warn('Failed to clear PIN', err);
-                    }
-                    update('appLockEnabled', false);
-                    update('appLockBiometricEnabled', false);
-                  },
-                },
-              ]);
+              setVerifyMode('disable');
+              verifyPinSheetRef.current?.present();
             }}
           />
         </View>
@@ -164,7 +153,10 @@ export default function SettingsScreen() {
           <>
             <Pressable
               style={[styles.row, { borderColor: colors.hairline }]}
-              onPress={() => pinSetupSheetRef.current?.present()}>
+              onPress={() => {
+                setVerifyMode('change');
+                verifyPinSheetRef.current?.present();
+              }}>
               <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.applock_change_pin')}</Text>
               <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>›</Text>
             </Pressable>
@@ -182,6 +174,14 @@ export default function SettingsScreen() {
                     Alert.alert(
                       t('settings.applock_biometric_unavailable_title'),
                       t('settings.applock_biometric_unavailable_body'),
+                    );
+                    return;
+                  }
+                  const ok = await authenticateBiometric(t('settings.applock_biometric_verify_title'));
+                  if (!ok) {
+                    Alert.alert(
+                      t('settings.applock_biometric_verify_failed_title'),
+                      t('settings.applock_biometric_verify_failed_body'),
                     );
                     return;
                   }
@@ -299,6 +299,29 @@ export default function SettingsScreen() {
         ref={pinSetupSheetRef}
         onComplete={() => {
           update('appLockEnabled', true);
+        }}
+      />
+
+      <VerifyPinSheet
+        ref={verifyPinSheetRef}
+        title={
+          verifyMode === 'disable'
+            ? t('settings.applock_verify_disable_title')
+            : t('settings.applock_verify_change_title')
+        }
+        biometricEnabled={settings.appLockBiometricEnabled}
+        onVerified={async () => {
+          if (verifyMode === 'disable') {
+            try {
+              await clearPin();
+            } catch (err) {
+              console.warn('Failed to clear PIN', err);
+            }
+            update('appLockEnabled', false);
+            update('appLockBiometricEnabled', false);
+            return;
+          }
+          pinSetupSheetRef.current?.present();
         }}
       />
     </View>
