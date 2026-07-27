@@ -1,4 +1,5 @@
 import * as Crypto from 'expo-crypto';
+import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 
 const PIN_HASH_KEY = 'spendlens_pin_hash';
@@ -64,4 +65,15 @@ export function recordFailedAttempt(state: LockoutState, now: number): LockoutSt
 
 export function recordSuccess(): LockoutState {
   return INITIAL_LOCKOUT_STATE;
+}
+
+export async function isBiometricAvailable(): Promise<boolean> {
+  const hasHardware = await LocalAuthentication.hasHardwareAsync();
+  if (!hasHardware) return false;
+  return LocalAuthentication.isEnrolledAsync();
+}
+
+export async function authenticateBiometric(promptMessage: string): Promise<boolean> {
+  const result = await LocalAuthentication.authenticateAsync({ promptMessage });
+  return result.success;
 }

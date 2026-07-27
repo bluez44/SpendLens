@@ -20,12 +20,21 @@ jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => 'fixed-salt'),
 }));
 
+jest.mock('expo-local-authentication', () => ({
+  hasHardwareAsync: jest.fn(),
+  isEnrolledAsync: jest.fn(),
+  authenticateAsync: jest.fn(),
+}));
+
+import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 
 import {
+  authenticateBiometric,
   clearPin,
   hasPinSet,
   INITIAL_LOCKOUT_STATE,
+  isBiometricAvailable,
   isLockedOut,
   recordFailedAttempt,
   recordSuccess,
@@ -114,5 +123,42 @@ describe('lockout state machine', () => {
     for (let i = 0; i < 5; i++) state = recordFailedAttempt(state, now);
     state = recordSuccess();
     expect(state).toEqual(INITIAL_LOCKOUT_STATE);
+  });
+});
+
+describe('isBiometricAvailable', () => {
+  it('is false when there is no hardware', async () => {
+    (LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(false);
+    expect(await isBiometricAvailable()).toBe(false);
+  });
+
+  it('is false when hardware exists but nothing is enrolled', async () => {
+    (LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(true);
+    (LocalAuthentication.isEnrolledAsync as jest.Mock).mockResolvedValue(false);
+    expect(await isBiometricAvailable()).toBe(false);
+  });
+
+  it('is true when hardware exists and is enrolled', async () => {
+    (LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(true);
+    (LocalAuthentication.isEnrolledAsync as jest.Mock).mockResolvedValue(true);
+    expect(await isBiometricAvailable()).toBe(true);
+  });
+});
+
+describe('authenticateBiometric', () => {
+  it('resolves true on success', async () => {
+    (LocalAuthentication.authenticateAsync as jest.Mock).mockResolvedValue({ success: true });
+    expect(await authenticateBiometric('Unlock SpendLens')).toBe(true);
+    expect(LocalAuthentication.authenticateAsync).toHaveBeenCalledWith({
+      promptMessage: 'Unlock SpendLens',
+    });
+  });
+
+  it('resolves false on failure/cancel', async () => {
+    (LocalAuthentication.authenticateAsync as jest.Mock).mockResolvedValue({
+      success: false,
+      error: 'user_cancel',
+    });
+    expect(await authenticateBiometric('Unlock SpendLens')).toBe(false);
   });
 });
