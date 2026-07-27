@@ -92,6 +92,23 @@ describe('LockScreen', () => {
     await waitFor(() => expect(onUnlock).toHaveBeenCalled());
   });
 
+  it('retries biometrics when the PinPad biometric key is pressed', async () => {
+    mocked.isBiometricAvailable.mockResolvedValue(true);
+    mocked.authenticateBiometric.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    const onUnlock = jest.fn();
+    const { getByTestId } = await render(<LockScreen biometricEnabled onUnlock={onUnlock} />);
+    await waitFor(() => expect(mocked.authenticateBiometric).toHaveBeenCalledTimes(1));
+    expect(onUnlock).not.toHaveBeenCalled();
+    await fireEvent.press(getByTestId('pin-biometric'));
+    await waitFor(() => expect(mocked.authenticateBiometric).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(onUnlock).toHaveBeenCalled());
+  });
+
+  it('does not render the biometric key when biometricEnabled is false', async () => {
+    const { queryByTestId } = await render(<LockScreen biometricEnabled={false} onUnlock={jest.fn()} />);
+    expect(queryByTestId('pin-biometric')).toBeNull();
+  });
+
   it('stops ticking the countdown once the lockout window elapses (no interval leak)', async () => {
     jest.useFakeTimers();
     try {

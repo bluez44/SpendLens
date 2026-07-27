@@ -41,7 +41,13 @@
         "expo-notifications",
         {}
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Dùng Face ID để mở khoá SpendLens."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

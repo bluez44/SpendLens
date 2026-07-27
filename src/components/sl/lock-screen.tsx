@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PinPad } from '@/components/sl/pin-pad';
@@ -39,16 +39,20 @@ export function LockScreen({ biometricEnabled, onUnlock }: LockScreenProps) {
     });
   }, [onUnlock]);
 
-  useEffect(() => {
-    if (!biometricEnabled || biometricTried.current) return;
-    biometricTried.current = true;
+  const runBiometric = useCallback(() => {
     isBiometricAvailable().then((available) => {
       if (!available) return;
       authenticateBiometric(t('lock.title')).then((success) => {
         if (success) onUnlock();
       });
     });
-  }, [biometricEnabled, onUnlock, t]);
+  }, [onUnlock, t]);
+
+  useEffect(() => {
+    if (!biometricEnabled || biometricTried.current) return;
+    biometricTried.current = true;
+    runBiometric();
+  }, [biometricEnabled, runBiometric]);
 
   useEffect(() => {
     if (!isLockedOut(lockout, Date.now())) {
@@ -104,6 +108,7 @@ export function LockScreen({ biometricEnabled, onUnlock }: LockScreenProps) {
         length={PIN_LENGTH}
         onDigit={onDigit}
         onDelete={onDelete}
+        onBiometricPress={biometricEnabled ? runBiometric : undefined}
         disabled={locked}
         error={error}
       />
