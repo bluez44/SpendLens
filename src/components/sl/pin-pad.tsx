@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
-import { useColors, W } from '@/constants/tokens';
+import { Money, useColors, W } from '@/constants/tokens';
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'biometric', '0', 'delete'] as const;
 
@@ -28,7 +28,7 @@ export function PinPad({ value, length, onDigit, onDelete, onBiometricPress, dis
             style={[
               styles.dot,
               {
-                backgroundColor: error ? '#FB5B4D' : c.text,
+                backgroundColor: error ? Money.expense : c.text,
                 opacity: i < value.length ? 1 : 0.2,
               },
             ]}

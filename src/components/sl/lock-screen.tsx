@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { PinPad } from '@/components/sl/pin-pad';
 import { Text } from '@/components/sl/text';
-import { useColors, W } from '@/constants/tokens';
+import { Money, useColors, W } from '@/constants/tokens';
 import {
   authenticateBiometric,
   hasPinSet,
@@ -114,11 +114,11 @@ export function LockScreen({ biometricEnabled, onUnlock }: LockScreenProps) {
       />
       <View style={styles.message}>
         {locked ? (
-          <Text style={{ color: '#FB5B4D', fontWeight: W.semibold }}>
+          <Text style={{ color: Money.expense, fontWeight: W.semibold }}>
             {t('lock.locked_message', { seconds: Math.ceil(remainingLockMs / 1000) })}
           </Text>
         ) : error ? (
-          <Text style={{ color: '#FB5B4D', fontWeight: W.semibold }}>
+          <Text style={{ color: Money.expense, fontWeight: W.semibold }}>
             {t('lock.wrong_pin', { count: Math.max(0, 5 - lockout.failedAttempts) })}
           </Text>
         ) : null}

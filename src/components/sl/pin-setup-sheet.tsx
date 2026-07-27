@@ -5,7 +5,7 @@ import { StyleSheet } from 'react-native';
 
 import { PinPad } from '@/components/sl/pin-pad';
 import { Text } from '@/components/sl/text';
-import { useColors, W } from '@/constants/tokens';
+import { Money, useColors, W } from '@/constants/tokens';
 import { setPin } from '@/lib/app-lock';
 import { useT } from '@/lib/i18n';
 
@@ -93,7 +93,7 @@ export const PinSetupSheet = forwardRef<PinSetupSheetHandle, Props>(function Pin
         </Text>
         <PinPad value={draft} length={PIN_LENGTH} onDigit={onDigit} onDelete={onDelete} />
         {mismatch ? (
-          <Text style={{ color: '#FB5B4D', fontWeight: W.semibold }}>{t('lock.setup_mismatch')}</Text>
+          <Text style={{ color: Money.expense, fontWeight: W.semibold }}>{t('lock.setup_mismatch')}</Text>
         ) : null}
       </BottomSheetView>
     </BottomSheetModal>
