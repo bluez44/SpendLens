@@ -79,7 +79,15 @@
     "reset": "Reset",
     "save": "Save",
     "permission_needed_title": "Notification permission needed",
-    "permission_needed_body": "Enable notification permission in system settings."
+    "permission_needed_body": "Enable notification permission in system settings.",
+    "section_security": "SECURITY",
+    "applock_row": "Lock with PIN/biometrics",
+    "applock_change_pin": "Change PIN",
+    "applock_biometric_row": "Use biometrics",
+    "applock_disable_title": "Turn off app lock?",
+    "applock_disable_body": "You won't need a PIN to open the app anymore.",
+    "applock_biometric_unavailable_title": "Not available",
+    "applock_biometric_unavailable_body": "This device doesn't support biometrics or none are enrolled."
   },
   "history": {
     "title": "History",

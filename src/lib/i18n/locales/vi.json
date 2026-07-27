@@ -79,7 +79,15 @@
     "reset": "Reset",
     "save": "Lưu",
     "permission_needed_title": "Cần quyền thông báo",
-    "permission_needed_body": "Hãy bật quyền thông báo trong Cài đặt hệ thống."
+    "permission_needed_body": "Hãy bật quyền thông báo trong Cài đặt hệ thống.",
+    "section_security": "BẢO MẬT",
+    "applock_row": "Khoá bằng PIN/sinh trắc học",
+    "applock_change_pin": "Đổi PIN",
+    "applock_biometric_row": "Dùng sinh trắc học",
+    "applock_disable_title": "Tắt khoá app?",
+    "applock_disable_body": "Bạn sẽ không cần PIN để mở app nữa.",
+    "applock_biometric_unavailable_title": "Không khả dụng",
+    "applock_biometric_unavailable_body": "Thiết bị không hỗ trợ hoặc chưa cài sinh trắc học."
   },
   "history": {
     "title": "Lịch sử",

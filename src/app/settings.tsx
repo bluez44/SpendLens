@@ -6,9 +6,11 @@ import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 
 
 import { BudgetSheet, type BudgetSheetHandle } from '@/components/sl/budget-sheet';
 import { DateRangeSheet, type DateRangeSheetHandle } from '@/components/sl/date-range-sheet';
+import { PinSetupSheet, type PinSetupSheetHandle } from '@/components/sl/pin-setup-sheet';
 import { Segmented } from '@/components/sl/segmented';
 import { Text } from '@/components/sl/text';
 import { useColors } from '@/constants/tokens';
+import { clearPin, isBiometricAvailable } from '@/lib/app-lock';
 import { exportAndShareCsv } from '@/lib/export';
 import { formatVND, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
@@ -30,6 +32,7 @@ export default function SettingsScreen() {
   const categoryExtras = userCategories.map(toCategoryObj);
   const exportSheetRef = useRef<DateRangeSheetHandle>(null);
   const budgetSheetRef = useRef<BudgetSheetHandle>(null);
+  const pinSetupSheetRef = useRef<PinSetupSheetHandle>(null);
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
 
   const themeLabels = [t('settings.theme_auto'), t('settings.theme_light'), t('settings.theme_dark')];
@@ -125,6 +128,70 @@ export default function SettingsScreen() {
           onChange={(i) => update('language', LANGUAGE_MODES[i])}
         />
 
+        {/* BẢO MẬT */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>
+          {t('settings.section_security')}
+        </Text>
+        <View style={[styles.row, { borderColor: colors.hairline }]}>
+          <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.applock_row')}</Text>
+          <Switch
+            value={settings.appLockEnabled}
+            onValueChange={(v) => {
+              if (v) {
+                pinSetupSheetRef.current?.present();
+                return;
+              }
+              Alert.alert(t('settings.applock_disable_title'), t('settings.applock_disable_body'), [
+                { text: t('settings.cancel'), style: 'cancel' },
+                {
+                  text: t('settings.delete'),
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      await clearPin();
+                    } catch (err) {
+                      console.warn('Failed to clear PIN', err);
+                    }
+                    update('appLockEnabled', false);
+                    update('appLockBiometricEnabled', false);
+                  },
+                },
+              ]);
+            }}
+          />
+        </View>
+        {settings.appLockEnabled && (
+          <>
+            <Pressable
+              style={[styles.row, { borderColor: colors.hairline }]}
+              onPress={() => pinSetupSheetRef.current?.present()}>
+              <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.applock_change_pin')}</Text>
+              <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>›</Text>
+            </Pressable>
+            <View style={[styles.row, { borderColor: colors.hairline }]}>
+              <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.applock_biometric_row')}</Text>
+              <Switch
+                value={settings.appLockBiometricEnabled}
+                onValueChange={async (v) => {
+                  if (!v) {
+                    update('appLockBiometricEnabled', false);
+                    return;
+                  }
+                  const available = await isBiometricAvailable();
+                  if (!available) {
+                    Alert.alert(
+                      t('settings.applock_biometric_unavailable_title'),
+                      t('settings.applock_biometric_unavailable_body'),
+                    );
+                    return;
+                  }
+                  update('appLockBiometricEnabled', true);
+                }}
+              />
+            </View>
+          </>
+        )}
+
         {/* GIAO DIỆN */}
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>{t('settings.section_theme')}</Text>
         <Segmented
@@ -169,6 +236,11 @@ export default function SettingsScreen() {
                   resetUserCategories();
                   reset();
                   await cancelDailyReminder();
+                  try {
+                    await clearPin();
+                  } catch (err) {
+                    console.warn('Failed to clear PIN', err);
+                  }
                   refresh();
                   refreshUserCategories();
                 },
@@ -221,6 +293,13 @@ export default function SettingsScreen() {
       <BudgetSheet
         ref={budgetSheetRef}
         onSave={(n) => update('monthlyBudget', n)}
+      />
+
+      <PinSetupSheet
+        ref={pinSetupSheetRef}
+        onComplete={() => {
+          update('appLockEnabled', true);
+        }}
       />
     </View>
   );
