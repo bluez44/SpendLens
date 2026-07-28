@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const fs = require('fs');
 const http = require('http');
 const { URL } = require('url');
@@ -10,6 +10,12 @@ const {
 } = require('./lib/gdrive-client');
 
 async function main() {
+  if (!process.env.GDRIVE_PARENT_FOLDER_ID || process.env.GDRIVE_PARENT_FOLDER_ID.trim().length === 0) {
+    throw new Error(
+      'Missing GDRIVE_PARENT_FOLDER_ID in .env. Copy .env.example to .env and fill in values.'
+    );
+  }
+
   const oauth2Client = createOAuth2Client({ withToken: false });
 
   const server = http.createServer();
