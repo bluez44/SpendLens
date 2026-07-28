@@ -32,34 +32,58 @@ async function main() {
   console.log(`If browser does not open, visit: ${authUrl}`);
 
   const codePromise = new Promise((resolve, reject) => {
+    let handled = false;
+
     server.on('request', (req, res) => {
       try {
         const url = new URL(req.url, redirectUri);
         const code = url.searchParams.get('code');
         const err = url.searchParams.get('error');
+
+        // If already handled (first request won), ignore subsequent requests
+        if (handled) {
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end('<h1>Already processed. You can close this tab.</h1>');
+          return;
+        }
+
         if (err) {
+          handled = true;
           res.writeHead(400, { 'Content-Type': 'text/html' });
           res.end(`<h1>Auth failed: ${err}</h1>`);
           reject(new Error(`OAuth error: ${err}`));
           return;
         }
+
         if (!code) {
+          handled = true;
           res.writeHead(400, { 'Content-Type': 'text/html' });
           res.end('<h1>Missing code parameter</h1>');
+          reject(new Error("Missing 'code' parameter in redirect. This can happen if you visited the URL directly instead of following Google's redirect."));
           return;
         }
+
+        handled = true;
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end('<h1>Success! You can close this tab and return to the terminal.</h1>');
         resolve(code);
       } catch (e) {
-        reject(e);
+        if (!handled) {
+          handled = true;
+          reject(e);
+        }
       }
     });
   });
 
   await open(authUrl);
-  const code = await codePromise;
-  server.close();
+
+  let code;
+  try {
+    code = await codePromise;
+  } finally {
+    server.close();
+  }
 
   const { tokens } = await oauth2Client.getToken({
     code,
