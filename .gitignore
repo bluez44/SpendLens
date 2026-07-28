@@ -41,3 +41,7 @@ example
 # generated native folders
 /ios
 /android
+
+# Google Drive upload script (secrets)
+.env
+.gdrive-token.json
