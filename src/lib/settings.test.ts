@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-import { DEFAULTS, loadSettings, resetSettings, updateSetting } from './settings';
+import { DEFAULTS, getSettingsUpdatedAt, loadSettings, resetSettings, updateSetting } from './settings';
 
 function freshDb() {
   const database = SQLite.openDatabaseSync(':memory:');
@@ -100,6 +100,23 @@ describe('language setting', () => {
     const d = freshDb();
     d.runSync('INSERT INTO settings (key, value) VALUES (?, ?)', 'language', 'zh');
     expect(loadSettings(d).language).toBe('auto');
+  });
+});
+
+describe('__updated_at tracking', () => {
+  it('bumps __updated_at on every updateSetting', () => {
+    const db = freshDb();
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(7000);
+    updateSetting('monthlyBudget', 500, db);
+    expect(getSettingsUpdatedAt(db)).toBe(7000);
+    nowSpy.mockRestore();
+  });
+
+  it('does not appear in loadSettings result', () => {
+    const db = freshDb();
+    updateSetting('monthlyBudget', 500, db);
+    const s = loadSettings(db) as Record<string, unknown>;
+    expect(s['__updated_at']).toBeUndefined();
   });
 });
 

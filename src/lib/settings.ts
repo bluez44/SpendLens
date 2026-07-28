@@ -84,6 +84,16 @@ export function loadSettings(database: SQLiteDatabase = defaultDb): Settings {
   return decode(map);
 }
 
+const UPDATED_AT_KEY = '__updated_at';
+
+export function getSettingsUpdatedAt(database: SQLiteDatabase = defaultDb): number {
+  const row = database.getFirstSync<{ value: string }>(
+    'SELECT value FROM settings WHERE key = ?',
+    UPDATED_AT_KEY,
+  );
+  return row ? Number(row.value) || 0 : 0;
+}
+
 export function updateSetting<K extends keyof Settings>(
   key: K,
   value: Settings[K],
@@ -93,6 +103,11 @@ export function updateSetting<K extends keyof Settings>(
     'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
     key,
     encode(key, value),
+  );
+  database.runSync(
+    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    UPDATED_AT_KEY,
+    String(Date.now()),
   );
 }
 

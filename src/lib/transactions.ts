@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { File } from 'expo-file-system';
+import * as Crypto from 'expo-crypto';
 
 import { db as defaultDb } from './db';
 import type { CategoryId } from './categories';
@@ -9,6 +10,8 @@ import { i18n } from './i18n';
 
 export interface Txn {
   id: number;
+  uuid: string;
+  updatedAt: number;
   date: string; // YYYY-MM-DD
   time: string; // HH:mm
   createdAt: number; // epoch ms
@@ -35,6 +38,8 @@ export interface NewTxn {
 
 interface Row {
   id: number;
+  uuid: string;
+  updated_at: number;
   date: string;
   time: string;
   created_at: number;
@@ -49,6 +54,8 @@ interface Row {
 function toTxn(r: Row): Txn {
   return {
     id: r.id,
+    uuid: r.uuid,
+    updatedAt: r.updated_at,
     date: r.date,
     time: r.time,
     createdAt: r.created_at,
@@ -73,12 +80,15 @@ export function getTransaction(id: number, database: SQLiteDatabase = defaultDb)
 }
 
 export function insertTransaction(input: NewTxn, database: SQLiteDatabase = defaultDb): number {
+  const now = input.createdAt ?? Date.now();
   const result = database.runSync(
-    `INSERT INTO transactions (date, time, created_at, category, name, note, amount, is_income, photo_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO transactions (uuid, date, time, created_at, updated_at, category, name, note, amount, is_income, photo_path)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    Crypto.randomUUID(),
     input.date,
     input.time,
-    input.createdAt ?? Date.now(),
+    now,
+    now,
     input.category,
     input.name,
     input.note ?? null,
@@ -92,10 +102,11 @@ export function insertTransaction(input: NewTxn, database: SQLiteDatabase = defa
 export function updateTransaction(id: number, input: NewTxn, database: SQLiteDatabase = defaultDb): void {
   database.runSync(
     `UPDATE transactions
-     SET date = ?, time = ?, category = ?, name = ?, note = ?, amount = ?, is_income = ?, photo_path = ?
+     SET date = ?, time = ?, updated_at = ?, category = ?, name = ?, note = ?, amount = ?, is_income = ?, photo_path = ?
      WHERE id = ?`,
     input.date,
     input.time,
+    Date.now(),
     input.category,
     input.name,
     input.note ?? null,

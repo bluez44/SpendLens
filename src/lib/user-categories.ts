@@ -7,18 +7,20 @@ export interface UserCategory {
   id: CustomCategoryId;
   label: string;
   createdAt: number;
+  updatedAt: number;
 }
 
-type Row = { id: string; label: string; created_at: number };
+type Row = { id: string; label: string; created_at: number; updated_at: number };
 
 export function listUserCategories(database: SQLiteDatabase = defaultDb): UserCategory[] {
   const rows = database.getAllSync<Row>(
-    'SELECT id, label, created_at FROM categories ORDER BY created_at ASC',
+    'SELECT id, label, created_at, updated_at FROM categories ORDER BY created_at ASC',
   );
   return rows.map((r) => ({
     id: r.id as CustomCategoryId,
     label: r.label,
     createdAt: r.created_at,
+    updatedAt: r.updated_at,
   }));
 }
 
@@ -33,12 +35,13 @@ export function insertUserCategory(
   const createdAt = Date.now();
   const id: CustomCategoryId = `custom_${createdAt}_${++_seq}`;
   database.runSync(
-    'INSERT INTO categories (id, label, created_at) VALUES (?, ?, ?)',
+    'INSERT INTO categories (id, label, created_at, updated_at) VALUES (?, ?, ?, ?)',
     id,
     trimmed,
     createdAt,
+    createdAt,
   );
-  return { id, label: trimmed, createdAt };
+  return { id, label: trimmed, createdAt, updatedAt: createdAt };
 }
 
 export function deleteUserCategory(id: string, database: SQLiteDatabase = defaultDb): void {

@@ -55,4 +55,16 @@ describe('user-categories', () => {
     resetUserCategories(d);
     expect(listUserCategories(d)).toEqual([]);
   });
+
+  it('sets updated_at on insert', () => {
+    const d = freshDb();
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(5000);
+    const cat = insertUserCategory('Cà phê', d);
+    const row = d.getFirstSync<{ updated_at: number }>(
+      'SELECT updated_at FROM categories WHERE id = ?', cat.id,
+    );
+    expect(row?.updated_at).toBe(5000);
+    expect(cat.updatedAt).toBe(5000);
+    nowSpy.mockRestore();
+  });
 });
