@@ -60,14 +60,18 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const deviceId = await getOrCreateDeviceId();
-      if (cancelled) return;
-      const provider = getCloudSyncProvider();
-      const e = new SyncEngine(defaultDb, provider, deviceId, () => policyRef.current);
-      const u = await provider.getCurrentUser().catch(() => null);
-      if (cancelled) return;
-      setUser(u);
-      setEngine(e);
+      try {
+        const deviceId = await getOrCreateDeviceId();
+        if (cancelled) return;
+        const provider = getCloudSyncProvider();
+        const e = new SyncEngine(defaultDb, provider, deviceId, () => policyRef.current);
+        const u = await provider.getCurrentUser().catch(() => null);
+        if (cancelled) return;
+        setUser(u);
+        setEngine(e);
+      } catch (err) {
+        console.warn('Sync init failed; running without cloud sync', err);
+      }
     })();
     return () => { cancelled = true; };
   }, []);

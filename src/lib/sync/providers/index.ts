@@ -1,10 +1,12 @@
 import type { CloudSyncProvider } from '../provider';
-import { GoogleDriveProvider } from './drive-provider';
 
 let instance: CloudSyncProvider | null = null;
 
 export function getCloudSyncProvider(): CloudSyncProvider {
-  if (!instance) instance = new GoogleDriveProvider();
+  if (!instance) {
+    const { GoogleDriveProvider } = require('./drive-provider') as typeof import('./drive-provider');
+    instance = new GoogleDriveProvider();
+  }
   return instance;
 }
 
