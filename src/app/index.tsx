@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
+import { scheduleOnRN } from "react-native-worklets";
 
 import { Text } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -197,26 +198,28 @@ function CameraPage({
 }) {
   const { t } = useT();
   const [zoom, setZoom] = useState(0);
-  const initialZoomRef = useRef(0);
-  const zoomRef = useRef(zoom);
-  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  const [initialZoom, setInitialZoom] = useState(0);
 
   const cameraGesture = useMemo(() => {
     const pinch = Gesture.Pinch()
-      .onStart(() => { initialZoomRef.current = zoomRef.current; })
+      .onStart(() => { setInitialZoom(zoom); })
       .onUpdate((e) => {
-        const next = Math.max(0, Math.min(1, initialZoomRef.current + (e.scale - 1) * 0.5));
-        runOnJS(setZoom)(next);
+        const next = Math.max(0, Math.min(1, initialZoom + (e.scale - 1) * 0.5));
+        scheduleOnRN(() => {
+          setZoom(next);
+        })
       })
       .onEnd(() => {
         // commit final baseline so the next pinch starts from the correct value
-        initialZoomRef.current = zoomRef.current;
+        setInitialZoom(zoom);
       });
     const doubleTap = Gesture.Tap()
       .numberOfTaps(2)
-      .onEnd(() => { runOnJS(setZoom)(0); });
+      .onEnd(() => { scheduleOnRN(() => {
+        setZoom(0);
+      }); });
     return Gesture.Simultaneous(pinch, doubleTap);
-  }, []);
+  }, [initialZoom, zoom]);
 
   return (
     <View style={{ height: SCREEN_HEIGHT, backgroundColor: '#111111' }}>
