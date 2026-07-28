@@ -47,7 +47,8 @@
         {
           "faceIDPermission": "Dùng Face ID để mở khoá SpendLens."
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,
