@@ -174,5 +174,48 @@
     "setup_mismatch": "PINs don't match, try again",
     "verify_wrong_pin": "Wrong PIN"
   },
-  "format": { "month_abbrev": "M{{month}}" }
+  "format": { "month_abbrev": "M{{month}}" },
+  "sync": {
+    "section_title": "SYNC & BACKUP",
+    "signin_cta": "Sign in with Google to sync",
+    "signin_desc": "Back up and restore your data automatically via your Google account.",
+    "photo_policy_label": "Photo sync",
+    "photo_policy_wifi": "Wi-Fi",
+    "photo_policy_always": "Always",
+    "photo_policy_off": "Off",
+    "status_synced": "Synced at {{time}}",
+    "status_syncing": "Syncing…",
+    "status_never": "Not backed up yet",
+    "status_error": "Error: {{msg}}",
+    "status_token_expired": "Sign in again",
+    "sync_now": "Sync now",
+    "signout": "Sign out",
+    "signout_keep": "Sign out (keep local data)",
+    "signout_and_wipe": "Sign out and wipe local data",
+    "first_login": {
+      "title": "Sync data",
+      "subtitle": "Both this device and cloud have data. Choose how to handle it.",
+      "use_local": "Use data on this device",
+      "use_local_desc": "Cloud will be overwritten",
+      "use_cloud": "Use data from cloud",
+      "use_cloud_desc": "Data on this device will be deleted",
+      "combine": "Combine both",
+      "combine_desc": "Merge all; newer version wins on conflict",
+      "count_summary": "{{txns}} transactions · {{cats}} categories",
+      "last_backup": "Last backup: {{when}}"
+    },
+    "preview": {
+      "title": "Preview",
+      "count": "{{n}} transactions will be saved",
+      "back": "Change choice",
+      "confirm": "Confirm & save"
+    },
+    "kicked": {
+      "title": "Signed in on another device",
+      "body": "You signed in to SpendLens on another device. This device has been signed out.",
+      "keep": "Keep offline data",
+      "wipe": "Wipe data on this device",
+      "wipe_confirm": "Wipe all transactions, photos and settings? Cannot be undone."
+    }
+  }
 }

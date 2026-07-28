@@ -174,5 +174,48 @@
     "setup_mismatch": "Mã PIN không khớp, thử lại",
     "verify_wrong_pin": "Sai PIN"
   },
-  "format": { "month_abbrev": "Th{{month}}" }
+  "format": { "month_abbrev": "Th{{month}}" },
+  "sync": {
+    "section_title": "ĐỒNG BỘ & SAO LƯU",
+    "signin_cta": "Đăng nhập Google để đồng bộ",
+    "signin_desc": "Sao lưu và khôi phục dữ liệu tự động qua tài khoản Google của bạn.",
+    "photo_policy_label": "Đồng bộ ảnh",
+    "photo_policy_wifi": "Wi-Fi",
+    "photo_policy_always": "Luôn luôn",
+    "photo_policy_off": "Tắt",
+    "status_synced": "Đã đồng bộ lúc {{time}}",
+    "status_syncing": "Đang đồng bộ…",
+    "status_never": "Chưa sao lưu lần nào",
+    "status_error": "Lỗi: {{msg}}",
+    "status_token_expired": "Cần đăng nhập lại",
+    "sync_now": "Đồng bộ ngay",
+    "signout": "Đăng xuất",
+    "signout_keep": "Đăng xuất (giữ dữ liệu trên máy)",
+    "signout_and_wipe": "Đăng xuất và xoá dữ liệu trên máy",
+    "first_login": {
+      "title": "Đồng bộ dữ liệu",
+      "subtitle": "Máy này và cloud đều đang có dữ liệu. Hãy chọn cách xử lý.",
+      "use_local": "Dùng dữ liệu trên máy này",
+      "use_local_desc": "Cloud sẽ bị ghi đè",
+      "use_cloud": "Dùng dữ liệu trên cloud",
+      "use_cloud_desc": "Dữ liệu trên máy này sẽ bị xoá",
+      "combine": "Kết hợp cả hai",
+      "combine_desc": "Gộp toàn bộ; nếu trùng lấy bản mới hơn",
+      "count_summary": "{{txns}} giao dịch · {{cats}} danh mục",
+      "last_backup": "Sao lưu gần nhất: {{when}}"
+    },
+    "preview": {
+      "title": "Xem trước",
+      "count": "{{n}} giao dịch sẽ được lưu",
+      "back": "Chọn lại",
+      "confirm": "Xác nhận & lưu"
+    },
+    "kicked": {
+      "title": "Tài khoản đăng nhập ở máy khác",
+      "body": "Bạn đã đăng nhập SpendLens trên một thiết bị khác. Máy này đã bị đăng xuất.",
+      "keep": "Giữ dữ liệu offline",
+      "wipe": "Xoá dữ liệu trên máy này",
+      "wipe_confirm": "Xoá toàn bộ giao dịch, ảnh và cài đặt? Không thể hoàn tác."
+    }
+  }
 }
