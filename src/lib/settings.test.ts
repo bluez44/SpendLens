@@ -35,6 +35,7 @@ describe('loadSettings', () => {
       language: 'auto',
       appLockEnabled: true,
       appLockBiometricEnabled: true,
+      photoSyncPolicy: 'wifi',
     });
   });
 
@@ -117,6 +118,21 @@ describe('__updated_at tracking', () => {
     updateSetting('monthlyBudget', 500, db);
     const s = loadSettings(db) as Record<string, unknown>;
     expect(s['__updated_at']).toBeUndefined();
+  });
+});
+
+describe('photoSyncPolicy', () => {
+  it('defaults to wifi', () => {
+    expect(loadSettings(freshDb()).photoSyncPolicy).toBe('wifi');
+  });
+  it('round-trips wifi / always / off', () => {
+    const d = freshDb();
+    updateSetting('photoSyncPolicy', 'always', d);
+    expect(loadSettings(d).photoSyncPolicy).toBe('always');
+    updateSetting('photoSyncPolicy', 'off', d);
+    expect(loadSettings(d).photoSyncPolicy).toBe('off');
+    updateSetting('photoSyncPolicy', 'wifi', d);
+    expect(loadSettings(d).photoSyncPolicy).toBe('wifi');
   });
 });
 

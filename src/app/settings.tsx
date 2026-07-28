@@ -17,6 +17,8 @@ import { formatVND, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@/lib/notifications';
 import { useSettings } from '@/lib/settings-context';
+import { useSync } from '@/lib/sync/sync-context';
+import { SyncStatusRow } from '@/components/sl/sync-status-row';
 import { resetTransactions } from '@/lib/transactions';
 import { resetUserCategories } from '@/lib/user-categories';
 import { toCategoryObj } from '@/lib/user-categories';
@@ -24,11 +26,13 @@ import { useTransactions } from '@/lib/transactions-context';
 
 const THEME_MODES = ['auto', 'light', 'dark'] as const;
 const LANGUAGE_MODES = ['auto', 'vi', 'en'] as const;
+const POLICY_MODES = ['wifi', 'always', 'off'] as const;
 
 export default function SettingsScreen() {
   const colors = useColors();
   const { t } = useT();
   const { settings, update, reset } = useSettings();
+  const { user: syncUser, signIn, signOut, syncNow } = useSync();
   const { transactions, refresh, userCategories, refreshUserCategories } = useTransactions();
   const categoryExtras = userCategories.map(toCategoryObj);
   const exportSheetRef = useRef<DateRangeSheetHandle>(null);
@@ -199,6 +203,51 @@ export default function SettingsScreen() {
           value={themeIndex >= 0 ? themeIndex : 0}
           onChange={(i) => update('themeMode', THEME_MODES[i])}
         />
+
+        {/* ĐỒNG BỘ & SAO LƯU */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>
+          {t('sync.section_title')}
+        </Text>
+        {syncUser ? (
+          <View style={[styles.row, { borderColor: colors.hairline, flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
+            <Text style={{ color: colors.text, fontWeight: '700' }}>
+              {syncUser.displayName ?? syncUser.email}
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{syncUser.email}</Text>
+            <Text style={{ color: colors.text, marginTop: 8, fontWeight: '500' }}>{t('sync.photo_policy_label')}</Text>
+            <Segmented
+              options={[t('sync.photo_policy_wifi'), t('sync.photo_policy_always'), t('sync.photo_policy_off')]}
+              value={Math.max(0, POLICY_MODES.indexOf(settings.photoSyncPolicy ?? 'wifi'))}
+              onChange={(i) => update('photoSyncPolicy', POLICY_MODES[i])}
+            />
+            <SyncStatusRow />
+            <Pressable onPress={() => { syncNow().catch(() => {}); }}>
+              <Text style={{ color: '#FF6B6B', fontWeight: '600' }}>{t('sync.sync_now')}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                Alert.alert(t('sync.signout'), '', [
+                  { text: t('settings.cancel'), style: 'cancel' },
+                  { text: t('sync.signout_keep'), onPress: () => { signOut().catch(() => {}); } },
+                  {
+                    text: t('sync.signout_and_wipe'),
+                    style: 'destructive',
+                    onPress: () => { signOut({ wipe: true }).then(refresh).catch(() => {}); },
+                  },
+                ]);
+              }}>
+              <Text style={{ color: '#FB5B4D', fontWeight: '600' }}>{t('sync.signout')}</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            style={[styles.row, { borderColor: colors.hairline, flexDirection: 'column', alignItems: 'stretch' }]}
+            onPress={() => { signIn().catch(() => {}); }}
+          >
+            <Text style={{ color: colors.text, fontWeight: '700' }}>{t('sync.signin_cta')}</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>{t('sync.signin_desc')}</Text>
+          </Pressable>
+        )}
 
         {/* DỮ LIỆU */}
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>{t('settings.section_data')}</Text>

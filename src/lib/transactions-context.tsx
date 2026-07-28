@@ -10,6 +10,7 @@ import {
   updateTransaction,
 } from './transactions';
 import { listUserCategories, type UserCategory } from './user-categories';
+import { useMaybeSync } from './sync/sync-context';
 
 interface TransactionsContextValue {
   transactions: Txn[];
@@ -29,6 +30,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
   const [transactions, setTransactions] = useState<Txn[]>([]);
   const [ready, setReady] = useState(false);
   const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
+  const sync = useMaybeSync();
+  const markDirty = useCallback(() => { sync?.markDirty(); }, [sync]);
 
   const refresh = useCallback(() => {
     setTransactions(listTransactions(db));
@@ -47,25 +50,28 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     (input: NewTxn) => {
       const id = insertTransaction(input, db);
       refresh();
+      markDirty();
       return id;
     },
-    [refresh]
+    [refresh, markDirty]
   );
 
   const update = useCallback(
     (id: number, input: NewTxn) => {
       updateTransaction(id, input, db);
       refresh();
+      markDirty();
     },
-    [refresh]
+    [refresh, markDirty]
   );
 
   const remove = useCallback(
     (id: number) => {
       deleteTransaction(id, db);
       refresh();
+      markDirty();
     },
-    [refresh]
+    [refresh, markDirty]
   );
 
   const getById = useCallback(

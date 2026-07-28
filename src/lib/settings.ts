@@ -12,6 +12,7 @@ export interface Settings {
   language: 'auto' | 'vi' | 'en';
   appLockEnabled: boolean;
   appLockBiometricEnabled: boolean;
+  photoSyncPolicy: 'wifi' | 'always' | 'off';
 }
 
 export const DEFAULTS: Settings = {
@@ -24,6 +25,7 @@ export const DEFAULTS: Settings = {
   language: 'auto',
   appLockEnabled: false,
   appLockBiometricEnabled: false,
+  photoSyncPolicy: 'wifi',
 };
 
 type Row = { key: string; value: string };
@@ -48,6 +50,8 @@ function encode<K extends keyof Settings>(key: K, value: Settings[K]): string {
       return (value as boolean) ? '1' : '0';
     case 'appLockBiometricEnabled':
       return (value as boolean) ? '1' : '0';
+    case 'photoSyncPolicy':
+      return value as string;
     default: {
       const _exhaustive: never = key;
       return _exhaustive;
@@ -75,6 +79,10 @@ function decode(map: Map<string, string>): Settings {
   if (appLockEnabled !== undefined) result.appLockEnabled = appLockEnabled === '1';
   const appLockBiometricEnabled = map.get('appLockBiometricEnabled');
   if (appLockBiometricEnabled !== undefined) result.appLockBiometricEnabled = appLockBiometricEnabled === '1';
+  const photoPolicy = map.get('photoSyncPolicy');
+  if (photoPolicy === 'wifi' || photoPolicy === 'always' || photoPolicy === 'off') {
+    result.photoSyncPolicy = photoPolicy;
+  }
   return result;
 }
 
