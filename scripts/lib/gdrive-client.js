@@ -27,7 +27,15 @@ function createOAuth2Client({ withToken }) {
         `Missing ${TOKEN_PATH}. Run: node scripts/gdrive-auth-setup.js`
       );
     }
-    const { refresh_token } = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf8'));
+    let tokenData;
+    try {
+      tokenData = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf8'));
+    } catch (e) {
+      throw new Error(
+        `Invalid token file ${TOKEN_PATH}. Re-run: node scripts/gdrive-auth-setup.js`
+      );
+    }
+    const { refresh_token } = tokenData;
     if (!refresh_token) {
       throw new Error(
         `Invalid token file ${TOKEN_PATH}. Re-run: node scripts/gdrive-auth-setup.js`
