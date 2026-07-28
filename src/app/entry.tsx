@@ -169,7 +169,7 @@ export default function EntryScreen() {
           }
         }
       }
-      router.replace('/history');
+      router.replace('/');
     }
   };
 
@@ -296,7 +296,7 @@ export default function EntryScreen() {
           <DateTimePicker
             value={selectedDate}
             mode="datetime"
-            onChange={(_, d) => {
+            onValueChange={(_, d) => {
               setPickerStep('idle');
               if (d) setSelectedDate(d);
             }}
@@ -306,7 +306,7 @@ export default function EntryScreen() {
           <DateTimePicker
             value={selectedDate}
             mode="date"
-            onChange={(_, d) => {
+            onValueChange={(_, d) => {
               if (!d) { setPickerStep('idle'); return; }
               const merged = new Date(d);
               merged.setHours(selectedDate.getHours(), selectedDate.getMinutes());
@@ -320,7 +320,7 @@ export default function EntryScreen() {
             value={selectedDate}
             mode="time"
             is24Hour
-            onChange={(_, d) => {
+            onValueChange={(_, d) => {
               setPickerStep('idle');
               if (!d) return;
               const merged = new Date(selectedDate);
