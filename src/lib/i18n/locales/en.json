@@ -174,5 +174,31 @@
     "setup_mismatch": "PINs don't match, try again",
     "verify_wrong_pin": "Wrong PIN"
   },
-  "format": { "month_abbrev": "M{{month}}" }
+  "format": { "month_abbrev": "M{{month}}" },
+  "currency": {
+    "section_title": "CURRENCY",
+    "primary_label": "Primary currency",
+    "picker_title": "Choose currency",
+    "rates_label": "Exchange rates",
+    "last_fetched": "Updated at {{time}}",
+    "fetch_now": "Update now",
+    "fetch_error": "Update failed",
+    "rate_row": "1 {{from}} = {{value}} {{to}}",
+    "source_auto": "Auto",
+    "source_manual": "Manual",
+    "source_fallback": "Default",
+    "revert_to_auto": "Reset to auto",
+    "override_title": "Set exchange rate",
+    "override_placeholder": "Rate",
+    "override_invalid": "Rate must be greater than 0",
+    "change_primary_title": "Change primary to {{code}}?",
+    "change_primary_body": "SpendLens will recompute {{n}} transactions with current rates:",
+    "change_primary_line": "• {{n}} {{from}} → {{to}}",
+    "change_primary_unchanged": "• {{n}} {{code}} → unchanged",
+    "change_primary_budget": "Monthly budget: {{before}} → {{after}}",
+    "change_primary_fallback_warn": "⚠ Using default rates — may be inaccurate. Try 'Update now' first.",
+    "change_primary_confirm": "Change & recompute",
+    "original_label": "Original",
+    "approx_prefix": "≈"
+  }
 }

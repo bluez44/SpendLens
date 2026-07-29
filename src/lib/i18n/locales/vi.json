@@ -174,5 +174,31 @@
     "setup_mismatch": "Mã PIN không khớp, thử lại",
     "verify_wrong_pin": "Sai PIN"
   },
-  "format": { "month_abbrev": "Th{{month}}" }
+  "format": { "month_abbrev": "Th{{month}}" },
+  "currency": {
+    "section_title": "TIỀN TỆ",
+    "primary_label": "Đơn vị chính",
+    "picker_title": "Chọn đơn vị",
+    "rates_label": "Tỷ giá",
+    "last_fetched": "Cập nhật lúc {{time}}",
+    "fetch_now": "Cập nhật ngay",
+    "fetch_error": "Cập nhật thất bại",
+    "rate_row": "1 {{from}} = {{value}} {{to}}",
+    "source_auto": "Tự động",
+    "source_manual": "Thủ công",
+    "source_fallback": "Mặc định",
+    "revert_to_auto": "Trở về tự động",
+    "override_title": "Đặt tỷ giá",
+    "override_placeholder": "Tỷ giá",
+    "override_invalid": "Tỷ giá phải lớn hơn 0",
+    "change_primary_title": "Đổi đơn vị chính sang {{code}}?",
+    "change_primary_body": "SpendLens sẽ tính lại {{n}} giao dịch bằng tỷ giá hiện tại:",
+    "change_primary_line": "• {{n}} giao dịch {{from}} → {{to}}",
+    "change_primary_unchanged": "• {{n}} giao dịch {{code}} → giữ nguyên",
+    "change_primary_budget": "Ngân sách tháng: {{before}} → {{after}}",
+    "change_primary_fallback_warn": "⚠ Đang dùng tỷ giá mặc định — có thể không chính xác. Hãy 'Cập nhật ngay' trước khi đổi.",
+    "change_primary_confirm": "Đổi & tính lại",
+    "original_label": "Nguyên gốc",
+    "approx_prefix": "≈"
+  }
 }
