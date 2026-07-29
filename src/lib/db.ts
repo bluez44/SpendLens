@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import type { SQLiteDatabase } from 'expo-sqlite';
+import * as Crypto from 'expo-crypto';
 
 export const FALLBACK_RATES: Record<'VND'|'EUR'|'JPY'|'GBP'|'KRW', number> = {
   VND: 1 / 24500,
@@ -66,6 +67,21 @@ export function createDb(name: string): SQLiteDatabase {
 }
 
 export function runMigrations(db: SQLiteDatabase): void {
+  if (!hasColumn(db, 'transactions', 'uuid')) {
+    db.execSync('ALTER TABLE transactions ADD COLUMN uuid TEXT');
+  }
+  const nullUuidRows = db.getAllSync<{ id: number }>(
+    'SELECT id FROM transactions WHERE uuid IS NULL'
+  );
+  for (const r of nullUuidRows) {
+    db.runSync('UPDATE transactions SET uuid = ? WHERE id = ?', Crypto.randomUUID(), r.id);
+  }
+
+  if (!hasColumn(db, 'transactions', 'updated_at')) {
+    db.execSync('ALTER TABLE transactions ADD COLUMN updated_at INTEGER');
+  }
+  db.execSync('UPDATE transactions SET updated_at = created_at WHERE updated_at IS NULL');
+
   if (!hasColumn(db, 'transactions', 'currency')) {
     db.execSync('ALTER TABLE transactions ADD COLUMN currency TEXT');
   }

@@ -1,6 +1,8 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { db as defaultDb } from './db';
+import { convert, type RateMap } from './fx';
+import type { CurrencyCode } from './currency';
 
 export interface Settings {
   monthlyBudget: number;
@@ -12,6 +14,7 @@ export interface Settings {
   language: 'auto' | 'vi' | 'en';
   appLockEnabled: boolean;
   appLockBiometricEnabled: boolean;
+  primaryCurrency: CurrencyCode;
 }
 
 export const DEFAULTS: Settings = {
@@ -24,6 +27,7 @@ export const DEFAULTS: Settings = {
   language: 'auto',
   appLockEnabled: false,
   appLockBiometricEnabled: false,
+  primaryCurrency: 'VND',
 };
 
 type Row = { key: string; value: string };
@@ -48,6 +52,8 @@ function encode<K extends keyof Settings>(key: K, value: Settings[K]): string {
       return (value as boolean) ? '1' : '0';
     case 'appLockBiometricEnabled':
       return (value as boolean) ? '1' : '0';
+    case 'primaryCurrency':
+      return value as string;
     default: {
       const _exhaustive: never = key;
       return _exhaustive;
@@ -75,6 +81,12 @@ function decode(map: Map<string, string>): Settings {
   if (appLockEnabled !== undefined) result.appLockEnabled = appLockEnabled === '1';
   const appLockBiometricEnabled = map.get('appLockBiometricEnabled');
   if (appLockBiometricEnabled !== undefined) result.appLockBiometricEnabled = appLockBiometricEnabled === '1';
+  const primaryCurrency = map.get('primaryCurrency');
+  if (primaryCurrency === 'VND' || primaryCurrency === 'USD' ||
+      primaryCurrency === 'EUR' || primaryCurrency === 'JPY' ||
+      primaryCurrency === 'GBP' || primaryCurrency === 'KRW') {
+    result.primaryCurrency = primaryCurrency;
+  }
   return result;
 }
 
@@ -98,4 +110,39 @@ export function updateSetting<K extends keyof Settings>(
 
 export function resetSettings(database: SQLiteDatabase = defaultDb): void {
   database.runSync('DELETE FROM settings');
+}
+
+export function changePrimaryCurrency(
+  db: SQLiteDatabase, oldPrimary: CurrencyCode, newPrimary: CurrencyCode, rates: RateMap,
+): void {
+  if (oldPrimary === newPrimary) return;
+  db.withTransactionSync(() => {
+    const rows = db.getAllSync<{ id: number; original_amount: number; original_currency: string }>(
+      'SELECT id, original_amount, original_currency FROM transactions'
+    );
+    for (const r of rows) {
+      const newAmount = convert(
+        r.original_amount, r.original_currency as CurrencyCode, newPrimary, rates,
+      );
+      db.runSync(
+        'UPDATE transactions SET amount = ?, currency = ? WHERE id = ?',
+        newAmount, newPrimary, r.id,
+      );
+    }
+    const budgetRow = db.getFirstSync<{ value: string }>(
+      "SELECT value FROM settings WHERE key = 'monthlyBudget'"
+    );
+    if (budgetRow) {
+      const oldBudget = Number(budgetRow.value) || 0;
+      const newBudget = convert(oldBudget, oldPrimary, newPrimary, rates);
+      db.runSync(
+        "INSERT INTO settings (key, value) VALUES ('monthlyBudget', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        String(newBudget),
+      );
+    }
+    db.runSync(
+      "INSERT INTO settings (key, value) VALUES ('primaryCurrency', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      newPrimary,
+    );
+  });
 }

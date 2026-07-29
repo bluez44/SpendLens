@@ -56,6 +56,17 @@ class MockSQLiteDatabase {
       changes: Number(result.changes),
     };
   }
+
+  withTransactionSync(callback: () => void): void {
+    try {
+      this.nativeDb.exec('BEGIN');
+      callback();
+      this.nativeDb.exec('COMMIT');
+    } catch (e) {
+      this.nativeDb.exec('ROLLBACK');
+      throw e;
+    }
+  }
 }
 
 export function openDatabaseSync(_name: string): MockSQLiteDatabase {

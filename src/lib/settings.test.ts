@@ -1,6 +1,10 @@
 import * as SQLite from 'expo-sqlite';
 
-import { DEFAULTS, loadSettings, resetSettings, updateSetting } from './settings';
+import { DEFAULTS, loadSettings, resetSettings, updateSetting, changePrimaryCurrency } from './settings';
+import { createDb, runMigrations } from './db';
+import { insertTransaction } from './transactions';
+
+const RATES = { VND: 1/25000, EUR: 1.10, JPY: 0.0067, GBP: 1.25, KRW: 0.00075 };
 
 function freshDb() {
   const database = SQLite.openDatabaseSync(':memory:');
@@ -25,6 +29,7 @@ describe('loadSettings', () => {
     updateSetting('budgetNotifiedMonth', '2026-07:100', db);
     updateSetting('appLockEnabled', true, db);
     updateSetting('appLockBiometricEnabled', true, db);
+    updateSetting('primaryCurrency', 'USD', db);
     expect(loadSettings(db)).toEqual({
       monthlyBudget: 3_000_000,
       reminderEnabled: true,
@@ -35,6 +40,7 @@ describe('loadSettings', () => {
       language: 'auto',
       appLockEnabled: true,
       appLockBiometricEnabled: true,
+      primaryCurrency: 'USD',
     });
   });
 
@@ -124,5 +130,68 @@ describe('app lock settings', () => {
     updateSetting('appLockEnabled', true, db);
     const row = db.getFirstSync<{ value: string }>('SELECT value FROM settings WHERE key = ?', ['appLockEnabled']);
     expect(row?.value).toBe('1');
+  });
+});
+
+describe('primaryCurrency setting', () => {
+  it('defaults to VND', () => {
+    expect(loadSettings(freshDb()).primaryCurrency).toBe('VND');
+  });
+  it('round-trips', () => {
+    const db = freshDb();
+    updateSetting('primaryCurrency', 'USD', db);
+    expect(loadSettings(db).primaryCurrency).toBe('USD');
+  });
+  it('unknown value falls back to VND', () => {
+    const db = freshDb();
+    db.runSync("INSERT INTO settings (key, value) VALUES ('primaryCurrency', 'XXX')");
+    expect(loadSettings(db).primaryCurrency).toBe('VND');
+  });
+});
+
+describe('changePrimaryCurrency', () => {
+  it('recomputes every txn amount from originals; converts budget', () => {
+    const d = createDb(':memory:');
+    runMigrations(d);
+    insertTransaction({
+      date: '2026-07-01', time: '10:00', createdAt: 1000,
+      category: 'food', name: 'a', originalAmount: 50000,
+      originalCurrency: 'VND', isIncome: false,
+    }, d, 'VND', RATES);
+    insertTransaction({
+      date: '2026-07-01', time: '10:00', createdAt: 1000,
+      category: 'food', name: 'b', originalAmount: 20,
+      originalCurrency: 'USD', isIncome: false,
+    }, d, 'VND', RATES);
+    updateSetting('monthlyBudget', 5_000_000, d);
+    updateSetting('primaryCurrency', 'VND', d);
+
+    changePrimaryCurrency(d, 'VND', 'USD', RATES);
+
+    const rows = d.getAllSync<any>(
+      'SELECT amount, currency, original_amount, original_currency FROM transactions ORDER BY id'
+    );
+    expect(rows[0].amount).toBeCloseTo(2, 5);
+    expect(rows[0].currency).toBe('USD');
+    expect(rows[1].amount).toBeCloseTo(20, 5);
+    expect(rows[1].currency).toBe('USD');
+
+    const s = loadSettings(d);
+    expect(s.primaryCurrency).toBe('USD');
+    expect(s.monthlyBudget).toBeCloseTo(200, 1);
+  });
+
+  it('back-and-forth is close to identity', () => {
+    const d = createDb(':memory:');
+    runMigrations(d);
+    insertTransaction({
+      date: '2026-07-01', time: '10:00', createdAt: 1000,
+      category: 'food', name: 'a', originalAmount: 50000,
+      originalCurrency: 'VND', isIncome: false,
+    }, d, 'VND', RATES);
+    changePrimaryCurrency(d, 'VND', 'USD', RATES);
+    changePrimaryCurrency(d, 'USD', 'VND', RATES);
+    const row = d.getFirstSync<{ amount: number }>('SELECT amount FROM transactions LIMIT 1');
+    expect(row?.amount).toBeCloseTo(50000, 0);
   });
 });
