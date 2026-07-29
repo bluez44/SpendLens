@@ -3,10 +3,10 @@ import {
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { Text } from '@/components/sl/text';
-import { Radius, useColors, Money } from '@/constants/tokens';
+import { Radius, useColors, Money, AccentGradient } from '@/constants/tokens';
 import { useT } from '@/lib/i18n';
 import type { CurrencyCode } from '@/lib/currency';
 
@@ -45,7 +45,7 @@ export const RateOverrideSheet = forwardRef<RateOverrideSheetHandle, Props>(
 
     const save = () => {
       const parsed = Number(draft);
-      if (!(parsed > 0) || Number.isNaN(parsed)) {
+      if (!(parsed > 0)) {
         setError(t('currency.override_invalid'));
         return;
       }
@@ -80,7 +80,7 @@ export const RateOverrideSheet = forwardRef<RateOverrideSheetHandle, Props>(
             onPress={save}
             style={({ pressed }) => [styles.saveBtn, { opacity: pressed ? 0.7 : 1 }]}
           >
-            <Text style={{ color: '#fff', fontWeight: '700' }}>Save</Text>
+            <Text style={{ color: '#fff', fontWeight: '700' }}>{t('settings.save')}</Text>
           </Pressable>
         </BottomSheetView>
       </BottomSheetModal>
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 16,
   },
   saveBtn: {
-    backgroundColor: '#111', borderRadius: Radius.button,
+    backgroundColor: AccentGradient[1], borderRadius: Radius.button,
     paddingVertical: 12, alignItems: 'center',
   },
 });
