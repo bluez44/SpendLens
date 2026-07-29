@@ -1,4 +1,5 @@
 import { i18n } from './i18n';
+import { CURRENCY_META, type CurrencyCode } from './currency';
 
 function groupThousands(n: number): string {
   return Math.abs(Math.round(n))
@@ -6,19 +7,61 @@ function groupThousands(n: number): string {
     .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
+function groupThousandsRaw(intAbs: number): string {
+  return intAbs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+export function formatMoney(amount: number, currency: CurrencyCode): string {
+  const meta = CURRENCY_META[currency];
+  const abs = Math.abs(amount);
+  let body: string;
+  if (meta.decimals === 0) {
+    const rounded = Math.round(abs);
+    body = currency === 'VND' ? groupThousandsRaw(rounded) : rounded.toString();
+  } else {
+    body = abs.toFixed(2);
+  }
+  return meta.position === 'prefix' ? meta.symbol + body : body + meta.symbol;
+}
+
+export function signedMoney(amount: number, currency: CurrencyCode, isIncome: boolean): string {
+  return (isIncome ? '+' : '−') + formatMoney(amount, currency);
+}
+
+export function formatCompact(amount: number, currency: CurrencyCode): string {
+  if (currency !== 'VND') return formatMoney(amount, currency);
+  const abs = Math.abs(amount);
+  if (abs >= 1_000_000) return (abs / 1_000_000).toFixed(2).replace('.', ',') + 'tr';
+  return groupThousandsRaw(Math.round(abs / 1000)) + 'k';
+}
+
+export function formatAmountInput(digits: string, currency: CurrencyCode): string {
+  const clean = digits.replace(/\D/g, '');
+  if (!clean) return '';
+  const meta = CURRENCY_META[currency];
+  if (meta.decimals === 0) {
+    const num = Number(clean);
+    return currency === 'VND' ? groupThousandsRaw(num) : num.toString();
+  }
+  const padded = clean.padStart(3, '0');
+  const intPart = padded.slice(0, -2).replace(/^0+/, '') || '0';
+  const centsPart = padded.slice(-2);
+  return `${intPart}.${centsPart}`;
+}
+
 /** Vietnamese đồng: 45000 -> "45.000₫". */
 export function formatVND(amount: number): string {
-  return groupThousands(amount) + '₫';
+  return formatMoney(amount, 'VND');
 }
 
 /** Signed money for feeds: expense -> "−45.000₫", income -> "+2.500.000₫". */
 export function signedVND(amount: number, isIncome: boolean): string {
-  return (isIncome ? '+' : '−') + formatVND(amount); // U+2212 minus for expense
+  return signedMoney(amount, 'VND', isIncome);
 }
 
 /** Compact thousands: 2500000 -> "2.500k", 730000 -> "730k". */
 export function compactK(amount: number): string {
-  return groupThousands(Math.round(Math.abs(amount) / 1000)) + 'k';
+  return groupThousandsRaw(Math.round(Math.abs(amount) / 1000)) + 'k';
 }
 
 /** Compact millions with comma decimal: 4230000 -> "4,23tr". */

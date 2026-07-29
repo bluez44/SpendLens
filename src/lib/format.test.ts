@@ -9,6 +9,10 @@ import {
   shiftDateKey,
   signedVND,
   toDateKey,
+  formatMoney,
+  signedMoney,
+  formatCompact,
+  formatAmountInput,
 } from './format';
 
 beforeEach(async () => { await i18n.changeLanguage('vi'); });
@@ -86,5 +90,62 @@ describe('dayLabel', () => {
 describe('monthKey', () => {
   it('extracts YYYY-MM', () => {
     expect(monthKey('2026-07-17')).toBe('2026-07');
+  });
+});
+
+describe('formatMoney', () => {
+  it('VND: 45000 → "45.000₫"', () => {
+    expect(formatMoney(45000, 'VND')).toBe('45.000₫');
+  });
+  it('USD: 20 → "$20.00"', () => {
+    expect(formatMoney(20, 'USD')).toBe('$20.00');
+  });
+  it('USD: 20.5 → "$20.50"', () => {
+    expect(formatMoney(20.5, 'USD')).toBe('$20.50');
+  });
+  it('JPY: 3000 → "¥3000" (no decimals, prefix)', () => {
+    expect(formatMoney(3000, 'JPY')).toBe('¥3000');
+  });
+  it('KRW: 50000 → "₩50000"', () => {
+    expect(formatMoney(50000, 'KRW')).toBe('₩50000');
+  });
+});
+
+describe('signedMoney', () => {
+  it('income → "+"', () => {
+    expect(signedMoney(20, 'USD', true)).toBe('+$20.00');
+  });
+  it('expense → U+2212 minus', () => {
+    expect(signedMoney(20, 'USD', false)).toBe('−$20.00');
+  });
+});
+
+describe('formatCompact', () => {
+  it('VND uses tr for millions', () => {
+    expect(formatCompact(4_230_000, 'VND')).toBe('4,23tr');
+  });
+  it('VND uses k for thousands', () => {
+    expect(formatCompact(485_000, 'VND')).toBe('485k');
+  });
+  it('USD passes through formatMoney', () => {
+    expect(formatCompact(20, 'USD')).toBe('$20.00');
+  });
+});
+
+describe('formatAmountInput', () => {
+  it('VND: digits with thousand separators', () => {
+    expect(formatAmountInput('485000', 'VND')).toBe('485.000');
+  });
+  it('VND: empty stays empty', () => {
+    expect(formatAmountInput('', 'VND')).toBe('');
+  });
+  it('USD: treats digits as cents', () => {
+    expect(formatAmountInput('12345', 'USD')).toBe('123.45');
+  });
+  it('USD: pads leading zeros for cents', () => {
+    expect(formatAmountInput('5', 'USD')).toBe('0.05');
+  });
+  it('JPY (decimals=0): digits as int', () => {
+    expect(formatAmountInput('3000', 'JPY')).toBe('3000');
   });
 });
