@@ -10,6 +10,7 @@ import {
   updateTransaction,
 } from './transactions';
 import { listUserCategories, type UserCategory } from './user-categories';
+import { useSettings } from './settings-context';
 
 interface TransactionsContextValue {
   transactions: Txn[];
@@ -29,6 +30,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
   const [transactions, setTransactions] = useState<Txn[]>([]);
   const [ready, setReady] = useState(false);
   const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
+  const { onAfterPrimaryChange } = useSettings();
 
   const refresh = useCallback(() => {
     setTransactions(listTransactions(db));
@@ -42,6 +44,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     refresh();
     setReady(true);
   }, [refresh]);
+
+  useEffect(() => onAfterPrimaryChange?.(() => refresh()), [onAfterPrimaryChange, refresh]);
 
   const add = useCallback(
     (input: NewTxn) => {
