@@ -8,6 +8,7 @@
 // way real screens do — it always renders its children (no hidden/visible
 // gating), so content is queryable regardless of present()/dismiss() state.
 import React, { forwardRef, useImperativeHandle } from 'react';
+import { TextInput } from 'react-native';
 
 export const BottomSheetModal = forwardRef<
   { present: (...args: unknown[]) => void; dismiss: () => void },
@@ -21,3 +22,8 @@ export const BottomSheetModal = forwardRef<
 });
 export const BottomSheetView = ({ children }: { children?: React.ReactNode }) => children;
 export const BottomSheetBackdrop = () => null;
+export const BottomSheetTextInput = forwardRef(
+  (props: React.ComponentProps<typeof TextInput>, ref: React.ForwardedRef<TextInput>) => (
+    React.createElement(TextInput, { ref, ...props } as any)
+  ),
+) as typeof TextInput;
