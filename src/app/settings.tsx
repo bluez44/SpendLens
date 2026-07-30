@@ -7,15 +7,19 @@ import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 
 import { BudgetSheet, type BudgetSheetHandle } from '@/components/sl/budget-sheet';
 import { DateRangeSheet, type DateRangeSheetHandle } from '@/components/sl/date-range-sheet';
 import { PinSetupSheet, type PinSetupSheetHandle } from '@/components/sl/pin-setup-sheet';
-import { VerifyPinSheet, type VerifyPinSheetHandle } from '@/components/sl/verify-pin-sheet';
+import { RateOverrideSheet, type RateOverrideSheetHandle } from '@/components/sl/rate-override-sheet';
 import { Segmented } from '@/components/sl/segmented';
 import { Text } from '@/components/sl/text';
+import { VerifyPinSheet, type VerifyPinSheetHandle } from '@/components/sl/verify-pin-sheet';
 import { useColors } from '@/constants/tokens';
 import { authenticateBiometric, clearPin, isBiometricAvailable } from '@/lib/app-lock';
+import { CURRENCIES, type CurrencyCode } from '@/lib/currency';
 import { exportAndShareCsv } from '@/lib/export';
-import { formatVND, toDateKey } from '@/lib/format';
+import { formatMoney, formatVND, toDateKey } from '@/lib/format';
+import { convert } from '@/lib/fx';
 import { useT } from '@/lib/i18n';
 import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@/lib/notifications';
+import { db } from '@/lib/db';
 import { useSettings } from '@/lib/settings-context';
 import { resetTransactions } from '@/lib/transactions';
 import { resetUserCategories } from '@/lib/user-categories';
@@ -28,15 +32,74 @@ const LANGUAGE_MODES = ['auto', 'vi', 'en'] as const;
 export default function SettingsScreen() {
   const colors = useColors();
   const { t } = useT();
-  const { settings, update, reset } = useSettings();
+  const {
+    settings, update, reset,
+    rates, fxLastFetchedAt, getRateSource,
+    changePrimary, setManualRate, clearManualRate, refetchRates,
+  } = useSettings();
   const { transactions, refresh, userCategories, refreshUserCategories } = useTransactions();
   const categoryExtras = userCategories.map(toCategoryObj);
   const exportSheetRef = useRef<DateRangeSheetHandle>(null);
   const budgetSheetRef = useRef<BudgetSheetHandle>(null);
   const pinSetupSheetRef = useRef<PinSetupSheetHandle>(null);
   const verifyPinSheetRef = useRef<VerifyPinSheetHandle>(null);
+  const rateOverrideRef = useRef<RateOverrideSheetHandle>(null);
   const [verifyMode, setVerifyMode] = useState<'disable' | 'change'>('disable');
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const nonUsdCurrencies = CURRENCIES.filter((c) => c !== 'USD') as Exclude<CurrencyCode, 'USD'>[];
+
+  const askChangePrimary = (target: CurrencyCode) => {
+    if (target === settings.primaryCurrency) return;
+    const rows = db.getAllSync<{ original_currency: string; n: number }>(
+      "SELECT original_currency, COUNT(*) AS n FROM transactions GROUP BY original_currency"
+    );
+    const lines: string[] = [];
+    let total = 0;
+    for (const r of rows) {
+      total += r.n;
+      if (r.original_currency === target) {
+        lines.push(t('currency.change_primary_unchanged', { n: r.n, code: target }));
+      } else {
+        lines.push(t('currency.change_primary_line', { n: r.n, from: r.original_currency, to: target }));
+      }
+    }
+    const before = formatMoney(settings.monthlyBudget, settings.primaryCurrency);
+    const after = formatMoney(
+      convert(settings.monthlyBudget, settings.primaryCurrency, target, rates),
+      target,
+    );
+    const anyFallback = nonUsdCurrencies.some((c) => getRateSource(c) === 'fallback');
+    const body = [
+      t('currency.change_primary_body', { n: total }),
+      ...lines,
+      '',
+      t('currency.change_primary_budget', { before, after }),
+      ...(anyFallback ? ['', t('currency.change_primary_fallback_warn')] : []),
+    ].join('\n');
+    Alert.alert(
+      t('currency.change_primary_title', { code: target }),
+      body,
+      [
+        { text: t('settings.cancel'), style: 'cancel' },
+        {
+          text: t('currency.change_primary_confirm'),
+          onPress: () => { changePrimary(target).catch(() => {}); },
+        },
+      ],
+    );
+  };
+
+  const doRefetch = async () => {
+    setFetchError(null);
+    try {
+      await refetchRates();
+    } catch {
+      setFetchError(t('currency.fetch_error'));
+      setTimeout(() => setFetchError(null), 3000);
+    }
+  };
 
   const themeLabels = [t('settings.theme_auto'), t('settings.theme_light'), t('settings.theme_dark')];
 
@@ -200,6 +263,67 @@ export default function SettingsScreen() {
           onChange={(i) => update('themeMode', THEME_MODES[i])}
         />
 
+        {/* TIỀN TỆ */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>
+          {t('currency.section_title')}
+        </Text>
+        <View style={{ marginHorizontal: 16, marginTop: 8 }}>
+          <Text style={{ color: colors.text, fontWeight: '500', marginBottom: 6 }}>
+            {t('currency.primary_label')}
+          </Text>
+          <Segmented
+            options={[...CURRENCIES]}
+            value={Math.max(0, CURRENCIES.indexOf(settings.primaryCurrency))}
+            onChange={(i) => askChangePrimary(CURRENCIES[i])}
+          />
+        </View>
+        <View style={[styles.row, { borderColor: colors.hairline, marginTop: 12, flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: colors.text, fontWeight: '600' }}>{t('currency.rates_label')}</Text>
+            <Pressable onPress={doRefetch} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+              <Text style={{ color: '#FF6B6B', fontWeight: '600' }}>{t('currency.fetch_now')}</Text>
+            </Pressable>
+          </View>
+          {fxLastFetchedAt ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+              {t('currency.last_fetched', { time: new Date(fxLastFetchedAt).toLocaleTimeString() })}
+            </Text>
+          ) : null}
+          {fetchError ? <Text style={{ color: '#FB5B4D', fontSize: 12 }}>{fetchError}</Text> : null}
+          {nonUsdCurrencies.map((cc) => {
+            const rateUsd = rates[cc];
+            const source = getRateSource(cc);
+            const displayRate = formatMoney(
+              convert(1, cc, settings.primaryCurrency, rates),
+              settings.primaryCurrency,
+            );
+            return (
+              <Pressable
+                key={cc}
+                onPress={() => rateOverrideRef.current?.present(cc, rateUsd)}
+                style={({ pressed }) => ({
+                  paddingVertical: 10, opacity: pressed ? 0.6 : 1,
+                  flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+                })}
+              >
+                <Text style={{ color: colors.text }}>
+                  {t('currency.rate_row', { from: cc, value: displayRate, to: '' }).replace(/\s*$/, '')}
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                    {t(`currency.source_${source ?? 'fallback'}`)}
+                  </Text>
+                  {source === 'manual' ? (
+                    <Pressable onPress={() => clearManualRate(cc)}>
+                      <Text style={{ color: '#FF6B6B', fontSize: 12 }}>{t('currency.revert_to_auto')}</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+
         {/* DỮ LIỆU */}
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>{t('settings.section_data')}</Text>
         <Pressable style={[styles.row, { borderColor: colors.hairline }]} onPress={() => exportSheetRef.current?.present()}>
@@ -323,6 +447,11 @@ export default function SettingsScreen() {
           }
           pinSetupSheetRef.current?.present();
         }}
+      />
+
+      <RateOverrideSheet
+        ref={rateOverrideRef}
+        onSave={(cc, rate) => { setManualRate(cc, rate); }}
       />
     </View>
   );
