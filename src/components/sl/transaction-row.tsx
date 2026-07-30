@@ -6,7 +6,7 @@ import { categoryOf, categoryLabel, INCOME_LABEL_KEY } from '@/lib/categories';
 import type { Category } from '@/lib/categories';
 import { i18n } from '@/lib/i18n';
 import type { Txn } from '@/lib/transactions';
-import { signedVND } from '@/lib/format';
+import { signedMoney } from '@/lib/format';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
 
 import { PhotoTile } from './photo-tile';
@@ -35,9 +35,16 @@ export function TransactionRow({
           {label} · {txn.time}
         </Text>
       </View>
-      <Text style={{ fontSize: 15, fontWeight: W.extrabold, color: txn.isIncome ? Money.income : Money.expense }}>
-        {signedVND(txn.amount, txn.isIncome)}
-      </Text>
+      <View style={{ alignItems: 'flex-end' }}>
+        <Text style={{ fontSize: 15, fontWeight: W.extrabold, color: txn.isIncome ? Money.income : Money.expense }}>
+          {signedMoney(txn.amount, txn.currency, txn.isIncome)}
+        </Text>
+        {txn.originalCurrency !== txn.currency ? (
+          <Text style={{ color: c.textSecondary, fontSize: 11, marginTop: 2, alignSelf: 'flex-end' }}>
+            ≈ {signedMoney(txn.originalAmount, txn.originalCurrency, txn.isIncome)}
+          </Text>
+        ) : null}
+      </View>
     </Pressable>
   );
 }

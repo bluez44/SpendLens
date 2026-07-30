@@ -16,13 +16,16 @@ function csvEscape(value: string): string {
 }
 
 export function buildTransactionsCsv(txns: Txn[], extras: Category[] = []): string {
-  const header = ['Date', 'Time', 'Category', 'Name', 'Amount', 'Type'];
+  const header = ['Date', 'Time', 'Category', 'Name', 'Amount', 'Currency', 'OriginalAmount', 'OriginalCurrency', 'Type'];
   const rows = txns.map((t) => [
     t.date,
     t.time,
     categoryLabel(categoryOf(t.category, extras)),
     t.name,
     t.amount.toFixed(2),
+    t.currency,
+    t.originalAmount.toFixed(2),
+    t.originalCurrency,
     t.isIncome ? 'Income' : 'Expense',
   ]);
   const body = [header, ...rows]

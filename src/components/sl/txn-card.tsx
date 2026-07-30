@@ -2,13 +2,14 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import { useColors } from '@/constants/tokens';
 
 import { Icon } from '@/components/sl/icons';
 import { Text } from '@/components/sl/text';
 import { TodayBadge } from '@/components/sl/today-badge';
 import { categoryOf, categoryLabel } from '@/lib/categories';
 import type { Category } from '@/lib/categories';
-import { formatVND } from '@/lib/format';
+import { signedMoney } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import type { Txn } from '@/lib/transactions';
 
@@ -24,8 +25,8 @@ export function TxnCard({
   onShare?: (txn: Txn) => void;
 }) {
   const { t } = useT();
+  const c = useColors();
   const cat = categoryOf(txn.category, extras);
-  const sign = txn.isIncome ? '+' : '−';
 
   return (
     <Pressable style={styles.card} onPress={() => router.push(`/transaction/${txn.id}`)}>
@@ -56,7 +57,12 @@ export function TxnCard({
         <View style={[styles.categoryChip, { backgroundColor: cat.chip }]}>
           <Text style={[styles.categoryText, { color: cat.fg }]}>{categoryLabel(cat)}</Text>
         </View>
-        <Text style={styles.amount}>{sign + formatVND(txn.amount)}</Text>
+        <Text style={styles.amount}>{signedMoney(txn.amount, txn.currency, txn.isIncome)}</Text>
+        {txn.originalCurrency !== txn.currency ? (
+          <Text style={{ color: c.textSecondary, fontSize: 11, marginTop: 2, alignSelf: 'flex-end' }}>
+            ≈ {signedMoney(txn.originalAmount, txn.originalCurrency, txn.isIncome)}
+          </Text>
+        ) : null}
         <Text style={styles.note} numberOfLines={2}>{txn.note ?? txn.name}</Text>
         <Text style={styles.tapHint}>{t('txn.tap_hint')}</Text>
       </View>

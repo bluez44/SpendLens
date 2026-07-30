@@ -19,6 +19,7 @@ const baseTxn = {
   id: 42, date: '2026-07-23', time: '10:00', createdAt: 1,
   category: 'food' as const, name: 'Cà phê', note: null,
   amount: 45000, isIncome: false, photoPath: null,
+  currency: 'VND' as const, originalAmount: 45000, originalCurrency: 'VND' as const,
 };
 
 const txnWithPhoto = { ...baseTxn, photoPath: '/tmp/photo.jpg' };
