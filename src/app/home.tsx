@@ -12,7 +12,7 @@ import { GradientFill } from '@/components/sl/gradient';
 import { Icon } from '@/components/sl/icons';
 import { Segmented } from '@/components/sl/segmented';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
-import { compactTr, formatVND, monthKey, toDateKey } from '@/lib/format';
+import { formatCompact, formatMoney, monthKey, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import {
   categoryBreakdown,
@@ -94,17 +94,17 @@ export default function HomeScreen() {
             {rangeBalanceLabel}
           </Text>
           <Text style={{ fontSize: 34, fontWeight: W.extrabold, color: '#fff', letterSpacing: -0.5, marginTop: 2 }}>
-            {(sum.net >= 0 ? '+' : '−') + formatVND(sum.net)}
+            {(sum.net >= 0 ? '+' : '−') + formatMoney(sum.net, settings.primaryCurrency)}
           </Text>
           <View style={styles.summaryStats}>
             <View>
               <Text style={styles.summaryLabel}>{t('home.income_label')}</Text>
-              <Text style={[styles.summaryValue, { color: incomeColor }]}>{formatVND(sum.income)}</Text>
+              <Text style={[styles.summaryValue, { color: incomeColor }]}>{formatMoney(sum.income, settings.primaryCurrency)}</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View>
               <Text style={styles.summaryLabel}>{t('home.expense_label')}</Text>
-              <Text style={[styles.summaryValue, { color: expenseColor }]}>{formatVND(sum.expense)}</Text>
+              <Text style={[styles.summaryValue, { color: expenseColor }]}>{formatMoney(sum.expense, settings.primaryCurrency)}</Text>
             </View>
           </View>
         </View>
@@ -128,7 +128,7 @@ export default function HomeScreen() {
             <Donut
               slices={breakdown.map((b) => ({ color: b.color, pct: b.pct }))}
               centerTop={t('home.expense_label')}
-              centerMain={compactTr(sum.expense)}
+              centerMain={formatCompact(sum.expense, settings.primaryCurrency)}
             />
             <View style={{ flex: 1, gap: 7 }}>
               {breakdown.map((b) => (

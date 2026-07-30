@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/sl/icons';
 import { PhotoTile } from '@/components/sl/photo-tile';
 import { useColors, W } from '@/constants/tokens';
-import { signedVND } from '@/lib/format';
+import { signedMoney } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import { useTransactions } from '@/lib/transactions-context';
 
@@ -44,7 +44,7 @@ export default function GalleryScreen() {
                 <PhotoTile uri={txn.photoPath} width={tile} height={tile} radius={14} />
                 <View style={styles.amount}>
                   <Text style={{ fontSize: 11, fontWeight: W.extrabold, color: '#fff' }}>
-                    {signedVND(txn.amount, txn.isIncome)}
+                    {signedMoney(txn.amount, txn.currency, txn.isIncome)}
                   </Text>
                 </View>
               </View>

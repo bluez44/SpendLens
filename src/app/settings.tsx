@@ -15,7 +15,7 @@ import { useColors } from '@/constants/tokens';
 import { authenticateBiometric, clearPin, isBiometricAvailable } from '@/lib/app-lock';
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency';
 import { exportAndShareCsv } from '@/lib/export';
-import { formatMoney, formatVND, toDateKey } from '@/lib/format';
+import { formatMoney, toDateKey } from '@/lib/format';
 import { convert } from '@/lib/fx';
 import { useT } from '@/lib/i18n';
 import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@/lib/notifications';
@@ -148,7 +148,7 @@ export default function SettingsScreen() {
         <Pressable style={[styles.row, { borderColor: colors.hairline }]} onPress={() => budgetSheetRef.current?.present(settings.monthlyBudget)}>
           <Text style={{ color: colors.text, fontWeight: '500' }}>{t('settings.budget_row')}</Text>
           <Text style={{ color: colors.text, fontWeight: '600' }}>
-            {settings.monthlyBudget > 0 ? formatVND(settings.monthlyBudget) : t('settings.budget_not_set')}
+            {settings.monthlyBudget > 0 ? formatMoney(settings.monthlyBudget, settings.primaryCurrency) : t('settings.budget_not_set')}
           </Text>
         </Pressable>
 

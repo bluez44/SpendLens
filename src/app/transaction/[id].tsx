@@ -14,7 +14,7 @@ import { PhotoTile } from '@/components/sl/photo-tile';
 import { Money, useColors, W } from '@/constants/tokens';
 import { categoryOf, categoryLabel, INCOME_LABEL_KEY } from '@/lib/categories';
 import { i18n, useT } from '@/lib/i18n';
-import { dayLabel, signedVND, toDateKey } from '@/lib/format';
+import { dayLabel, formatMoney, signedMoney, toDateKey } from '@/lib/format';
 import { useTransactions } from '@/lib/transactions-context';
 import { toCategoryObj } from '@/lib/user-categories';
 
@@ -96,7 +96,7 @@ export default function TransactionDetailScreen() {
         </View>
 
         <Text style={{ fontSize: 46, fontWeight: W.extrabold, letterSpacing: -1, marginTop: 16, color: accent }}>
-          {signedVND(txn.amount, txn.isIncome)}
+          {signedMoney(txn.amount, txn.currency, txn.isIncome)}
         </Text>
         <Text style={{ fontSize: 17, fontWeight: W.bold, marginTop: 6, color: c.text }}>{txn.name}</Text>
 
@@ -108,6 +108,9 @@ export default function TransactionDetailScreen() {
             value={txn.isIncome ? t('transaction.type_income') : t('transaction.type_expense')}
             valueColor={accent}
           />
+          {txn.originalCurrency !== txn.currency ? (
+            <DetailRow label={t('currency.original_label')} value={formatMoney(txn.originalAmount, txn.originalCurrency)} />
+          ) : null}
         </View>
 
         <Pressable onPress={confirmDelete} style={styles.deleteBtn}>

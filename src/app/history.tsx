@@ -10,12 +10,13 @@ import { Icon } from '@/components/sl/icons';
 import { Segmented } from '@/components/sl/segmented';
 import { TransactionRow } from '@/components/sl/transaction-row';
 import { Money, useColors, W } from '@/constants/tokens';
-import { compactK, dayLabel, formatVND, toDateKey } from '@/lib/format';
+import { formatCompact, formatMoney, dayLabel, toDateKey } from '@/lib/format';
 import { exportAndShareCsv } from '@/lib/export';
 import { useT } from '@/lib/i18n';
 import { filterRange, groupByDay, summarize, type Range } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 import { toCategoryObj } from '@/lib/user-categories';
+import { useSettings } from '@/lib/settings-context';
 
 const RANGES: Range[] = ['day', 'week', 'month'];
 
@@ -24,6 +25,8 @@ export default function HistoryScreen() {
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const { transactions, userCategories } = useTransactions();
+  const { settings } = useSettings();
+  const primary = settings.primaryCurrency;
   const categoryExtras = userCategories.map(toCategoryObj);
   const [rangeIndex, setRangeIndex] = useState(1);
   const range = RANGES[rangeIndex];
@@ -66,13 +69,13 @@ export default function HistoryScreen() {
         </View>
 
         <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-          <SummaryCell label={t('history.income_label')} value={'+' + compactK(sum.income)} color={Money.income} />
+          <SummaryCell label={t('history.income_label')} value={'+' + formatCompact(sum.income, primary)} color={Money.income} />
           <View style={[styles.vline, { backgroundColor: c.cardBorder }]} />
-          <SummaryCell label={t('history.expense_label')} value={'−' + compactK(sum.expense)} color={Money.expense} />
+          <SummaryCell label={t('history.expense_label')} value={'−' + formatCompact(sum.expense, primary)} color={Money.expense} />
           <View style={[styles.vline, { backgroundColor: c.cardBorder }]} />
           <SummaryCell
             label={t('history.net_label')}
-            value={(sum.net >= 0 ? '+' : '−') + compactK(sum.net)}
+            value={(sum.net >= 0 ? '+' : '−') + formatCompact(sum.net, primary)}
             color={c.text}
           />
         </View>
@@ -89,7 +92,7 @@ export default function HistoryScreen() {
             <View style={styles.groupHeader}>
               <Text style={{ fontSize: 13, fontWeight: W.extrabold, color: c.text }}>{dayLabel(g.key, todayKey)}</Text>
               <Text style={{ fontSize: 12.5, fontWeight: W.bold, color: c.textSecondary }}>
-                {(g.net >= 0 ? '+' : '−') + formatVND(g.net)}
+                {(g.net >= 0 ? '+' : '−') + formatMoney(g.net, primary)}
               </Text>
             </View>
             <View style={{ gap: 11 }}>

@@ -18,10 +18,11 @@ import type { ShareSheetHandle } from '@/components/sl/share-sheet';
 import { TodayBadge } from '@/components/sl/today-badge';
 import { TxnCard } from '@/components/sl/txn-card';
 import { Money, W, useColors } from '@/constants/tokens';
-import { formatVND, toDateKey } from '@/lib/format';
+import { formatMoney, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import type { Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
+import { useSettings } from '@/lib/settings-context';
 import { toCategoryObj } from '@/lib/user-categories';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -32,6 +33,7 @@ export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const { transactions, userCategories } = useTransactions();
+  const { settings } = useSettings();
   const categoryExtras = userCategories.map(toCategoryObj);
   const [facing, setFacing] = useState<'back' | 'front'>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
@@ -197,6 +199,7 @@ function CameraPage({
   todayExpense: number;
 }) {
   const { t } = useT();
+  const { settings } = useSettings();
   const [zoom, setZoom] = useState(0);
   const [initialZoom, setInitialZoom] = useState(0);
 
@@ -229,7 +232,7 @@ function CameraPage({
         <View style={styles.totalPill}>
           <Text style={{ fontSize: 12, fontWeight: W.semibold, color: 'rgba(255,255,255,0.65)' }}>{t('nav.today')}</Text>
           <Text style={{ fontSize: 15, fontWeight: W.extrabold, color: Money.expenseOnDark }}>
-            −{formatVND(todayExpense)}
+            −{formatMoney(todayExpense, settings.primaryCurrency)}
           </Text>
         </View>
         <RoundButton onPress={() => router.push('/history')}><Icon name="menu" /></RoundButton>
