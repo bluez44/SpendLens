@@ -30,7 +30,11 @@ export class FxService {
     );
     const map = Object.fromEntries(rows.map(r => [r.currency, r.rate_to_usd]));
     return NON_USD.reduce((acc, cur) => {
-      acc[cur] = (map[cur] ?? 0);
+      const rate = map[cur];
+      if (typeof rate !== 'number' || rate <= 0) {
+        throw new Error(`Missing FX rate for ${cur}`);
+      }
+      acc[cur] = rate;
       return acc;
     }, {} as RateMap);
   }

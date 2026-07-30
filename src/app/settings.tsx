@@ -11,7 +11,7 @@ import { RateOverrideSheet, type RateOverrideSheetHandle } from '@/components/sl
 import { Segmented } from '@/components/sl/segmented';
 import { Text } from '@/components/sl/text';
 import { VerifyPinSheet, type VerifyPinSheetHandle } from '@/components/sl/verify-pin-sheet';
-import { useColors } from '@/constants/tokens';
+import { AccentGradient, Money, useColors } from '@/constants/tokens';
 import { authenticateBiometric, clearPin, isBiometricAvailable } from '@/lib/app-lock';
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency';
 import { exportAndShareCsv } from '@/lib/export';
@@ -48,7 +48,7 @@ export default function SettingsScreen() {
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const nonUsdCurrencies = CURRENCIES.filter((c) => c !== 'USD') as Exclude<CurrencyCode, 'USD'>[];
+  const nonUsdCurrencies = CURRENCIES.filter((c) => c !== 'USD' && c !== settings.primaryCurrency) as Exclude<CurrencyCode, 'USD'>[];
 
   const askChangePrimary = (target: CurrencyCode) => {
     if (target === settings.primaryCurrency) return;
@@ -281,7 +281,7 @@ export default function SettingsScreen() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={{ color: colors.text, fontWeight: '600' }}>{t('currency.rates_label')}</Text>
             <Pressable onPress={doRefetch} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-              <Text style={{ color: '#FF6B6B', fontWeight: '600' }}>{t('currency.fetch_now')}</Text>
+              <Text style={{ color: AccentGradient[1], fontWeight: '600' }}>{t('currency.fetch_now')}</Text>
             </Pressable>
           </View>
           {fxLastFetchedAt ? (
@@ -289,7 +289,7 @@ export default function SettingsScreen() {
               {t('currency.last_fetched', { time: new Date(fxLastFetchedAt).toLocaleTimeString() })}
             </Text>
           ) : null}
-          {fetchError ? <Text style={{ color: '#FB5B4D', fontSize: 12 }}>{fetchError}</Text> : null}
+          {fetchError ? <Text style={{ color: Money.expense, fontSize: 12 }}>{fetchError}</Text> : null}
           {nonUsdCurrencies.map((cc) => {
             const rateUsd = rates[cc];
             const source = getRateSource(cc);
@@ -315,7 +315,7 @@ export default function SettingsScreen() {
                   </Text>
                   {source === 'manual' ? (
                     <Pressable onPress={() => clearManualRate(cc)}>
-                      <Text style={{ color: '#FF6B6B', fontSize: 12 }}>{t('currency.revert_to_auto')}</Text>
+                      <Text style={{ color: AccentGradient[1], fontSize: 12 }}>{t('currency.revert_to_auto')}</Text>
                     </Pressable>
                   ) : null}
                 </View>

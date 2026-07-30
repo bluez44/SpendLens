@@ -46,6 +46,11 @@ export default function GalleryScreen() {
                   <Text style={{ fontSize: 11, fontWeight: W.extrabold, color: '#fff' }}>
                     {signedMoney(txn.amount, txn.currency, txn.isIncome)}
                   </Text>
+                  {txn.originalCurrency !== txn.currency ? (
+                    <Text style={{ color: c.textSecondary, fontSize: 10, marginTop: 2 }}>
+                      ≈ {signedMoney(txn.originalAmount, txn.originalCurrency, txn.isIncome)}
+                    </Text>
+                  ) : null}
                 </View>
               </View>
             </Pressable>
