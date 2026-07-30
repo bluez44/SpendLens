@@ -30,7 +30,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
   const [transactions, setTransactions] = useState<Txn[]>([]);
   const [ready, setReady] = useState(false);
   const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
-  const { onAfterPrimaryChange } = useSettings();
+  const { settings, rates, onAfterPrimaryChange } = useSettings();
+  const primary = settings.primaryCurrency;
 
   const refresh = useCallback(() => {
     setTransactions(listTransactions(db));
@@ -49,19 +50,19 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
 
   const add = useCallback(
     (input: NewTxn) => {
-      const id = insertTransaction(input, db);
+      const id = insertTransaction(input, db, primary, rates);
       refresh();
       return id;
     },
-    [refresh]
+    [refresh, primary, rates]
   );
 
   const update = useCallback(
     (id: number, input: NewTxn) => {
-      updateTransaction(id, input, db);
+      updateTransaction(id, input, db, primary, rates);
       refresh();
     },
-    [refresh]
+    [refresh, primary, rates]
   );
 
   const remove = useCallback(

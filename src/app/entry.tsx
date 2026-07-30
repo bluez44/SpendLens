@@ -6,6 +6,7 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleShee
 import { Text, TextInput } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CurrencyPickerSheet, type CurrencyPickerSheetHandle } from '@/components/sl/currency-picker-sheet';
 import { GradientButton } from '@/components/sl/gradient';
 import { CategoryChip } from '@/components/sl/category-chip';
 import { Icon } from '@/components/sl/icons';
@@ -14,9 +15,11 @@ import { Segmented } from '@/components/sl/segmented';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
 import { STATIC_CATEGORIES } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
+import { CURRENCY_META, type CurrencyCode } from '@/lib/currency';
+import { convert } from '@/lib/fx';
 import { deleteUserCategory, insertUserCategory, listUserCategories, toCategoryObj } from '@/lib/user-categories';
 import type { UserCategory } from '@/lib/user-categories';
-import { dayLabel, formatVND, toDateKey } from '@/lib/format';
+import { dayLabel, formatAmountInput, formatMoney, toDateKey } from '@/lib/format';
 import { decideBudgetAlert } from '@/lib/budget-alert';
 import { fireBudgetAlert } from '@/lib/notifications';
 import { useT } from '@/lib/i18n';
@@ -39,7 +42,7 @@ export default function EntryScreen() {
   const params = useLocalSearchParams<{ photo?: string; note?: string; id?: string }>();
   const { photo, id } = params;
   const { add, update, getById, transactions, refreshUserCategories } = useTransactions();
-  const { settings, update: updateSettings } = useSettings();
+  const { settings, rates, update: updateSettings } = useSettings();
 
   const scrollRef = useRef<ScrollView>(null);
   const amountOffsetRef = useRef(0);
@@ -57,11 +60,25 @@ export default function EntryScreen() {
   const [pickerStep, setPickerStep] = useState<'idle' | 'date' | 'time' | 'datetime'>('idle');
 
   const [isIncome, setIsIncome] = useState(existing?.isIncome ?? false);
-  const [amount, setAmount] = useState(existing?.amount ?? 0);
+  const [currency, setCurrency] = useState<CurrencyCode>(
+    existing ? existing.originalCurrency : settings.primaryCurrency
+  );
+  const [amountDigits, setAmountDigits] = useState<string>(
+    existing
+      ? String(Math.round(existing.originalAmount * (CURRENCY_META[existing.originalCurrency].decimals === 2 ? 100 : 1)))
+      : ''
+  );
+  const currencyPickerRef = useRef<CurrencyPickerSheetHandle>(null);
   const [category, setCategory] = useState<CategoryId>(existing?.category ?? 'food');
   const [note, setNote] = useState(mergeExisting(existing) || params.note || '');
   const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
   const [customInput, setCustomInput] = useState('');
+
+  const originalAmount = (() => {
+    if (!amountDigits) return 0;
+    const n = Number(amountDigits);
+    return CURRENCY_META[currency].decimals === 2 ? n / 100 : n;
+  })();
 
   const accent = isIncome ? Money.income : Money.expense;
 
@@ -112,7 +129,7 @@ export default function EntryScreen() {
     );
   }
 
-  const canSave = amount > 0 && note.trim() !== '';
+  const canSave = originalAmount > 0 && note.trim() !== '';
 
   const save = async () => {
     if (!canSave) return;
@@ -137,7 +154,8 @@ export default function EntryScreen() {
       category: effectiveCategory,
       name: note.trim(),
       note: null,
-      amount,
+      originalAmount,
+      originalCurrency: currency,
       isIncome,
       photoPath: photoUri ?? null,
     };
@@ -150,9 +168,10 @@ export default function EntryScreen() {
         const budget = settings.monthlyBudget;
         if (budget > 0 && settings.budgetAlertsEnabled) {
           const currentMonth = toDateKey(new Date()).slice(0, 7);
+          const primaryAmount = convert(originalAmount, currency, settings.primaryCurrency, rates);
           const spent = transactions
             .filter((tx) => !tx.isIncome && tx.date.slice(0, 7) === currentMonth)
-            .reduce((s, tx) => s + tx.amount, 0) + amount;
+            .reduce((s, tx) => s + tx.amount, 0) + primaryAmount;
           const fireLevel = decideBudgetAlert({
             spent,
             budget,
@@ -203,19 +222,38 @@ export default function EntryScreen() {
           style={styles.amountBlock}
           onLayout={(e) => { amountOffsetRef.current = e.nativeEvent.layout.y; }}
         >
-          <Text style={{ fontSize: 12, fontWeight: W.semibold, color: c.textSecondary, letterSpacing: 0.3 }}>{t('entry.amount_label')} <Text style={{ color: '#FB5B4D' }}>*</Text></Text>
+          <Text style={{ fontSize: 12, fontWeight: W.semibold, color: c.textSecondary, letterSpacing: 0.3 }}>{t('entry.amount_label')} <Text style={{ color: Money.expense }}>*</Text></Text>
           <View style={styles.amountRow}>
+            {CURRENCY_META[currency].position === 'prefix' ? (
+              <Text style={[styles.dong, { color: accent }]}>{CURRENCY_META[currency].symbol}</Text>
+            ) : null}
             <TextInput
-              value={amount ? formatVND(amount).slice(0, -1) : ''}
-              onChangeText={(v) => setAmount(Number(v.replace(/\D/g, '')) || 0)}
+              value={amountDigits ? formatAmountInput(amountDigits, currency) : ''}
+              onChangeText={(v) => setAmountDigits(v.replace(/\D/g, ''))}
               keyboardType="number-pad"
               placeholder="0"
               placeholderTextColor={c.textSecondary}
               onFocus={() => scrollToOffset(amountOffsetRef.current)}
               style={[styles.amountInput, { color: c.text }]}
             />
-            <Text style={[styles.dong, { color: accent }]}>₫</Text>
+            {CURRENCY_META[currency].position === 'suffix' ? (
+              <Text style={[styles.dong, { color: accent }]}>{CURRENCY_META[currency].symbol}</Text>
+            ) : null}
           </View>
+          <Pressable
+            onPress={() => currencyPickerRef.current?.present(currency)}
+            style={({ pressed }) => [
+              styles.currencyChip,
+              { backgroundColor: c.chipBg, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Text style={{ color: c.text, fontWeight: W.semibold }}>{currency} ▾</Text>
+          </Pressable>
+          {currency !== settings.primaryCurrency && originalAmount > 0 ? (
+            <Text style={{ color: c.textSecondary, marginTop: 4, fontSize: 12 }}>
+              ≈ {formatMoney(convert(originalAmount, currency, settings.primaryCurrency, rates), settings.primaryCurrency)}
+            </Text>
+          ) : null}
         </View>
 
         {/* Categories (expense only) */}
@@ -339,6 +377,7 @@ export default function EntryScreen() {
         />
       </ScrollView>
       </KeyboardAvoidingView>
+      <CurrencyPickerSheet ref={currencyPickerRef} onChoose={(cc) => setCurrency(cc)} />
     </View>
   );
 }
@@ -372,6 +411,13 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   dong: { fontSize: 44, fontWeight: W.extrabold },
+  currencyChip: {
+    alignSelf: 'center',
+    marginTop: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 18 },
   field: {
     marginTop: 16,
