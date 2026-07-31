@@ -39,6 +39,7 @@ export const AnchorDayPickerSheet = forwardRef<AnchorDayPickerSheetHandle, Props
       <BottomSheetModal
         ref={sheet}
         snapPoints={['65%']}
+        stackBehavior="push"
         backdropComponent={renderBackdrop}
         backgroundStyle={{ backgroundColor: c.card }}
       >
