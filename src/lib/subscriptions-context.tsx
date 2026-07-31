@@ -93,7 +93,13 @@ export function SubscriptionsProvider({ children }: { children: ReactNode }) {
     const id = insertSubscription(input, db);
     refresh();
     const sub = listSubscriptions(db).find((s) => s.id === id);
-    if (sub) await rescheduleNotifications(sub);
+    if (sub) {
+      try {
+        await rescheduleNotifications(sub);
+      } catch {
+        // silent — best effort
+      }
+    }
     return id;
   }, [refresh]);
 
@@ -102,21 +108,43 @@ export function SubscriptionsProvider({ children }: { children: ReactNode }) {
     refresh();
     const sub = listSubscriptions(db).find((s) => s.id === id);
     if (sub) {
-      await cancelNotifications(sub.uuid);
-      if (!sub.paused) await rescheduleNotifications(sub);
+      try {
+        await cancelNotifications(sub.uuid);
+      } catch {
+        // silent — best effort
+      }
+      if (!sub.paused) {
+        try {
+          await rescheduleNotifications(sub);
+        } catch {
+          // silent — best effort
+        }
+      }
     }
   }, [refresh]);
 
   const remove = useCallback(async (id: number) => {
     const sub = listSubscriptions(db).find((s) => s.id === id);
-    if (sub) await cancelNotifications(sub.uuid);
+    if (sub) {
+      try {
+        await cancelNotifications(sub.uuid);
+      } catch {
+        // silent — best effort
+      }
+    }
     deleteSubscription(id, db);
     refresh();
   }, [refresh]);
 
   const pause = useCallback(async (id: number) => {
     const sub = listSubscriptions(db).find((s) => s.id === id);
-    if (sub) await cancelNotifications(sub.uuid);
+    if (sub) {
+      try {
+        await cancelNotifications(sub.uuid);
+      } catch {
+        // silent — best effort
+      }
+    }
     pauseSubscription(id, db);
     refresh();
   }, [refresh]);
@@ -125,7 +153,13 @@ export function SubscriptionsProvider({ children }: { children: ReactNode }) {
     resumeSubscription(id, db);
     refresh();
     const sub = listSubscriptions(db).find((s) => s.id === id);
-    if (sub) await rescheduleNotifications(sub);
+    if (sub) {
+      try {
+        await rescheduleNotifications(sub);
+      } catch {
+        // silent — best effort
+      }
+    }
   }, [refresh]);
 
   const count = useCallback((opts?: { activeOnly?: boolean }) => {
