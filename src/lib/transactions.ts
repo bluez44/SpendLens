@@ -26,6 +26,7 @@ export interface Txn {
   originalCurrency: CurrencyCode;
   isIncome: boolean;
   photoPath: string | null;
+  subscriptionUuid: string | null;
 }
 
 export interface NewTxn {
@@ -40,6 +41,7 @@ export interface NewTxn {
   photoPath?: string | null;
   /** Defaults to now; seed data passes the real transaction time. */
   createdAt?: number;
+  subscriptionUuid?: string | null;
 }
 
 interface Row {
@@ -58,6 +60,7 @@ interface Row {
   original_currency: string;
   is_income: number;
   photo_path: string | null;
+  subscription_uuid: string | null;
 }
 
 function toTxn(r: Row): Txn {
@@ -77,6 +80,7 @@ function toTxn(r: Row): Txn {
     originalCurrency: r.original_currency as CurrencyCode,
     isIncome: r.is_income === 1,
     photoPath: r.photo_path,
+    subscriptionUuid: r.subscription_uuid,
   };
 }
 
@@ -102,13 +106,14 @@ export function insertTransaction(
   const result = database.runSync(
     `INSERT INTO transactions
       (uuid, date, time, created_at, updated_at, category, name, note,
-       amount, currency, original_amount, original_currency, is_income, photo_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       amount, currency, original_amount, original_currency, is_income, photo_path, subscription_uuid)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     Crypto.randomUUID(),
     input.date, input.time, now, now,
     input.category, input.name, input.note ?? null,
     amount, primary, input.originalAmount, input.originalCurrency,
     input.isIncome ? 1 : 0, input.photoPath ?? null,
+    input.subscriptionUuid ?? null,
   );
   return result.lastInsertRowId;
 }
@@ -124,12 +129,13 @@ export function updateTransaction(
     `UPDATE transactions
      SET date = ?, time = ?, updated_at = ?, category = ?, name = ?, note = ?,
          amount = ?, currency = ?, original_amount = ?, original_currency = ?,
-         is_income = ?, photo_path = ?
+         is_income = ?, photo_path = ?, subscription_uuid = ?
      WHERE id = ?`,
     input.date, input.time, Date.now(),
     input.category, input.name, input.note ?? null,
     amount, primary, input.originalAmount, input.originalCurrency,
     input.isIncome ? 1 : 0, input.photoPath ?? null,
+    input.subscriptionUuid ?? null,
     id,
   );
 }

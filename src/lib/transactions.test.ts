@@ -29,7 +29,8 @@ function freshDb() {
       photo_path TEXT,
       currency TEXT,
       original_amount REAL,
-      original_currency TEXT
+      original_currency TEXT,
+      subscription_uuid TEXT
     );
   `);
   return database;
@@ -89,6 +90,30 @@ describe('updateTransaction currency', () => {
     );
     expect(row?.original_amount).toBe(25);
     expect(row?.amount).toBeCloseTo(25 * 25000, 0);
+  });
+});
+
+describe('subscriptionUuid on insert/list', () => {
+  it('default null when omitted', () => {
+    const db = freshDb();
+    const id = insertTransaction({
+      date: '2026-08-01', time: '10:00', createdAt: 1000,
+      category: 'food', name: 'x',
+      originalAmount: 45000, originalCurrency: 'VND', isIncome: false,
+    }, db);
+    const list = listTransactions(db);
+    expect(list.find((t) => t.id === id)?.subscriptionUuid).toBeNull();
+  });
+
+  it('stores non-null uuid when provided', () => {
+    const db = freshDb();
+    insertTransaction({
+      date: '2026-08-01', time: '10:00', createdAt: 1000,
+      category: 'food', name: 'Claude Pro',
+      originalAmount: 20, originalCurrency: 'USD', isIncome: false,
+      subscriptionUuid: 'sub-abc',
+    }, db);
+    expect(listTransactions(db)[0].subscriptionUuid).toBe('sub-abc');
   });
 });
 
