@@ -23,6 +23,7 @@ import { AppLockProvider, useAppLock } from '@/lib/app-lock-context';
 import { SettingsProvider, useSettings } from '@/lib/settings-context';
 import { ThemeProvider as SLThemeProvider } from '@/lib/theme-context';
 import { TransactionsProvider } from '@/lib/transactions-context';
+import { SubscriptionsProvider } from '@/lib/subscriptions-context';
 import { scheduleDailyReminder } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -93,9 +94,11 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <SettingsProvider>
           <TransactionsProvider>
-            <LockGate>
-              <ThemedShell scheme={scheme} />
-            </LockGate>
+            <SubscriptionsProvider>
+              <LockGate>
+                <ThemedShell scheme={scheme} />
+              </LockGate>
+            </SubscriptionsProvider>
           </TransactionsProvider>
         </SettingsProvider>
       </SafeAreaProvider>
