@@ -77,6 +77,13 @@ export default function RootLayout() {
   const scheme = useColorScheme();
 
   useEffect(() => {
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (!response) return;
+      const route = (response.notification.request.content.data as { route?: string })?.route;
+      if (route === '/subscriptions') {
+        router.push('/subscriptions');
+      }
+    });
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
       const route = (response.notification.request.content.data as { route?: string })?.route;
       if (route === '/subscriptions') {

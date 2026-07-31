@@ -115,6 +115,25 @@ describe('subscriptionUuid on insert/list', () => {
     }, db);
     expect(listTransactions(db)[0].subscriptionUuid).toBe('sub-abc');
   });
+
+  it('updateTransaction preserves subscription_uuid when field omitted', () => {
+    const db = freshDb();
+    const id = insertTransaction({
+      date: '2026-08-01', time: '10:00', createdAt: 1000,
+      category: 'food', name: 'Sub txn',
+      originalAmount: 20, originalCurrency: 'USD', isIncome: false,
+      subscriptionUuid: 'sub-preserve',
+    }, db);
+    updateTransaction(id, {
+      date: '2026-08-01', time: '10:00',
+      category: 'food', name: 'Renamed',
+      originalAmount: 25, originalCurrency: 'USD', isIncome: false,
+    }, db);
+    const row = db.getFirstSync<{ subscription_uuid: string | null }>(
+      'SELECT subscription_uuid FROM transactions WHERE id = ?', id,
+    );
+    expect(row?.subscription_uuid).toBe('sub-preserve');
+  });
 });
 
 describe('resetTransactions', () => {

@@ -151,4 +151,29 @@ describe('catchUpSubscriptions', () => {
     const created = catchUpSubscriptions(db, 'VND', IDENTITY_RATES, now);
     expect(created).toBe(12);
   });
+
+  it('skips a subscription with invalid anchor_day but continues others', () => {
+    const db = freshDb();
+    const now = new Date('2026-08-15T10:00:00');
+    // Valid one
+    db.runSync(
+      `INSERT INTO subscriptions (uuid, name, category, original_amount, original_currency, anchor_day, next_due_date, notify_7, notify_3, notify_1, paused, created_at, updated_at)
+       VALUES ('sub-good', 'Good', 'other', 20, 'USD', 15, '2026-08-15', 0, 0, 0, 0, ?, ?)`,
+      now.getTime(), now.getTime(),
+    );
+    // Invalid anchor_day = 0
+    db.runSync(
+      `INSERT INTO subscriptions (uuid, name, category, original_amount, original_currency, anchor_day, next_due_date, notify_7, notify_3, notify_1, paused, created_at, updated_at)
+       VALUES ('sub-bad', 'Bad', 'other', 30, 'USD', 0, '2026-08-15', 0, 0, 0, 0, ?, ?)`,
+      now.getTime(), now.getTime(),
+    );
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const created = catchUpSubscriptions(db, 'VND', IDENTITY_RATES, now);
+    expect(created).toBe(1);
+    const txnRows = db.getAllSync<{ subscription_uuid: string }>('SELECT subscription_uuid FROM transactions');
+    expect(txnRows).toHaveLength(1);
+    expect(txnRows[0].subscription_uuid).toBe('sub-good');
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
 });

@@ -23,6 +23,9 @@ import { Text } from '@/components/sl/text';
 import { AccentGradient, Money, Radius, W, useColors } from '@/constants/tokens';
 import { STATIC_CATEGORIES } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
+import { insertUserCategory, listUserCategories, toCategoryObj } from '@/lib/user-categories';
+import type { UserCategory } from '@/lib/user-categories';
+import { useTransactions } from '@/lib/transactions-context';
 import { CURRENCY_META, type CurrencyCode } from '@/lib/currency';
 import { convert } from '@/lib/fx';
 import { formatAmountInput, formatMoney } from '@/lib/format';
@@ -58,6 +61,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
     const { t } = useT();
     const c = useColors();
     const { settings, rates } = useSettings();
+    const { refreshUserCategories } = useTransactions();
 
     const sheet = useRef<BottomSheetModal>(null);
     const currencyPickerRef = useRef<CurrencyPickerSheetHandle>(null);
@@ -88,6 +92,9 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
     const notify1Ref = useRef(false);
     const editingIdRef = useRef<number | undefined>(undefined);
 
+    const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
+    const [customInput, setCustomInput] = useState('');
+
     const setNameSynced = (v: string) => { nameRef.current = v; setName(v); };
     const setCurrencySynced = (v: CurrencyCode) => { currencyRef.current = v; setCurrency(v); };
     const setAmountDigitsSynced = (v: string) => { amountDigitsRef.current = v; setAmountDigits(v); };
@@ -111,6 +118,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
       setNotify7Synced(false);
       setNotify3Synced(false);
       setNotify1Synced(false);
+      setCustomInput('');
     };
 
     useImperativeHandle(ref, () => ({
@@ -135,6 +143,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
         setNotify7Synced(sub.notify7);
         setNotify3Synced(sub.notify3);
         setNotify1Synced(sub.notify1);
+        setCustomInput('');
         sheet.current?.present();
       },
       dismiss: () => sheet.current?.dismiss(),
@@ -213,6 +222,26 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
       setNotify3Synced(flags.n3);
       setNotify1Synced(flags.n1);
     };
+
+    function tryAddCustomCategory() {
+      const name = customInput.trim();
+      if (!name) return;
+      try {
+        const uc = insertUserCategory(name);
+        setUserCategories((prev) => [...prev, uc]);
+        setCategorySynced(uc.id);
+        setCustomInput('');
+        refreshUserCategories();
+      } catch (err) {
+        const existingUC = listUserCategories().find((c) => c.label === name);
+        if (existingUC) {
+          setCategorySynced(existingUC.id);
+          setCustomInput('');
+        } else {
+          console.warn('Failed to add category', err);
+        }
+      }
+    }
 
     // save() reads from refs for correctness when called synchronously after
     // state setters in tests (avoids stale closure over the previous render's
@@ -372,7 +401,32 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
                   onPress={() => setCategorySynced(cat.id)}
                 />
               ))}
+              {userCategories.map((uc) => {
+                const cat = toCategoryObj(uc);
+                return (
+                  <CategoryChip
+                    key={cat.id}
+                    category={cat}
+                    selected={category === cat.id}
+                    onPress={() => setCategorySynced(cat.id)}
+                  />
+                );
+              })}
             </View>
+            {category === 'other' && (
+              <View style={[styles.customCategoryRow, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
+                <BottomSheetTextInput
+                  value={customInput}
+                  onChangeText={setCustomInput}
+                  placeholder={t('entry.custom_category_placeholder')}
+                  placeholderTextColor={c.textSecondary}
+                  style={{ flex: 1, fontSize: 14, color: c.text, padding: 0 }}
+                />
+                <Pressable onPress={tryAddCustomCategory} disabled={customInput.trim() === ''}>
+                  <Icon name="check" size={20} color={customInput.trim() === '' ? c.textSecondary : c.text} />
+                </Pressable>
+              </View>
+            )}
 
             {/* Anchor day */}
             <Text style={[styles.label, { color: c.textSecondary }]}>{t('sub.field_anchor_day')}</Text>
@@ -563,6 +617,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  customCategoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: Radius.button,
+    borderWidth: 1,
+  },
   anchorRow: {
     flexDirection: 'row',
     alignItems: 'center',

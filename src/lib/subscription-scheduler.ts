@@ -59,44 +59,52 @@ export function catchUpSubscriptions(
   let totalCreated = 0;
 
   for (const sub of rows) {
-    let dueKey = sub.next_due_date;
-    let cycles = 0;
-    while (dueKey <= todayKey && cycles < MAX_CATCH_UP_CYCLES) {
-      const createdAt = new Date(`${dueKey}T12:00:00`).getTime();
-      insertTransaction(
-        {
-          date: dueKey,
-          time: '12:00',
-          createdAt,
-          category: sub.category as any,
-          name: sub.name,
-          note: null,
-          originalAmount: sub.original_amount,
-          originalCurrency: sub.original_currency as CurrencyCode,
-          isIncome: false,
-          photoPath: sub.photo_path,
-          subscriptionUuid: sub.uuid,
-        },
-        db,
-        primary,
-        rates,
+    try {
+      // Validate anchor_day eagerly so a corrupted value skips the entire sub.
+      if (!Number.isInteger(sub.anchor_day) || sub.anchor_day < 1 || sub.anchor_day > 31) {
+        throw new Error(`Invalid anchor day: ${sub.anchor_day}`);
+      }
+      let dueKey = sub.next_due_date;
+      let cycles = 0;
+      while (dueKey <= todayKey && cycles < MAX_CATCH_UP_CYCLES) {
+        const createdAt = new Date(`${dueKey}T12:00:00`).getTime();
+        insertTransaction(
+          {
+            date: dueKey,
+            time: '12:00',
+            createdAt,
+            category: sub.category as any,
+            name: sub.name,
+            note: null,
+            originalAmount: sub.original_amount,
+            originalCurrency: sub.original_currency as CurrencyCode,
+            isIncome: false,
+            photoPath: sub.photo_path,
+            subscriptionUuid: sub.uuid,
+          },
+          db,
+          primary,
+          rates,
+        );
+        totalCreated++;
+        cycles++;
+        const next = nextDueFromAnchor(
+          sub.anchor_day,
+          new Date(new Date(`${dueKey}T12:00:00`).getTime() + 24 * 60 * 60 * 1000),
+        );
+        dueKey = toDateKey(next);
+      }
+      db.runSync(
+        'UPDATE subscriptions SET next_due_date = ?, updated_at = ? WHERE id = ?',
+        dueKey,
+        now.getTime(),
+        sub.id,
       );
-      totalCreated++;
-      cycles++;
-      const next = nextDueFromAnchor(
-        sub.anchor_day,
-        new Date(new Date(`${dueKey}T12:00:00`).getTime() + 24 * 60 * 60 * 1000),
-      );
-      dueKey = toDateKey(next);
-    }
-    db.runSync(
-      'UPDATE subscriptions SET next_due_date = ?, updated_at = ? WHERE id = ?',
-      dueKey,
-      now.getTime(),
-      sub.id,
-    );
-    if (cycles === MAX_CATCH_UP_CYCLES) {
-      console.warn(`catchUpSubscriptions: hit ${MAX_CATCH_UP_CYCLES}-cycle cap for ${sub.uuid}`);
+      if (cycles === MAX_CATCH_UP_CYCLES) {
+        console.warn(`catchUpSubscriptions: hit ${MAX_CATCH_UP_CYCLES}-cycle cap for ${sub.uuid}`);
+      }
+    } catch (err) {
+      console.warn(`catchUpSubscriptions: skipped subscription ${sub.uuid} due to error`, err);
     }
   }
 

@@ -125,19 +125,34 @@ export function updateTransaction(
   const amount = rates
     ? convert(input.originalAmount, input.originalCurrency, primary, rates)
     : input.originalAmount;
-  database.runSync(
-    `UPDATE transactions
-     SET date = ?, time = ?, updated_at = ?, category = ?, name = ?, note = ?,
-         amount = ?, currency = ?, original_amount = ?, original_currency = ?,
-         is_income = ?, photo_path = ?, subscription_uuid = ?
-     WHERE id = ?`,
-    input.date, input.time, Date.now(),
-    input.category, input.name, input.note ?? null,
-    amount, primary, input.originalAmount, input.originalCurrency,
-    input.isIncome ? 1 : 0, input.photoPath ?? null,
-    input.subscriptionUuid ?? null,
-    id,
-  );
+  if (input.subscriptionUuid !== undefined) {
+    database.runSync(
+      `UPDATE transactions
+       SET date = ?, time = ?, updated_at = ?, category = ?, name = ?, note = ?,
+           amount = ?, currency = ?, original_amount = ?, original_currency = ?,
+           is_income = ?, photo_path = ?, subscription_uuid = ?
+       WHERE id = ?`,
+      input.date, input.time, Date.now(),
+      input.category, input.name, input.note ?? null,
+      amount, primary, input.originalAmount, input.originalCurrency,
+      input.isIncome ? 1 : 0, input.photoPath ?? null,
+      input.subscriptionUuid,
+      id,
+    );
+  } else {
+    database.runSync(
+      `UPDATE transactions
+       SET date = ?, time = ?, updated_at = ?, category = ?, name = ?, note = ?,
+           amount = ?, currency = ?, original_amount = ?, original_currency = ?,
+           is_income = ?, photo_path = ?
+       WHERE id = ?`,
+      input.date, input.time, Date.now(),
+      input.category, input.name, input.note ?? null,
+      amount, primary, input.originalAmount, input.originalCurrency,
+      input.isIncome ? 1 : 0, input.photoPath ?? null,
+      id,
+    );
+  }
 }
 
 export function deleteTransaction(id: number, database: SQLiteDatabase = defaultDb): void {

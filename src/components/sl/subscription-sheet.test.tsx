@@ -9,10 +9,11 @@ import { createRef } from 'react';
 import { act, fireEvent, render } from '@testing-library/react-native';
 import { SubscriptionSheet, type SubscriptionSheetHandle } from './subscription-sheet';
 import { SettingsProvider } from '@/lib/settings-context';
+import { TransactionsProvider } from '@/lib/transactions-context';
 import type { Subscription } from '@/lib/subscriptions';
 
 function renderWithProviders(ui: any) {
-  return render(<SettingsProvider>{ui}</SettingsProvider>);
+  return render(<SettingsProvider><TransactionsProvider>{ui}</TransactionsProvider></SettingsProvider>);
 }
 
 describe('SubscriptionSheet', () => {
