@@ -16,6 +16,7 @@ import { categoryOf, categoryLabel, INCOME_LABEL_KEY } from '@/lib/categories';
 import { i18n, useT } from '@/lib/i18n';
 import { dayLabel, formatMoney, signedMoney, toDateKey } from '@/lib/format';
 import { useTransactions } from '@/lib/transactions-context';
+import { useSubscriptions } from '@/lib/subscriptions-context';
 import { toCategoryObj } from '@/lib/user-categories';
 
 export default function TransactionDetailScreen() {
@@ -25,6 +26,7 @@ export default function TransactionDetailScreen() {
   const shareSheetRef = useRef<ShareSheetHandle>(null);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getById, remove, userCategories } = useTransactions();
+  const subscriptionsContext = useSubscriptions();
   const txn = getById(Number(id));
   const categoryExtras = userCategories.map(toCategoryObj);
 
@@ -110,6 +112,12 @@ export default function TransactionDetailScreen() {
           />
           {txn.originalCurrency !== txn.currency ? (
             <DetailRow label={t('currency.original_label')} value={formatMoney(txn.originalAmount, txn.originalCurrency)} />
+          ) : null}
+          {txn.subscriptionUuid ? (
+            <DetailRow
+              label={t('sub.transaction_source')}
+              value={subscriptionsContext.findByUuid(txn.subscriptionUuid)?.name ?? t('sub.transaction_source_deleted')}
+            />
           ) : null}
         </View>
 
