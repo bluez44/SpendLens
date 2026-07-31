@@ -174,6 +174,78 @@ describe('countSubscriptions', () => {
   });
 });
 
+describe('updateSubscription photo cleanup', () => {
+  beforeEach(() => {
+    mockSubUuidCounter = 0;
+    mockFileDelete.mockClear();
+  });
+
+  it('deletes the previous local file when photo_path changes', () => {
+    const db = freshDb();
+    const id = insertSubscription(
+      { ...SAMPLE, photoPath: 'file:///doc/sub-old.jpg' },
+      db,
+      new Date('2026-08-01T10:00:00Z'),
+    );
+    updateSubscription(
+      id,
+      { ...SAMPLE, photoPath: 'file:///doc/sub-new.jpg' },
+      db,
+      new Date('2026-08-02T10:00:00Z'),
+    );
+    expect(mockFileDelete).toHaveBeenCalledWith('file:///doc/sub-old.jpg');
+    expect(mockFileDelete).not.toHaveBeenCalledWith('file:///doc/sub-new.jpg');
+  });
+
+  it('does not delete when photo_path is unchanged', () => {
+    const db = freshDb();
+    const id = insertSubscription(
+      { ...SAMPLE, photoPath: 'file:///doc/sub-same.jpg' },
+      db,
+      new Date('2026-08-01T10:00:00Z'),
+    );
+    updateSubscription(
+      id,
+      { ...SAMPLE, name: 'renamed', photoPath: 'file:///doc/sub-same.jpg' },
+      db,
+      new Date('2026-08-02T10:00:00Z'),
+    );
+    expect(mockFileDelete).not.toHaveBeenCalled();
+  });
+
+  it('deletes the previous local file when new photo_path is null (removed)', () => {
+    const db = freshDb();
+    const id = insertSubscription(
+      { ...SAMPLE, photoPath: 'file:///doc/sub-removed.jpg' },
+      db,
+      new Date('2026-08-01T10:00:00Z'),
+    );
+    updateSubscription(
+      id,
+      { ...SAMPLE, photoPath: null },
+      db,
+      new Date('2026-08-02T10:00:00Z'),
+    );
+    expect(mockFileDelete).toHaveBeenCalledWith('file:///doc/sub-removed.jpg');
+  });
+
+  it('does not delete when previous photo_path is http(s)', () => {
+    const db = freshDb();
+    const id = insertSubscription(
+      { ...SAMPLE, photoPath: 'https://example.com/x.jpg' },
+      db,
+      new Date('2026-08-01T10:00:00Z'),
+    );
+    updateSubscription(
+      id,
+      { ...SAMPLE, photoPath: 'file:///doc/sub-new.jpg' },
+      db,
+      new Date('2026-08-02T10:00:00Z'),
+    );
+    expect(mockFileDelete).not.toHaveBeenCalled();
+  });
+});
+
 describe('deleteSubscription photo cleanup', () => {
   beforeEach(() => {
     mockSubUuidCounter = 0;

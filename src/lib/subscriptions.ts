@@ -98,8 +98,8 @@ export function updateSubscription(
   db: SQLiteDatabase = defaultDb,
   now: Date = new Date(),
 ): void {
-  const existing = db.getFirstSync<{ anchor_day: number; next_due_date: string }>(
-    'SELECT anchor_day, next_due_date FROM subscriptions WHERE id = ?', id,
+  const existing = db.getFirstSync<{ anchor_day: number; next_due_date: string; photo_path: string | null }>(
+    'SELECT anchor_day, next_due_date, photo_path FROM subscriptions WHERE id = ?', id,
   );
   if (!existing) return;
   const nextDue = existing.anchor_day === input.anchorDay
@@ -116,6 +116,14 @@ export function updateSubscription(
     input.notify7 ? 1 : 0, input.notify3 ? 1 : 0, input.notify1 ? 1 : 0,
     now.getTime(), id,
   );
+  const oldPath = existing.photo_path;
+  if (!oldPath || !oldPath.startsWith('file://')) return;
+  if (oldPath === input.photoPath) return;
+  try {
+    new File(oldPath).delete();
+  } catch {
+    // best-effort; ignore missing/renamed files
+  }
 }
 
 export function deleteSubscription(id: number, db: SQLiteDatabase = defaultDb): void {
