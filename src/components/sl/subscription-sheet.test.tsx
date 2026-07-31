@@ -1,8 +1,21 @@
 jest.mock('expo-image-picker', () => ({
   __esModule: true,
   launchImageLibraryAsync: jest.fn(async () => ({ canceled: true })),
-  MediaTypeOptions: { Images: 'Images' },
   requestMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true })),
+}));
+
+jest.mock('expo-file-system', () => ({
+  __esModule: true,
+  Paths: { document: { uri: 'file:///doc/' } },
+  File: jest.fn().mockImplementation((first: any, second?: string) => {
+    const base = typeof first === 'string' ? first : first?.uri ?? '';
+    const uri = second ? `${base}${second}` : base;
+    return {
+      uri,
+      copySync: jest.fn(),
+      delete: jest.fn(),
+    };
+  }),
 }));
 
 import { createRef } from 'react';
@@ -60,4 +73,5 @@ describe('SubscriptionSheet', () => {
     expect(payload.originalAmount).toBeGreaterThan(0);
     expect(id).toBeUndefined();
   });
+
 });

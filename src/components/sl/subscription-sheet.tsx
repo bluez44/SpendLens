@@ -6,6 +6,8 @@ import {
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import * as ImagePicker from 'expo-image-picker';
+import * as Crypto from 'expo-crypto';
+import { File, Paths } from 'expo-file-system';
 import {
   forwardRef,
   useCallback,
@@ -177,11 +179,20 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
 
     const handlePickPhoto = async () => {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         quality: 0.8,
       });
-      if (!result.canceled && result.assets[0]) {
-        setPhotoPathSynced(result.assets[0].uri);
+      if (result.canceled || !result.assets[0]) return;
+      const source = result.assets[0].uri;
+      try {
+        const extMatch = source.match(/\.([a-zA-Z0-9]{1,5})(?:$|\?)/);
+        const ext = (extMatch?.[1] ?? 'jpg').toLowerCase();
+        const dest = new File(Paths.document, `sub-${Crypto.randomUUID()}.${ext}`);
+        new File(source).copySync(dest);
+        setPhotoPathSynced(dest.uri);
+      } catch (err) {
+        console.warn('Failed to copy picked photo, using source uri', err);
+        setPhotoPathSynced(source);
       }
     };
 
@@ -323,6 +334,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
 
             {/* Photo */}
             <Pressable
+              testID="sub-photo-pressable"
               onPress={handlePickPhoto}
               style={[styles.photoWrap, { borderColor: c.cardBorder }]}
             >
