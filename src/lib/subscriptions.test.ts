@@ -4,6 +4,15 @@ jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => `sub-${String(++mockSubUuidCounter).padStart(4, '0')}`),
 }));
 
+const mockFileDelete = jest.fn();
+jest.mock('expo-file-system', () => ({
+  __esModule: true,
+  File: jest.fn().mockImplementation((p: string) => ({
+    uri: typeof p === 'string' ? p : p?.uri,
+    delete: () => mockFileDelete(typeof p === 'string' ? p : p?.uri),
+  })),
+}));
+
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { createDb, runMigrations } from './db';
 import {
@@ -162,5 +171,53 @@ describe('countSubscriptions', () => {
     pauseSubscription(idPaused, db);
     expect(countSubscriptions(db)).toBe(2);
     expect(countSubscriptions(db, { activeOnly: true })).toBe(1);
+  });
+});
+
+describe('deleteSubscription photo cleanup', () => {
+  beforeEach(() => {
+    mockSubUuidCounter = 0;
+    mockFileDelete.mockClear();
+  });
+
+  it('deletes the local file when photo_path is a file:// uri', () => {
+    const db = freshDb();
+    const id = insertSubscription(
+      { ...SAMPLE, photoPath: 'file:///doc/sub-abcd.jpg' },
+      db,
+      new Date('2026-08-01T10:00:00Z'),
+    );
+    deleteSubscription(id, db);
+    expect(mockFileDelete).toHaveBeenCalledWith('file:///doc/sub-abcd.jpg');
+  });
+
+  it('does not touch the filesystem for null photo_path', () => {
+    const db = freshDb();
+    const id = insertSubscription(SAMPLE, db, new Date('2026-08-01T10:00:00Z'));
+    deleteSubscription(id, db);
+    expect(mockFileDelete).not.toHaveBeenCalled();
+  });
+
+  it('does not touch the filesystem for http(s) photo_path (seed data)', () => {
+    const db = freshDb();
+    const id = insertSubscription(
+      { ...SAMPLE, photoPath: 'https://example.com/receipt.jpg' },
+      db,
+      new Date('2026-08-01T10:00:00Z'),
+    );
+    deleteSubscription(id, db);
+    expect(mockFileDelete).not.toHaveBeenCalled();
+  });
+
+  it('swallows delete errors so the row is still removed', () => {
+    const db = freshDb();
+    const id = insertSubscription(
+      { ...SAMPLE, photoPath: 'file:///doc/sub-missing.jpg' },
+      db,
+      new Date('2026-08-01T10:00:00Z'),
+    );
+    mockFileDelete.mockImplementationOnce(() => { throw new Error('ENOENT'); });
+    expect(() => deleteSubscription(id, db)).not.toThrow();
+    expect(db.getFirstSync('SELECT id FROM subscriptions WHERE id = ?', id)).toBeNull();
   });
 });

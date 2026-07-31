@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';
+import { File } from 'expo-file-system';
 
 import type { CategoryId } from './categories';
 import type { CurrencyCode } from './currency';
@@ -118,7 +119,17 @@ export function updateSubscription(
 }
 
 export function deleteSubscription(id: number, db: SQLiteDatabase = defaultDb): void {
+  const row = db.getFirstSync<{ photo_path: string | null }>(
+    'SELECT photo_path FROM subscriptions WHERE id = ?', id,
+  );
   db.runSync('DELETE FROM subscriptions WHERE id = ?', id);
+  const p = row?.photo_path;
+  if (!p || !p.startsWith('file://')) return;
+  try {
+    new File(p).delete();
+  } catch {
+    // best-effort; ignore missing/renamed files
+  }
 }
 
 export function pauseSubscription(id: number, db: SQLiteDatabase = defaultDb, now: Date = new Date()): void {
