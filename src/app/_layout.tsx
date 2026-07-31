@@ -8,8 +8,8 @@ import {
   useFonts,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider, Stack, router } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, type ReactNode } from 'react';
@@ -59,6 +59,7 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
             <Stack.Screen name="gallery" />
             <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
             <Stack.Screen name="transaction/[id]" />
+            <Stack.Screen name="subscriptions" />
           </Stack>
           {isLocked && <LockScreen biometricEnabled={settings.appLockBiometricEnabled} onUnlock={unlock} />}
         </BottomSheetModalProvider>
@@ -74,6 +75,16 @@ function LockGate({ children }: { children: ReactNode }) {
 
 export default function RootLayout() {
   const scheme = useColorScheme();
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const route = (response.notification.request.content.data as { route?: string })?.route;
+      if (route === '/subscriptions') {
+        router.push('/subscriptions');
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   const [fontsLoaded] = useFonts({
     PlusJakartaSans_400Regular,
