@@ -21,6 +21,7 @@ export const BottomSheetModal = forwardRef<
   return React.createElement(React.Fragment, null, children);
 });
 export const BottomSheetView = ({ children }: { children?: React.ReactNode }) => children;
+export const BottomSheetScrollView = ({ children }: { children?: React.ReactNode }) => children;
 export const BottomSheetBackdrop = () => null;
 export const BottomSheetTextInput = forwardRef(
   (props: React.ComponentProps<typeof TextInput>, ref: React.ForwardedRef<TextInput>) => (

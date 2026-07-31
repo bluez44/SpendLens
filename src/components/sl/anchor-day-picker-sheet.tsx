@@ -1,9 +1,9 @@
 import {
-  BottomSheetBackdrop, BottomSheetModal, BottomSheetView,
+  BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
 import { AccentGradient, Radius, useColors } from '@/constants/tokens';
@@ -42,12 +42,12 @@ export const AnchorDayPickerSheet = forwardRef<AnchorDayPickerSheetHandle, Props
         backdropComponent={renderBackdrop}
         backgroundStyle={{ backgroundColor: c.card }}
       >
-        <BottomSheetView style={styles.header}>
+        <View style={styles.header}>
           <Text style={{ fontWeight: '700', color: c.text, fontSize: 18 }}>
             {t('sub.anchor_picker_title')}
           </Text>
-        </BottomSheetView>
-        <ScrollView style={styles.scrollView}>
+        </View>
+        <BottomSheetScrollView>
           {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
             const active = day === current;
             return (
@@ -70,7 +70,7 @@ export const AnchorDayPickerSheet = forwardRef<AnchorDayPickerSheetHandle, Props
               </Pressable>
             );
           })}
-        </ScrollView>
+        </BottomSheetScrollView>
       </BottomSheetModal>
     );
   },
@@ -78,7 +78,6 @@ export const AnchorDayPickerSheet = forwardRef<AnchorDayPickerSheetHandle, Props
 
 const styles = StyleSheet.create({
   header: { padding: 20, paddingBottom: 8 },
-  scrollView: { flex: 1 },
   dayRow: {
     paddingVertical: 12, paddingHorizontal: 20,
     borderRadius: Radius.card, borderWidth: 1,
