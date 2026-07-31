@@ -76,7 +76,20 @@ function LockGate({ children }: { children: ReactNode }) {
 export default function RootLayout() {
   const scheme = useColorScheme();
 
+  const [fontsLoaded] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
+
   useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded]);
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
     Notifications.getLastNotificationResponseAsync().then((response) => {
       if (!response) return;
       const route = (response.notification.request.content.data as { route?: string })?.route;
@@ -91,18 +104,6 @@ export default function RootLayout() {
       }
     });
     return () => sub.remove();
-  }, []);
-
-  const [fontsLoaded] = useFonts({
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-    PlusJakartaSans_800ExtraBold,
-  });
-
-  useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
   }, [fontsLoaded]);
 
   if (!fontsLoaded) return null;
