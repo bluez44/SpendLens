@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { PhotoTile } from '@/components/sl/photo-tile';
 import { Text } from '@/components/sl/text';
 import { Radius, useColors, W } from '@/constants/tokens';
-import { categoryOf } from '@/lib/categories';
 import type { CurrencyCode } from '@/lib/currency';
 import { formatMoney, signedMoney } from '@/lib/format';
 import { convert, type RateMap } from '@/lib/fx';
@@ -20,7 +19,6 @@ interface Props {
 export function SubscriptionRow({ subscription: sub, primary, rates, onPress }: Props) {
   const c = useColors();
   const { t } = useT();
-  const cat = categoryOf(sub.category, []);
   const converted = convert(sub.originalAmount, sub.originalCurrency, primary, rates);
 
   return (
