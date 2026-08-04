@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DateRangeSheet, type DateRangeSheetHandle } from '@/components/sl/date-range-sheet';
 import { Icon } from '@/components/sl/icons';
 import { Segmented } from '@/components/sl/segmented';
+import { SummaryCell } from '@/components/sl/summary-cell';
 import { TransactionRow } from '@/components/sl/transaction-row';
 import { Money, useColors, W } from '@/constants/tokens';
 import { formatCompact, formatMoney, dayLabel, toDateKey } from '@/lib/format';
@@ -120,16 +121,6 @@ export default function HistoryScreen() {
           await exportAndShareCsv(filtered, categoryExtras);
         }}
       />
-    </View>
-  );
-}
-
-function SummaryCell({ label, value, color }: { label: string; value: string; color: string }) {
-  const c = useColors();
-  return (
-    <View style={{ flex: 1, alignItems: 'center' }}>
-      <Text style={{ fontSize: 11, fontWeight: W.semibold, color: c.textSecondary }}>{label}</Text>
-      <Text style={{ fontSize: 15, fontWeight: W.extrabold, color, marginTop: 3 }}>{value}</Text>
     </View>
   );
 }
