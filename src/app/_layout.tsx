@@ -61,6 +61,7 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
             <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
             <Stack.Screen name="transaction/[id]" />
             <Stack.Screen name="subscriptions" />
+            <Stack.Screen name="compare" />
           </Stack>
           {isLocked && <LockScreen biometricEnabled={settings.appLockBiometricEnabled} onUnlock={unlock} />}
         </BottomSheetModalProvider>
