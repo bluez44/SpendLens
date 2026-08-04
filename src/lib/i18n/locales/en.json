@@ -113,6 +113,48 @@
     "export_button": "Export",
     "export_a11y": "Export CSV"
   },
+  "history_months": {
+    "header": "Older transactions",
+    "picker_trigger_placeholder": "Select month",
+    "picker_title": "Select month",
+    "empty_no_history": "No history from previous months yet",
+    "empty_this_month": "No transactions this month",
+    "picker_row_spend": "{{amount}} spent",
+    "view_older_btn": "View older transactions"
+  },
+  "compare": {
+    "header": "Compare",
+    "type_month": "Month",
+    "type_week": "Week",
+    "swap_a11y": "Swap A and B",
+    "preset_label": "Quick pick",
+    "preset_this_vs_last_month": "This month vs last month",
+    "preset_last_vs_prev_month": "Last month vs 2 months ago",
+    "preset_year_over_year": "Same month last year",
+    "preset_this_vs_last_week": "This week vs last week",
+    "preset_last_vs_prev_week": "Last week vs 2 weeks ago",
+    "preset_custom": "Custom",
+    "picker_a_title": "Pick period A",
+    "picker_b_title": "Pick period B",
+    "chart_title_month": "Spend by week",
+    "chart_title_week": "Spend by day",
+    "categories_title": "Categories",
+    "empty_period_a": "No transactions in period A",
+    "empty_period_b": "No transactions in period B",
+    "empty_both": "No data to compare",
+    "compare_btn": "Compare",
+    "week_label_range": "{{from}} - {{to}}",
+    "week_day_short": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "week_bucket_short": "W{{n}}"
+  },
+  "delta": {
+    "vs_yesterday": "vs yesterday",
+    "vs_last_week": "vs last week",
+    "vs_month": "vs {{label}}",
+    "category_new": "new",
+    "category_gone": "gone",
+    "no_previous": ""
+  },
   "notif": {
     "reminder_title": "SpendLens",
     "reminder_body": "Log today's expenses?",

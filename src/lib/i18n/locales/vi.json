@@ -113,6 +113,48 @@
     "export_button": "Xuất",
     "export_a11y": "Xuất CSV"
   },
+  "history_months": {
+    "header": "Xem tháng cũ",
+    "picker_trigger_placeholder": "Chọn tháng",
+    "picker_title": "Chọn tháng",
+    "empty_no_history": "Chưa có dữ liệu các tháng trước",
+    "empty_this_month": "Chưa có giao dịch trong tháng này",
+    "picker_row_spend": "{{amount}} chi",
+    "view_older_btn": "Xem tháng cũ"
+  },
+  "compare": {
+    "header": "So sánh",
+    "type_month": "Tháng",
+    "type_week": "Tuần",
+    "swap_a11y": "Đổi vị trí A và B",
+    "preset_label": "Chọn nhanh",
+    "preset_this_vs_last_month": "Tháng này vs Tháng trước",
+    "preset_last_vs_prev_month": "Tháng trước vs 2 tháng trước",
+    "preset_year_over_year": "Cùng kỳ năm trước",
+    "preset_this_vs_last_week": "Tuần này vs Tuần trước",
+    "preset_last_vs_prev_week": "Tuần trước vs 2 tuần trước",
+    "preset_custom": "Tuỳ chọn",
+    "picker_a_title": "Chọn kỳ A",
+    "picker_b_title": "Chọn kỳ B",
+    "chart_title_month": "Chi theo tuần",
+    "chart_title_week": "Chi theo ngày",
+    "categories_title": "Danh mục",
+    "empty_period_a": "Không có giao dịch trong kỳ A",
+    "empty_period_b": "Không có giao dịch trong kỳ B",
+    "empty_both": "Chưa có dữ liệu để so sánh",
+    "compare_btn": "So sánh",
+    "week_label_range": "{{from}} - {{to}}",
+    "week_day_short": ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
+    "week_bucket_short": "W{{n}}"
+  },
+  "delta": {
+    "vs_yesterday": "so với hôm qua",
+    "vs_last_week": "so với tuần trước",
+    "vs_month": "so với {{label}}",
+    "category_new": "mới",
+    "category_gone": "không còn",
+    "no_previous": ""
+  },
   "notif": {
     "reminder_title": "SpendLens",
     "reminder_body": "Ghi lại chi tiêu hôm nay?",
