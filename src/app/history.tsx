@@ -14,6 +14,7 @@ import { Money, useColors, W } from '@/constants/tokens';
 import { formatCompact, formatMoney, dayLabel, toDateKey } from '@/lib/format';
 import { exportAndShareCsv } from '@/lib/export';
 import { useT } from '@/lib/i18n';
+import { availableMonthsDesc } from '@/lib/comparison';
 import { filterRange, groupByDay, summarize, type Range } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 import { toCategoryObj } from '@/lib/user-categories';
@@ -37,6 +38,10 @@ export default function HistoryScreen() {
   const ranged = useMemo(() => filterRange(transactions, range), [transactions, range]);
   const groups = useMemo(() => groupByDay(ranged), [ranged]);
   const sum = useMemo(() => summarize(ranged), [ranged]);
+  const hasOlderMonths = useMemo(
+    () => availableMonthsDesc(transactions).length > 0,
+    [transactions],
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
@@ -103,6 +108,16 @@ export default function HistoryScreen() {
             </View>
           </View>
         ))}
+        {range === 'month' && hasOlderMonths ? (
+          <Pressable
+            onPress={() => router.push('/history-months')}
+            style={{ paddingVertical: 18, alignItems: 'center' }}
+          >
+            <Text style={{ fontSize: 13.5, fontWeight: W.bold, color: c.textSecondary }}>
+              {t('history_months.view_older_btn')} →
+            </Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
 
       <Pressable
