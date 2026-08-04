@@ -56,6 +56,7 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
             <Stack.Screen name="index" />
             <Stack.Screen name="home" />
             <Stack.Screen name="history" />
+            <Stack.Screen name="history-months" />
             <Stack.Screen name="gallery" />
             <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
             <Stack.Screen name="transaction/[id]" />
