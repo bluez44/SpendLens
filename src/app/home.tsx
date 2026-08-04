@@ -7,11 +7,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BarChart } from '@/components/sl/bar-chart';
 import { BudgetBar } from '@/components/sl/budget-bar';
+import { DeltaBadge } from '@/components/sl/delta-badge';
 import { Donut } from '@/components/sl/donut';
 import { GradientFill } from '@/components/sl/gradient';
 import { Icon } from '@/components/sl/icons';
 import { Segmented } from '@/components/sl/segmented';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
+import { deltaPct, previousPeriodLabel, previousPeriodTxns } from '@/lib/comparison';
 import { formatCompact, formatMoney, monthKey, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import {
@@ -45,6 +47,11 @@ export default function HomeScreen() {
   const sum = useMemo(() => summarize(ranged), [ranged]);
   const bars = useMemo(() => monthlyExpenseSeries(transactions), [transactions]);
   const breakdown = useMemo(() => categoryBreakdown(ranged).slice(0, 5), [ranged]);
+
+  const prevTxns = useMemo(() => previousPeriodTxns(transactions, range), [transactions, range]);
+  const prevSum = useMemo(() => summarize(prevTxns), [prevTxns]);
+  const prevLabel = previousPeriodLabel(range);
+  const prevBreakdown = useMemo(() => categoryBreakdown(prevTxns), [prevTxns]);
 
   const incomeColor = isDark ? '#fff' : Money.income;
   const expenseColor = isDark ? '#fff' : Money.expenseOnDark;
@@ -96,6 +103,12 @@ export default function HomeScreen() {
           <Text style={{ fontSize: 34, fontWeight: W.extrabold, color: '#fff', letterSpacing: -0.5, marginTop: 2 }}>
             {(sum.net >= 0 ? '+' : '−') + formatMoney(sum.net, settings.primaryCurrency)}
           </Text>
+          <DeltaBadge
+            current={sum.expense}
+            previous={prevSum.expense}
+            compareType="expense"
+            periodLabel={prevLabel}
+          />
           <View style={styles.summaryStats}>
             <View>
               <Text style={styles.summaryLabel}>{t('home.income_label')}</Text>
@@ -118,7 +131,14 @@ export default function HomeScreen() {
 
         {/* Monthly bars */}
         <View style={[styles.card, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-          <Text style={{ fontSize: 13.5, fontWeight: W.extrabold, color: c.text }}>{t('home.monthly_chart_title')}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 13.5, fontWeight: W.extrabold, color: c.text }}>{t('home.monthly_chart_title')}</Text>
+            <Pressable onPress={() => router.push('/compare')} hitSlop={6}>
+              <Text style={{ fontSize: 12.5, fontWeight: W.bold, color: c.textSecondary }}>
+                {t('compare.compare_btn')} →
+              </Text>
+            </Pressable>
+          </View>
           <BarChart data={bars} />
         </View>
 
@@ -131,13 +151,30 @@ export default function HomeScreen() {
               centerMain={formatCompact(sum.expense, settings.primaryCurrency)}
             />
             <View style={{ flex: 1, gap: 7 }}>
-              {breakdown.map((b) => (
-                <View key={b.id} style={styles.legendRow}>
-                  <View style={{ width: 9, height: 9, borderRadius: 3, backgroundColor: b.color }} />
-                  <Text style={{ flex: 1, fontSize: 12, fontWeight: W.semibold, color: c.text }}>{b.label}</Text>
-                  <Text style={{ fontSize: 12, fontWeight: W.extrabold, color: c.text }}>{Math.round(b.pct)}%</Text>
-                </View>
-              ))}
+              {breakdown.map((b) => {
+                const prev = prevBreakdown.find((p) => p.id === b.id);
+                const isNew = !prev;
+                const pct = prev ? deltaPct(b.amount, prev.amount) : null;
+                const rising = prev ? b.amount > prev.amount : true;
+                const deltaColor = isNew
+                  ? c.textSecondary
+                  : rising ? Money.expense : Money.income;
+                const deltaText = isNew
+                  ? t('delta.category_new')
+                  : pct === null ? '' : `${pct > 0 ? '+' : ''}${Math.round(pct)}%`;
+                return (
+                  <View key={b.id} style={styles.legendRow}>
+                    <View style={{ width: 9, height: 9, borderRadius: 3, backgroundColor: b.color }} />
+                    <Text style={{ flex: 1, fontSize: 12, fontWeight: W.semibold, color: c.text }}>{b.label}</Text>
+                    <Text style={{ fontSize: 12, fontWeight: W.extrabold, color: c.text }}>{Math.round(b.pct)}%</Text>
+                    {prevBreakdown.length > 0 && deltaText ? (
+                      <Text style={{ fontSize: 11, fontWeight: W.semibold, color: deltaColor, marginLeft: 6 }}>
+                        {deltaText}
+                      </Text>
+                    ) : null}
+                  </View>
+                );
+              })}
             </View>
           </View>
         ) : null}
