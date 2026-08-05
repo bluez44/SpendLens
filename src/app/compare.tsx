@@ -1,31 +1,28 @@
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BarChartOverlay } from '@/components/sl/bar-chart-overlay';
 import { GradientFill } from '@/components/sl/gradient';
 import { Icon } from '@/components/sl/icons';
-import { MonthPickerSheet, type MonthPickerSheetHandle } from '@/components/sl/month-picker-sheet';
-import {
-  PeriodPickerSheet, type PeriodPickerSheetHandle, type PresetKey,
-} from '@/components/sl/period-picker-sheet';
+import { MonthPickerSheet } from '@/components/sl/month-picker-sheet';
+import { PeriodPickerSheet, type PresetKey } from '@/components/sl/period-picker-sheet';
 import { Segmented } from '@/components/sl/segmented';
 import { Text } from '@/components/sl/text';
-import { WeekPickerSheet, type WeekPickerSheetHandle } from '@/components/sl/week-picker-sheet';
+import { WeekPickerSheet } from '@/components/sl/week-picker-sheet';
 import { AccentGradient, Money, Radius, useColors, W } from '@/constants/tokens';
 import type { CurrencyCode } from '@/lib/currency';
 import {
-  availableMonthsDesc, availableWeeksDesc, buildComparison,
-  filterByMonth, filterByWeek, weekRangeLabel, weekStartOf,
+  availableMonthsDesc, buildComparison,
+  filterByMonth, filterByWeek, weekRangeLabel,
 } from '@/lib/comparison';
-import { formatCompact, formatMoney, monthKey, shiftDateKey, shiftMonthKey, toDateKey } from '@/lib/format';
+import { formatCompact, formatMoney, monthKey, shiftMonthKey, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings-context';
 import { useTransactions } from '@/lib/transactions-context';
+import { useCompareSelection } from '@/lib/use-compare-selection';
 import { toCategoryObj } from '@/lib/user-categories';
-
-type CompareType = 'month' | 'week';
 
 export default function CompareScreen() {
   const c = useColors();
@@ -39,44 +36,20 @@ export default function CompareScreen() {
     [userCategories],
   );
 
-  const monthSheetA = useRef<MonthPickerSheetHandle>(null);
-  const monthSheetB = useRef<MonthPickerSheetHandle>(null);
-  const weekSheetA = useRef<WeekPickerSheetHandle>(null);
-  const weekSheetB = useRef<WeekPickerSheetHandle>(null);
-  const presetSheet = useRef<PeriodPickerSheetHandle>(null);
-
-  const [typeIndex, setTypeIndex] = useState(0);
-  const type: CompareType = typeIndex === 0 ? 'month' : 'week';
-
-  const initialMonthA = useMemo(() => monthKey(toDateKey(new Date())), []);
-  const initialMonthB = useMemo(
-    () => availableMonthsDesc(transactions)[0] ?? initialMonthA,
-    [transactions, initialMonthA],
-  );
-  const initialWeekA = useMemo(() => weekStartOf(toDateKey(new Date())), []);
-  const initialWeekB = useMemo(
-    () => availableWeeksDesc(transactions)[0] ?? initialWeekA,
-    [transactions, initialWeekA],
-  );
-
-  const [monthA, setMonthA] = useState(initialMonthA);
-  const [monthB, setMonthB] = useState(initialMonthB);
-  const [weekA, setWeekA] = useState(initialWeekA);
-  const [weekB, setWeekB] = useState(initialWeekB);
-  const [preset, setPreset] = useState<PresetKey>('this_vs_last_month');
-
-  useEffect(() => {
-    if (type === 'month') {
-      setPreset('this_vs_last_month');
-      setMonthA(initialMonthA);
-      setMonthB(initialMonthB);
-    } else {
-      setPreset('this_vs_last_week');
-      setWeekA(initialWeekA);
-      setWeekB(initialWeekB);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type]);
+  const {
+    type, typeIndex, setTypeIndex,
+    monthA, monthB, weekA, weekB,
+    setMonthA, setMonthB, setWeekA, setWeekB,
+    preset, setPreset,
+    sheetRefs: {
+      monthA: monthSheetARef,
+      monthB: monthSheetBRef,
+      weekA: weekSheetARef,
+      weekB: weekSheetBRef,
+      preset: presetSheetRef,
+    },
+    swap, openPickerA, openPickerB,
+  } = useCompareSelection(transactions);
 
   const yearOverYearAvailable = useMemo(() => {
     const months = availableMonthsDesc(transactions);
@@ -84,29 +57,6 @@ export default function CompareScreen() {
     const yoy = shiftMonthKey(monthKey(toDateKey(new Date())), -12);
     return months.includes(yoy);
   }, [transactions]);
-
-  useEffect(() => {
-    if (preset === 'custom') return;
-    const nowMk = monthKey(toDateKey(new Date()));
-    if (preset === 'this_vs_last_month') {
-      setMonthA(nowMk);
-      setMonthB(shiftMonthKey(nowMk, -1));
-    } else if (preset === 'last_vs_prev_month') {
-      setMonthA(shiftMonthKey(nowMk, -1));
-      setMonthB(shiftMonthKey(nowMk, -2));
-    } else if (preset === 'year_over_year') {
-      setMonthA(nowMk);
-      setMonthB(shiftMonthKey(nowMk, -12));
-    } else if (preset === 'this_vs_last_week') {
-      const cur = weekStartOf(toDateKey(new Date()));
-      setWeekA(cur);
-      setWeekB(shiftDateKey(cur, -7));
-    } else if (preset === 'last_vs_prev_week') {
-      const cur = weekStartOf(toDateKey(new Date()));
-      setWeekA(shiftDateKey(cur, -7));
-      setWeekB(shiftDateKey(cur, -14));
-    }
-  }, [preset]);
 
   const txnsA = useMemo(
     () => (type === 'month' ? filterByMonth(transactions, monthA) : filterByWeek(transactions, weekA)),
@@ -127,23 +77,6 @@ export default function CompareScreen() {
     }
     const { from, to } = weekRangeLabel(key);
     return `${from} - ${to}`;
-  };
-
-  const swap = () => {
-    if (type === 'month') { setMonthA(monthB); setMonthB(monthA); }
-    else { setWeekA(weekB); setWeekB(weekA); }
-    setPreset('custom');
-  };
-
-  const openPickerA = () => {
-    setPreset('custom');
-    if (type === 'month') monthSheetA.current?.present();
-    else weekSheetA.current?.present();
-  };
-  const openPickerB = () => {
-    setPreset('custom');
-    if (type === 'month') monthSheetB.current?.present();
-    else weekSheetB.current?.present();
   };
 
   const bothEmpty = txnsA.length === 0 && txnsB.length === 0;
@@ -189,7 +122,7 @@ export default function CompareScreen() {
         </View>
 
         <Pressable
-          onPress={() => presetSheet.current?.present()}
+          onPress={() => presetSheetRef.current?.present()}
           style={[styles.presetChip, { backgroundColor: c.segment }]}
         >
           <Text style={{ color: c.text, fontWeight: W.bold, fontSize: 13 }}>
@@ -290,12 +223,12 @@ export default function CompareScreen() {
         )}
       </ScrollView>
 
-      <MonthPickerSheet ref={monthSheetA} selectedMonth={monthA} onSelect={setMonthA} includeCurrentMonth />
-      <MonthPickerSheet ref={monthSheetB} selectedMonth={monthB} onSelect={setMonthB} includeCurrentMonth />
-      <WeekPickerSheet  ref={weekSheetA}  selectedWeek={weekA}  onSelect={setWeekA}  includeCurrentWeek />
-      <WeekPickerSheet  ref={weekSheetB}  selectedWeek={weekB}  onSelect={setWeekB}  includeCurrentWeek />
+      <MonthPickerSheet ref={monthSheetARef} selectedMonth={monthA} onSelect={setMonthA} includeCurrentMonth />
+      <MonthPickerSheet ref={monthSheetBRef} selectedMonth={monthB} onSelect={setMonthB} includeCurrentMonth />
+      <WeekPickerSheet  ref={weekSheetARef}  selectedWeek={weekA}  onSelect={setWeekA}  includeCurrentWeek />
+      <WeekPickerSheet  ref={weekSheetBRef}  selectedWeek={weekB}  onSelect={setWeekB}  includeCurrentWeek />
       <PeriodPickerSheet
-        ref={presetSheet}
+        ref={presetSheetRef}
         type={type}
         yearOverYearAvailable={yearOverYearAvailable}
         selected={preset}

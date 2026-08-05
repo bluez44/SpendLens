@@ -11,7 +11,7 @@
 | 5 | `useDraftTransaction` hook | ✅ Done | `152cb51` |
 | 6 | Split `settings.tsx` into 4 sub-components | ✅ Done | `a781381` |
 | 7 | `useSubscriptionFormState` + `useSyncedState` | ✅ Done | `a87902a` |
-| 8 | `useCompareSelection` hook | ⬜ Pending | — |
+| 8 | `useCompareSelection` hook | ✅ Done | _pending_ |
 | 9 | Memoize `categoryExtras` + stable `onShare` | ✅ Done | `32a1baf` |
 | 10 | Date arithmetic via `shiftMonthKey` helper | ✅ Done | `c541314` |
 
