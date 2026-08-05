@@ -1,5 +1,22 @@
 # SpendLens Code Audit — 2026-08-05
 
+## Progress (updated 2026-08-05)
+
+| # | Priority | Status | Commit |
+|---|---|---|---|
+| 1 | DB write try-catch + Alert | ✅ Done | `b1b238d` |
+| 2 | Save button disable + inline hint | ✅ Done | `81bce4e` |
+| 3 | Input bounds (amount/note/date) | ✅ Done | `709c174` |
+| 4 | Photo/permission alert surfacing | ✅ Done | `38a07ef` |
+| 5 | `useDraftTransaction` hook | ✅ Done | `152cb51` |
+| 6 | Split `settings.tsx` into 4 sub-components | ⬜ Pending | — |
+| 7 | `useSubscriptionFormState` + `useSyncedState` | ⬜ Pending | — |
+| 8 | `useCompareSelection` hook | ⬜ Pending | — |
+| 9 | Memoize `categoryExtras` + stable `onShare` | ✅ Done | `32a1baf` |
+| 10 | Date arithmetic via `shiftMonthKey` helper | ✅ Done | `c541314` |
+
+**To resume in a new session:** open this file, then say _"tiếp tục audit từ `docs/audits/2026-08-05-code-audit.md`, làm priority #6"_ (or #7 / #8). The section further below still contains the full plan for each pending item.
+
 ## Scope
 
 Audit của 5 file lớn nhất trong codebase, theo 4 chiều:
