@@ -15,7 +15,7 @@ import { Segmented } from '@/components/sl/segmented';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
 import { STATIC_CATEGORIES } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
-import { CURRENCY_META, type CurrencyCode } from '@/lib/currency';
+import { CURRENCY_META } from '@/lib/currency';
 import { convert } from '@/lib/fx';
 import { deleteUserCategory, insertUserCategory, listUserCategories, toCategoryObj } from '@/lib/user-categories';
 import type { UserCategory } from '@/lib/user-categories';
@@ -23,17 +23,10 @@ import { dayLabel, formatAmountInput, formatMoney, toDateKey } from '@/lib/forma
 import { decideBudgetAlert } from '@/lib/budget-alert';
 import { fireBudgetAlert } from '@/lib/notifications';
 import { useT } from '@/lib/i18n';
-import type { NewTxn, Txn } from '@/lib/transactions';
+import type { NewTxn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 import { useSettings } from '@/lib/settings-context';
-
-function mergeExisting(existing: Txn | undefined): string {
-  if (!existing) return '';
-  const name = existing.name?.trim() ?? '';
-  const note = existing.note?.trim() ?? '';
-  if (name && note && name !== note) return `${name} · ${note}`;
-  return name || note;
-}
+import { useDraftTransaction } from '@/lib/use-draft-transaction';
 
 export default function EntryScreen() {
   const c = useColors();
@@ -55,30 +48,25 @@ export default function EntryScreen() {
   );
   const photoUri = photo ?? existing?.photoPath ?? undefined;
 
-  const initialSelected = editing && existing ? new Date(existing.createdAt) : new Date();
-  const [selectedDate, setSelectedDate] = useState<Date>(initialSelected);
-  const [pickerStep, setPickerStep] = useState<'idle' | 'date' | 'time' | 'datetime'>('idle');
+  const draft = useDraftTransaction({
+    existing,
+    primaryCurrency: settings.primaryCurrency,
+    initialNote: params.note,
+  });
+  const {
+    isIncome, setIsIncome,
+    currency, setCurrency,
+    amountDigits, setAmountDigits,
+    category, setCategory,
+    note, setNote,
+    selectedDate, setSelectedDate,
+    originalAmount, canSave,
+  } = draft;
 
-  const [isIncome, setIsIncome] = useState(existing?.isIncome ?? false);
-  const [currency, setCurrency] = useState<CurrencyCode>(
-    existing ? existing.originalCurrency : settings.primaryCurrency
-  );
-  const [amountDigits, setAmountDigits] = useState<string>(
-    existing
-      ? String(Math.round(existing.originalAmount * (CURRENCY_META[existing.originalCurrency].decimals === 2 ? 100 : 1)))
-      : ''
-  );
+  const [pickerStep, setPickerStep] = useState<'idle' | 'date' | 'time' | 'datetime'>('idle');
   const currencyPickerRef = useRef<CurrencyPickerSheetHandle>(null);
-  const [category, setCategory] = useState<CategoryId>(existing?.category ?? 'food');
-  const [note, setNote] = useState(mergeExisting(existing) || params.note || '');
   const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
   const [customInput, setCustomInput] = useState('');
-
-  const originalAmount = (() => {
-    if (!amountDigits) return 0;
-    const n = Number(amountDigits);
-    return CURRENCY_META[currency].decimals === 2 ? n / 100 : n;
-  })();
 
   const accent = isIncome ? Money.income : Money.expense;
 
@@ -128,8 +116,6 @@ export default function EntryScreen() {
       ],
     );
   }
-
-  const canSave = originalAmount > 0 && note.trim() !== '';
 
   const save = async () => {
     if (!canSave) return;
@@ -236,7 +222,7 @@ export default function EntryScreen() {
             ) : null}
             <TextInput
               value={amountDigits ? formatAmountInput(amountDigits, currency) : ''}
-              onChangeText={(v) => setAmountDigits(v.replace(/\D/g, '').slice(0, 15))}
+              onChangeText={setAmountDigits}
               keyboardType="number-pad"
               placeholder="0"
               placeholderTextColor={c.textSecondary}
