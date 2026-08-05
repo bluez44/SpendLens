@@ -10,7 +10,7 @@
 | 4 | Photo/permission alert surfacing | ✅ Done | `38a07ef` |
 | 5 | `useDraftTransaction` hook | ✅ Done | `152cb51` |
 | 6 | Split `settings.tsx` into 4 sub-components | ✅ Done | `a781381` |
-| 7 | `useSubscriptionFormState` + `useSyncedState` | ⬜ Pending | — |
+| 7 | `useSubscriptionFormState` + `useSyncedState` | ✅ Done | `a87902a` |
 | 8 | `useCompareSelection` hook | ⬜ Pending | — |
 | 9 | Memoize `categoryExtras` + stable `onShare` | ✅ Done | `32a1baf` |
 | 10 | Date arithmetic via `shiftMonthKey` helper | ✅ Done | `c541314` |
