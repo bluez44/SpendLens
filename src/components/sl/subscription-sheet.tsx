@@ -377,7 +377,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
               <BottomSheetTextInput
                 testID="sub-amount-input"
                 value={amountDigits ? formatAmountInput(amountDigits, currency) : ''}
-                onChangeText={(v) => setAmountDigitsSynced(v.replace(/\D/g, ''))}
+                onChangeText={(v) => setAmountDigitsSynced(v.replace(/\D/g, '').slice(0, 15))}
                 keyboardType="number-pad"
                 placeholder="0"
                 placeholderTextColor={c.textSecondary}
@@ -437,6 +437,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
                   onChangeText={setCustomInput}
                   placeholder={t('entry.custom_category_placeholder')}
                   placeholderTextColor={c.textSecondary}
+                  maxLength={30}
                   style={{ flex: 1, fontSize: 14, color: c.text, padding: 0 }}
                 />
                 <Pressable onPress={tryAddCustomCategory} disabled={customInput.trim() === ''}>

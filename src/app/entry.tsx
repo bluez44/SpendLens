@@ -236,7 +236,7 @@ export default function EntryScreen() {
             ) : null}
             <TextInput
               value={amountDigits ? formatAmountInput(amountDigits, currency) : ''}
-              onChangeText={(v) => setAmountDigits(v.replace(/\D/g, ''))}
+              onChangeText={(v) => setAmountDigits(v.replace(/\D/g, '').slice(0, 15))}
               keyboardType="number-pad"
               placeholder="0"
               placeholderTextColor={c.textSecondary}
@@ -300,6 +300,7 @@ export default function EntryScreen() {
                   onChangeText={setCustomInput}
                   placeholder={t('entry.custom_category_placeholder')}
                   placeholderTextColor={c.textSecondary}
+                  maxLength={30}
                   style={{ flex: 1, fontSize: 14, color: c.text, padding: 0 }}
                 />
                 <Pressable onPress={tryAddCustomCategory} disabled={customInput.trim() === ''}>
@@ -321,6 +322,7 @@ export default function EntryScreen() {
             onChangeText={setNote}
             placeholder={isIncome ? t('entry.note_placeholder_income') : t('entry.note_placeholder_expense')}
             placeholderTextColor={c.textSecondary}
+            maxLength={500}
             onFocus={() => scrollToOffset(noteOffsetRef.current)}
             style={{ fontSize: 14.5, fontWeight: W.semibold, color: c.text, padding: 0 }}
           />
@@ -341,6 +343,7 @@ export default function EntryScreen() {
           <DateTimePicker
             value={selectedDate}
             mode="datetime"
+            maximumDate={new Date()}
             onValueChange={(_, d) => {
               setPickerStep('idle');
               if (d) setSelectedDate(d);
@@ -351,6 +354,7 @@ export default function EntryScreen() {
           <DateTimePicker
             value={selectedDate}
             mode="date"
+            maximumDate={new Date()}
             onValueChange={(_, d) => {
               if (!d) { setPickerStep('idle'); return; }
               const merged = new Date(d);
