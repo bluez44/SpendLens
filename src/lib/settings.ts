@@ -15,6 +15,7 @@ export interface Settings {
   appLockEnabled: boolean;
   appLockBiometricEnabled: boolean;
   primaryCurrency: CurrencyCode;
+  shareHideAmounts: boolean;
 }
 
 export const DEFAULTS: Settings = {
@@ -28,6 +29,7 @@ export const DEFAULTS: Settings = {
   appLockEnabled: false,
   appLockBiometricEnabled: false,
   primaryCurrency: 'VND',
+  shareHideAmounts: false,
 };
 
 type Row = { key: string; value: string };
@@ -54,6 +56,8 @@ function encode<K extends keyof Settings>(key: K, value: Settings[K]): string {
       return (value as boolean) ? '1' : '0';
     case 'primaryCurrency':
       return value as string;
+    case 'shareHideAmounts':
+      return (value as boolean) ? '1' : '0';
     default: {
       const _exhaustive: never = key;
       return _exhaustive;
@@ -87,6 +91,8 @@ function decode(map: Map<string, string>): Settings {
       primaryCurrency === 'GBP' || primaryCurrency === 'KRW') {
     result.primaryCurrency = primaryCurrency;
   }
+  const shareHideAmounts = map.get('shareHideAmounts');
+  if (shareHideAmounts !== undefined) result.shareHideAmounts = shareHideAmounts === '1';
   return result;
 }
 

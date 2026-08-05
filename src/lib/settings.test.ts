@@ -30,6 +30,7 @@ describe('loadSettings', () => {
     updateSetting('appLockEnabled', true, db);
     updateSetting('appLockBiometricEnabled', true, db);
     updateSetting('primaryCurrency', 'USD', db);
+    updateSetting('shareHideAmounts', true, db);
     expect(loadSettings(db)).toEqual({
       monthlyBudget: 3_000_000,
       reminderEnabled: true,
@@ -41,6 +42,7 @@ describe('loadSettings', () => {
       appLockEnabled: true,
       appLockBiometricEnabled: true,
       primaryCurrency: 'USD',
+      shareHideAmounts: true,
     });
   });
 
