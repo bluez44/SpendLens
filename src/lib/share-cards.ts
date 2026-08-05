@@ -1,4 +1,8 @@
+import { buildComparison, filterByWeek, weekStartOf, type CategoryLike } from './comparison';
 import type { CurrencyCode } from './currency';
+import { shiftDateKey, toDateKey } from './format';
+import { computeLogDaysStreak } from './streaks';
+import type { Txn } from './transactions';
 
 export type CardType = 'recap' | 'streak';
 
@@ -72,4 +76,91 @@ export function pickHype(logDays: number): HypeKey {
   if (logDays >= 7) return 'locked_in_streak';
   if (logDays >= 3) return 'warming_up';
   return 'just_started';
+}
+
+function computePreviousWeekTopCategoryId(prevWeekTxns: Txn[]): string | null {
+  if (prevWeekTxns.length === 0) return null;
+  const totals = new Map<string, number>();
+  for (const t of prevWeekTxns) {
+    if (t.isIncome) continue;
+    totals.set(t.category, (totals.get(t.category) ?? 0) + t.amount);
+  }
+  let topId: string | null = null;
+  let topValue = 0;
+  for (const [id, value] of totals) {
+    if (value > topValue) { topId = id; topValue = value; }
+  }
+  return topId;
+}
+
+export function assembleRecapData(
+  txns: Txn[],
+  categoryRegistry: CategoryLike[],
+  monthlyBudget: number,
+  primary: CurrencyCode,
+  today: Date = new Date(),
+): RecapData {
+  const todayKey = toDateKey(today);
+  const weekStart = weekStartOf(todayKey);
+  const weekEnd = shiftDateKey(weekStart, 6);
+  const prevWeekStart = shiftDateKey(weekStart, -7);
+
+  const thisWeekTxns = filterByWeek(txns, weekStart);
+  const prevWeekTxns = filterByWeek(txns, prevWeekStart);
+
+  const comparison = buildComparison(
+    thisWeekTxns, prevWeekTxns, 'week',
+    categoryRegistry, weekStart, prevWeekStart,
+  );
+
+  const totalExpense = comparison.sumA.expense;
+  const totalIncome = comparison.sumA.income;
+
+  // comparison.categories is sorted by max(valueA, valueB) for chart legibility.
+  // For the recap card we want THIS week's top spenders — sort by valueA desc.
+  const topCategories: RecapTopCategory[] = comparison.categories
+    .filter((c) => c.valueA > 0)
+    .slice()
+    .sort((a, b) => b.valueA - a.valueA)
+    .slice(0, 3)
+    .map((c) => ({
+      id: c.id,
+      label: c.label,
+      color: c.color,
+      value: c.valueA,
+      pctOfWeek: totalExpense > 0 ? (c.valueA / totalExpense) * 100 : 0,
+    }));
+
+  const budgetPctUsed = monthlyBudget > 0
+    ? (totalExpense / (monthlyBudget * 7 / 30)) * 100
+    : null;
+
+  const previousTopCatId = computePreviousWeekTopCategoryId(prevWeekTxns);
+
+  const draft: RecapData = {
+    weekStart, weekEnd,
+    totalExpense, totalIncome,
+    topCategories,
+    deltaExpensePct: comparison.deltaExpensePct,
+    narrative: 'another_log',
+    budgetPctUsed,
+    primary,
+  };
+  draft.narrative = pickNarrative(draft, previousTopCatId);
+  return draft;
+}
+
+export function assembleStreakData(
+  txns: Txn[],
+  today: Date = new Date(),
+): StreakData {
+  const logDays = computeLogDaysStreak(txns, today);
+  const todayKey = toDateKey(today);
+  const weekStart = weekStartOf(todayKey);
+  const txnCountThisWeek = filterByWeek(txns, weekStart).length;
+  return {
+    logDays,
+    txnCountThisWeek,
+    hype: pickHype(logDays),
+  };
 }

@@ -77,6 +77,106 @@ describe('pickNarrative', () => {
   });
 });
 
+import type { Txn } from './transactions';
+import { assembleRecapData, assembleStreakData } from './share-cards';
+
+const REG = [
+  { id: 'food', label: 'Food', color: '#f00' },
+  { id: 'fun', label: 'Fun', color: '#0f0' },
+  { id: 'bills', label: 'Bills', color: '#00f' },
+  { id: 'transport', label: 'Transport', color: '#ff0' },
+];
+
+function mkAssemblyTxn(date: string, amount: number, category: string, id: number): Txn {
+  return {
+    id, uuid: `u${id}`, updatedAt: 0,
+    date, time: '10:00', createdAt: 0,
+    category: category as Txn['category'], name: 't', note: null,
+    amount, currency: 'VND',
+    originalAmount: amount, originalCurrency: 'VND',
+    isIncome: false, photoPath: null, subscriptionUuid: null,
+  };
+}
+
+// Wednesday of a Monday-starting week (2026-08-03 = Monday)
+const WEDNESDAY = new Date(2026, 7, 5, 12, 0, 0);
+
+describe('assembleRecapData', () => {
+  it('returns zeroed data for empty txns with narrative=another_log', () => {
+    const r = assembleRecapData([], REG, 0, 'VND', WEDNESDAY);
+    expect(r.totalExpense).toBe(0);
+    expect(r.totalIncome).toBe(0);
+    expect(r.topCategories).toEqual([]);
+    expect(r.budgetPctUsed).toBeNull();
+    expect(r.narrative).toBe('another_log');
+  });
+
+  it('sums this-week expense and picks top 3 categories', () => {
+    const txns = [
+      mkAssemblyTxn('2026-08-04', 300, 'food', 1),
+      mkAssemblyTxn('2026-08-05', 200, 'fun', 2),
+      mkAssemblyTxn('2026-08-06', 100, 'bills', 3),
+      mkAssemblyTxn('2026-08-07', 50, 'transport', 4),
+    ];
+    const r = assembleRecapData(txns, REG, 0, 'VND', WEDNESDAY);
+    expect(r.totalExpense).toBe(650);
+    expect(r.topCategories).toHaveLength(3);
+    expect(r.topCategories[0].id).toBe('food');
+    expect(r.topCategories[0].value).toBe(300);
+    expect(r.topCategories[0].pctOfWeek).toBeCloseTo(46.15, 1);
+  });
+
+  it('computes budgetPctUsed proportional to week when budget > 0', () => {
+    // monthlyBudget = 3000, week share = 3000 * 7/30 = 700, spend = 350 → 50%
+    const txns = [mkAssemblyTxn('2026-08-04', 350, 'food', 1)];
+    const r = assembleRecapData(txns, REG, 3000, 'VND', WEDNESDAY);
+    expect(r.budgetPctUsed).toBeCloseTo(50, 0);
+  });
+
+  it('leaves budgetPctUsed null when monthlyBudget === 0', () => {
+    const txns = [mkAssemblyTxn('2026-08-04', 100, 'food', 1)];
+    const r = assembleRecapData(txns, REG, 0, 'VND', WEDNESDAY);
+    expect(r.budgetPctUsed).toBeNull();
+  });
+
+  it('picks new_obsession narrative when this-week top differs from prev-week top', () => {
+    const txns = [
+      // prev week: food dominant
+      mkAssemblyTxn('2026-07-28', 300, 'food', 1),
+      mkAssemblyTxn('2026-07-29', 200, 'transport', 2),
+      // this week: fun top but only 41% (below single_cat_focus 50% threshold),
+      // total 600 vs prev 500 = +20% (below splurged 30% threshold)
+      mkAssemblyTxn('2026-08-04', 250, 'fun', 3),
+      mkAssemblyTxn('2026-08-05', 200, 'bills', 4),
+      mkAssemblyTxn('2026-08-06', 150, 'food', 5),
+    ];
+    const r = assembleRecapData(txns, REG, 0, 'VND', WEDNESDAY);
+    expect(r.topCategories[0].id).toBe('fun');
+    expect(r.narrative).toBe('new_obsession');
+  });
+});
+
+describe('assembleStreakData', () => {
+  it('composes logDays + txnCountThisWeek + hype', () => {
+    const txns = [
+      mkAssemblyTxn('2026-08-05', 100, 'food', 1),
+      mkAssemblyTxn('2026-08-04', 100, 'food', 2),
+      mkAssemblyTxn('2026-08-03', 100, 'food', 3),
+    ];
+    const s = assembleStreakData(txns, WEDNESDAY);
+    expect(s.logDays).toBe(3);
+    expect(s.txnCountThisWeek).toBe(3);
+    expect(s.hype).toBe('warming_up');
+  });
+
+  it('returns zeroed streak with just_started hype when txns empty', () => {
+    const s = assembleStreakData([], WEDNESDAY);
+    expect(s.logDays).toBe(0);
+    expect(s.txnCountThisWeek).toBe(0);
+    expect(s.hype).toBe('just_started');
+  });
+});
+
 describe('pickHype', () => {
   it('returns just_started for 0', () => {
     expect(pickHype(0)).toBe('just_started');
