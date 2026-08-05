@@ -2,7 +2,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Dimensions, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Dimensions, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from "react-native-worklets";
@@ -15,11 +15,14 @@ import { GradientButton, Shutter } from '@/components/sl/gradient';
 import { Icon } from '@/components/sl/icons';
 import { ShareSheet } from '@/components/sl/share-sheet';
 import type { ShareSheetHandle } from '@/components/sl/share-sheet';
+import { CardPickerSheet, type CardPickerSheetHandle } from '@/components/share/card-picker-sheet';
 import { TodayBadge } from '@/components/sl/today-badge';
 import { TxnCard } from '@/components/sl/txn-card';
 import { Money, W, useColors } from '@/constants/tokens';
+import { weekStartOf } from '@/lib/comparison';
 import { formatMoney, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
+import { computeLogDaysStreak } from '@/lib/streaks';
 import type { Txn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 import { useSettings } from '@/lib/settings-context';
@@ -43,6 +46,22 @@ export default function CameraScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const shareSheetRef = useRef<ShareSheetHandle>(null);
+  const cardPickerRef = useRef<CardPickerSheetHandle>(null);
+
+  const cannotShareCards = useMemo(() => {
+    const weekStart = weekStartOf(toDateKey(new Date()));
+    const noTxnsThisWeek = transactions.filter((tx) => tx.date >= weekStart).length === 0;
+    const noStreak = computeLogDaysStreak(transactions) === 0;
+    return noTxnsThisWeek && noStreak;
+  }, [transactions]);
+
+  const handleOpenShareCards = useCallback(() => {
+    if (cannotShareCards) {
+      Alert.alert(t('share.no_data_title'), t('share.no_data_body'));
+      return;
+    }
+    cardPickerRef.current?.present();
+  }, [cannotShareCards, t]);
 
   const todayKey = toDateKey(new Date());
   const todayTxns = useMemo(
@@ -164,6 +183,22 @@ export default function CameraScreen() {
         </Pressable>
       )}
       <ShareSheet ref={shareSheetRef} extras={categoryExtras} />
+      <CardPickerSheet
+        ref={cardPickerRef}
+        onSelect={(type) => router.push(`/share?type=${type}` as never)}
+      />
+      <View style={[styles.topRightIcons, { top: insets.top + 12 }]} pointerEvents="box-none">
+        <Pressable
+          testID="share-cards-icon"
+          onPress={handleOpenShareCards}
+          style={({ pressed }) => [
+            styles.floatingIcon,
+            { opacity: cannotShareCards ? 0.5 : (pressed ? 0.7 : 1) },
+          ]}
+        >
+          <Icon name="share" size={20} color="#fff" />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -371,6 +406,21 @@ function EmptyTodayCard() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#111111' },
+  topRightIcons: {
+    position: 'absolute',
+    right: 12,
+    flexDirection: 'row',
+    gap: 8,
+    zIndex: 10,
+  },
+  floatingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   nav: {
     flexDirection: 'row',
     alignItems: 'center',
