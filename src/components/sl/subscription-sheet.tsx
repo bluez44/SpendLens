@@ -24,11 +24,10 @@ import { PhotoTile } from '@/components/sl/photo-tile';
 import { Text } from '@/components/sl/text';
 import { AccentGradient, Money, Radius, W, useColors } from '@/constants/tokens';
 import { STATIC_CATEGORIES } from '@/lib/categories';
-import type { CategoryId } from '@/lib/categories';
 import { insertUserCategory, listUserCategories, toCategoryObj } from '@/lib/user-categories';
 import type { UserCategory } from '@/lib/user-categories';
 import { useTransactions } from '@/lib/transactions-context';
-import { CURRENCY_META, type CurrencyCode } from '@/lib/currency';
+import { CURRENCY_META } from '@/lib/currency';
 import { convert } from '@/lib/fx';
 import { formatAmountInput, formatMoney } from '@/lib/format';
 import { useT } from '@/lib/i18n';
@@ -36,6 +35,7 @@ import { requestPermission } from '@/lib/notifications';
 import { nextDueFromAnchor } from '@/lib/subscription-scheduler';
 import type { NewSubscription, Subscription } from '@/lib/subscriptions';
 import { useSettings } from '@/lib/settings-context';
+import { useSubscriptionFormState } from '@/lib/use-subscription-form-state';
 
 import {
   AnchorDayPickerSheet,
@@ -69,59 +69,17 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
     const currencyPickerRef = useRef<CurrencyPickerSheetHandle>(null);
     const anchorPickerRef = useRef<AnchorDayPickerSheetHandle>(null);
 
-    // Form state — mirrored in refs so save() always reads latest values
-    const [editingId, setEditingId] = useState<number | undefined>(undefined);
-    const [isPaused, setIsPaused] = useState(false);
-    const [name, setName] = useState('');
-    const [currency, setCurrency] = useState<CurrencyCode>(settings.primaryCurrency);
-    const [amountDigits, setAmountDigits] = useState('');
-    const [category, setCategory] = useState<CategoryId>('other');
-    const [anchorDay, setAnchorDay] = useState(1);
-    const [photoPath, setPhotoPath] = useState<string | null>(null);
-    const [notify7, setNotify7] = useState(false);
-    const [notify3, setNotify3] = useState(false);
-    const [notify1, setNotify1] = useState(false);
-
-    // Refs for save() to always see the latest values (avoids stale closure)
-    const nameRef = useRef('');
-    const currencyRef = useRef<CurrencyCode>(settings.primaryCurrency);
-    const amountDigitsRef = useRef('');
-    const categoryRef = useRef<CategoryId>('other');
-    const anchorDayRef = useRef(1);
-    const photoPathRef = useRef<string | null>(null);
-    const notify7Ref = useRef(false);
-    const notify3Ref = useRef(false);
-    const notify1Ref = useRef(false);
-    const editingIdRef = useRef<number | undefined>(undefined);
+    const {
+      editingId, isPaused, name, currency, amountDigits, category, anchorDay,
+      photoPath, notify7, notify3, notify1, customInput,
+      setName, setCurrency, setAmountDigits, setCategory,
+      setAnchorDay, setPhotoPath, setNotify7, setNotify3, setNotify1,
+      setCustomInput,
+      refs,
+      resetToDefaults, loadFromSubscription,
+    } = useSubscriptionFormState(settings.primaryCurrency);
 
     const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
-    const [customInput, setCustomInput] = useState('');
-
-    const setNameSynced = (v: string) => { nameRef.current = v; setName(v); };
-    const setCurrencySynced = (v: CurrencyCode) => { currencyRef.current = v; setCurrency(v); };
-    const setAmountDigitsSynced = (v: string) => { amountDigitsRef.current = v; setAmountDigits(v); };
-    const setCategorySynced = (v: CategoryId) => { categoryRef.current = v; setCategory(v); };
-    const setAnchorDaySynced = (v: number) => { anchorDayRef.current = v; setAnchorDay(v); };
-    const setPhotoPathSynced = (v: string | null) => { photoPathRef.current = v; setPhotoPath(v); };
-    const setNotify7Synced = (v: boolean) => { notify7Ref.current = v; setNotify7(v); };
-    const setNotify3Synced = (v: boolean) => { notify3Ref.current = v; setNotify3(v); };
-    const setNotify1Synced = (v: boolean) => { notify1Ref.current = v; setNotify1(v); };
-    const setEditingIdSynced = (v: number | undefined) => { editingIdRef.current = v; setEditingId(v); };
-
-    const resetToDefaults = () => {
-      setEditingIdSynced(undefined);
-      setIsPaused(false);
-      setNameSynced('');
-      setCurrencySynced(settings.primaryCurrency);
-      setAmountDigitsSynced('');
-      setCategorySynced('other');
-      setAnchorDaySynced(1);
-      setPhotoPathSynced(null);
-      setNotify7Synced(false);
-      setNotify3Synced(false);
-      setNotify1Synced(false);
-      setCustomInput('');
-    };
 
     useImperativeHandle(ref, () => ({
       presentAdd: () => {
@@ -129,23 +87,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
         sheet.current?.present();
       },
       presentEdit: (sub: Subscription) => {
-        setEditingIdSynced(sub.id);
-        setIsPaused(sub.paused);
-        setNameSynced(sub.name);
-        setCurrencySynced(sub.originalCurrency);
-        const meta = CURRENCY_META[sub.originalCurrency];
-        const digits =
-          meta.decimals === 2
-            ? String(Math.round(sub.originalAmount * 100))
-            : String(Math.round(sub.originalAmount));
-        setAmountDigitsSynced(digits);
-        setCategorySynced(sub.category);
-        setAnchorDaySynced(sub.anchorDay);
-        setPhotoPathSynced(sub.photoPath);
-        setNotify7Synced(sub.notify7);
-        setNotify3Synced(sub.notify3);
-        setNotify1Synced(sub.notify1);
-        setCustomInput('');
+        loadFromSubscription(sub);
         sheet.current?.present();
       },
       dismiss: () => sheet.current?.dismiss(),
@@ -196,10 +138,10 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
         const ext = (extMatch?.[1] ?? 'jpg').toLowerCase();
         const dest = new File(Paths.document, `sub-${Crypto.randomUUID()}.${ext}`);
         new File(source).copySync(dest);
-        setPhotoPathSynced(dest.uri);
+        setPhotoPath(dest.uri);
       } catch (err) {
         console.warn('Failed to copy picked photo, using source uri', err);
-        setPhotoPathSynced(source);
+        setPhotoPath(source);
       }
     };
 
@@ -225,27 +167,27 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
     };
 
     const handleNotify7 = async () => {
-      const next = !notify7Ref.current;
-      const flags = await coerceNotifyFlags(next, notify3Ref.current, notify1Ref.current);
-      setNotify7Synced(flags.n7);
-      setNotify3Synced(flags.n3);
-      setNotify1Synced(flags.n1);
+      const next = !refs.notify7.current;
+      const flags = await coerceNotifyFlags(next, refs.notify3.current, refs.notify1.current);
+      setNotify7(flags.n7);
+      setNotify3(flags.n3);
+      setNotify1(flags.n1);
     };
 
     const handleNotify3 = async () => {
-      const next = !notify3Ref.current;
-      const flags = await coerceNotifyFlags(notify7Ref.current, next, notify1Ref.current);
-      setNotify7Synced(flags.n7);
-      setNotify3Synced(flags.n3);
-      setNotify1Synced(flags.n1);
+      const next = !refs.notify3.current;
+      const flags = await coerceNotifyFlags(refs.notify7.current, next, refs.notify1.current);
+      setNotify7(flags.n7);
+      setNotify3(flags.n3);
+      setNotify1(flags.n1);
     };
 
     const handleNotify1 = async () => {
-      const next = !notify1Ref.current;
-      const flags = await coerceNotifyFlags(notify7Ref.current, notify3Ref.current, next);
-      setNotify7Synced(flags.n7);
-      setNotify3Synced(flags.n3);
-      setNotify1Synced(flags.n1);
+      const next = !refs.notify1.current;
+      const flags = await coerceNotifyFlags(refs.notify7.current, refs.notify3.current, next);
+      setNotify7(flags.n7);
+      setNotify3(flags.n3);
+      setNotify1(flags.n1);
     };
 
     function tryAddCustomCategory() {
@@ -254,13 +196,13 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
       try {
         const uc = insertUserCategory(name);
         setUserCategories((prev) => [...prev, uc]);
-        setCategorySynced(uc.id);
+        setCategory(uc.id);
         setCustomInput('');
         refreshUserCategories();
       } catch (err) {
         const existingUC = listUserCategories().find((c) => c.label === name);
         if (existingUC) {
-          setCategorySynced(existingUC.id);
+          setCategory(existingUC.id);
           setCustomInput('');
         } else {
           console.warn('Failed to add category', err);
@@ -273,16 +215,16 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
     // state setters in tests (avoids stale closure over the previous render's
     // state values)
     const save = async () => {
-      const curName = nameRef.current;
-      const curCurrency = currencyRef.current;
-      const curAmountDigits = amountDigitsRef.current;
-      const curCategory = categoryRef.current;
-      const curAnchorDay = anchorDayRef.current;
-      const curPhotoPath = photoPathRef.current;
-      const curNotify7 = notify7Ref.current;
-      const curNotify3 = notify3Ref.current;
-      const curNotify1 = notify1Ref.current;
-      const curEditingId = editingIdRef.current;
+      const curName = refs.name.current;
+      const curCurrency = refs.currency.current;
+      const curAmountDigits = refs.amountDigits.current;
+      const curCategory = refs.category.current;
+      const curAnchorDay = refs.anchorDay.current;
+      const curPhotoPath = refs.photoPath.current;
+      const curNotify7 = refs.notify7.current;
+      const curNotify3 = refs.notify3.current;
+      const curNotify1 = refs.notify1.current;
+      const curEditingId = refs.editingId.current;
 
       if (!curName.trim()) return;
 
@@ -313,7 +255,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
     };
 
     const confirmDelete = () => {
-      const id = editingIdRef.current;
+      const id = refs.editingId.current;
       if (id == null) return;
       Alert.alert(
         t('sub.delete_confirm_title'),
@@ -374,7 +316,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
             <BottomSheetTextInput
               testID="sub-name-input"
               value={name}
-              onChangeText={setNameSynced}
+              onChangeText={setName}
               placeholder={t('sub.field_name')}
               placeholderTextColor={c.textSecondary}
               style={[styles.textInput, { color: c.text, borderColor: c.cardBorder }]}
@@ -391,7 +333,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
               <BottomSheetTextInput
                 testID="sub-amount-input"
                 value={amountDigits ? formatAmountInput(amountDigits, currency) : ''}
-                onChangeText={(v) => setAmountDigitsSynced(v.replace(/\D/g, '').slice(0, 15))}
+                onChangeText={(v) => setAmountDigits(v.replace(/\D/g, '').slice(0, 15))}
                 keyboardType="number-pad"
                 placeholder="0"
                 placeholderTextColor={c.textSecondary}
@@ -429,7 +371,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
                   key={cat.id}
                   category={cat}
                   selected={category === cat.id}
-                  onPress={() => setCategorySynced(cat.id)}
+                  onPress={() => setCategory(cat.id)}
                 />
               ))}
               {userCategories.map((uc) => {
@@ -439,7 +381,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
                     key={cat.id}
                     category={cat}
                     selected={category === cat.id}
-                    onPress={() => setCategorySynced(cat.id)}
+                    onPress={() => setCategory(cat.id)}
                   />
                 );
               })}
@@ -544,7 +486,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
               <View style={styles.editExtras}>
                 <Pressable
                   onPress={() => {
-                    const id = editingIdRef.current;
+                    const id = refs.editingId.current;
                     if (id == null) return;
                     onPauseResume(id, !isPaused);
                     sheet.current?.dismiss();
@@ -576,11 +518,11 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
 
         <CurrencyPickerSheet
           ref={currencyPickerRef}
-          onChoose={(cc) => setCurrencySynced(cc)}
+          onChoose={(cc) => setCurrency(cc)}
         />
         <AnchorDayPickerSheet
           ref={anchorPickerRef}
-          onChoose={(day) => setAnchorDaySynced(day)}
+          onChoose={(day) => setAnchorDay(day)}
         />
       </>
     );
