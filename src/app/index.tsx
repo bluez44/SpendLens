@@ -34,7 +34,7 @@ export default function CameraScreen() {
   const cameraRef = useRef<CameraView>(null);
   const { transactions, userCategories } = useTransactions();
   const { settings } = useSettings();
-  const categoryExtras = userCategories.map(toCategoryObj);
+  const categoryExtras = useMemo(() => userCategories.map(toCategoryObj), [userCategories]);
   const [facing, setFacing] = useState<'back' | 'front'>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
   const [note, setNote] = useState('');
@@ -96,6 +96,8 @@ export default function CameraScreen() {
 
   const granted = permission?.granted ?? false;
 
+  const onShareTxn = useCallback((t: Txn) => shareSheetRef.current?.present(t), []);
+
   const renderItem = useCallback(({ item }: { item: PageItem }) => {
     if (item.type === 'camera')
       return (
@@ -122,10 +124,10 @@ export default function CameraScreen() {
       <TxnCard
         txn={item.txn}
         extras={categoryExtras}
-        onShare={(t) => shareSheetRef.current?.present(t)}
+        onShare={onShareTxn}
       />
     );
-  }, [insets, permission, requestPermission, granted, facing, flash, note, noteFocused, todayExpense, capture, categoryExtras]);
+  }, [insets, permission, requestPermission, granted, facing, flash, note, noteFocused, todayExpense, capture, categoryExtras, onShareTxn]);
 
   return (
     <View style={styles.root}>
