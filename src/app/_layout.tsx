@@ -24,9 +24,16 @@ import { SettingsProvider, useSettings } from '@/lib/settings-context';
 import { ThemeProvider as SLThemeProvider } from '@/lib/theme-context';
 import { TransactionsProvider } from '@/lib/transactions-context';
 import { SubscriptionsProvider } from '@/lib/subscriptions-context';
-import { scheduleDailyReminder } from '@/lib/notifications';
+import { scheduleDailyReminder, scheduleWeeklyRecapReminder } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+function handleNotifRoute(route: string | undefined) {
+  if (!route) return;
+  if (route === '/subscriptions') { router.push('/subscriptions'); return; }
+  if (route.startsWith('/share')) { router.push(route as never); return; }
+  // Unknown route → ignore silently
+}
 
 function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
   const { settings } = useSettings();
@@ -42,6 +49,13 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
       // silent — permission may have been revoked externally
     });
   }, [settings.reminderEnabled, settings.reminderHHMM]);
+
+  useEffect(() => {
+    if (!settings.reminderEnabled) return;
+    scheduleWeeklyRecapReminder().catch(() => {
+      // silent — permission may have been revoked externally
+    });
+  }, [settings.reminderEnabled]);
 
   return (
     <SLThemeProvider value={effective}>
@@ -62,6 +76,7 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
             <Stack.Screen name="transaction/[id]" />
             <Stack.Screen name="subscriptions" />
             <Stack.Screen name="compare" />
+            <Stack.Screen name="share" />
           </Stack>
           {isLocked && <LockScreen biometricEnabled={settings.appLockBiometricEnabled} onUnlock={unlock} />}
         </BottomSheetModalProvider>
@@ -95,15 +110,11 @@ export default function RootLayout() {
     Notifications.getLastNotificationResponseAsync().then((response) => {
       if (!response) return;
       const route = (response.notification.request.content.data as { route?: string })?.route;
-      if (route === '/subscriptions') {
-        router.push('/subscriptions');
-      }
+      handleNotifRoute(route);
     });
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
       const route = (response.notification.request.content.data as { route?: string })?.route;
-      if (route === '/subscriptions') {
-        router.push('/subscriptions');
-      }
+      handleNotifRoute(route);
     });
     return () => sub.remove();
   }, [fontsLoaded]);
