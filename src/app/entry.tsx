@@ -375,12 +375,21 @@ export default function EntryScreen() {
           />
         )}
 
+        {!canSave ? (
+          <Text style={{
+            color: c.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 12,
+          }}>
+            {!(originalAmount > 0)
+              ? t('entry.hint_missing_amount')
+              : t('entry.hint_missing_note')}
+          </Text>
+        ) : null}
         <GradientButton
           label={editing ? t('entry.save_update') : isIncome ? t('entry.save_income') : t('entry.save_expense')}
           onPress={save}
           disabled={!canSave}
           colors={isIncome ? (['#34C79A', '#1FA07A'] as const) : undefined}
-          style={{ marginTop: 20, marginBottom: insets.bottom + 12 }}
+          style={{ marginTop: canSave ? 20 : 8, marginBottom: insets.bottom + 12 }}
         />
       </ScrollView>
       </KeyboardAvoidingView>

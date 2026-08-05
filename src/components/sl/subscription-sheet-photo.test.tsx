@@ -44,9 +44,11 @@ describe('SubscriptionSheet photo pick', () => {
     await act(async () => {
       fireEvent.press(r.getByTestId('sub-photo-pressable'));
     });
-    fireEvent.changeText(r.getByTestId('sub-name-input'), 'Netflix');
-    fireEvent.changeText(r.getByTestId('sub-amount-input'), '20000');
-    fireEvent.press(r.getByTestId('sub-save-button'));
+    await act(async () => {
+      fireEvent.changeText(r.getByTestId('sub-name-input'), 'Netflix');
+      fireEvent.changeText(r.getByTestId('sub-amount-input'), '20000');
+    });
+    await act(async () => { fireEvent.press(r.getByTestId('sub-save-button')); });
 
     expect(onSave).toHaveBeenCalled();
     const [payload] = onSave.mock.calls[0];

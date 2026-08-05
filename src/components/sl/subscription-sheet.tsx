@@ -492,16 +492,37 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
             </View>
 
             {/* Save CTA */}
-            <Pressable
-              testID="sub-save-button"
-              onPress={save}
-              style={({ pressed }) => [styles.saveBtn, { opacity: pressed ? 0.85 : 1 }]}
-            >
-              <GradientFill />
-              <Text style={styles.saveBtnLabel}>
-                {isEditing ? t('sub.save_edit') : t('sub.save_add')}
-              </Text>
-            </Pressable>
+            {(() => {
+              const hasName = name.trim().length > 0;
+              const hasAmount = amountDigits.length > 0 && Number(amountDigits) > 0;
+              const isValid = hasName && hasAmount;
+              const hintKey = !hasName ? 'sub.hint_missing_name'
+                : !hasAmount ? 'sub.hint_missing_amount'
+                : null;
+              return (
+                <>
+                  {hintKey ? (
+                    <Text style={{ color: c.textSecondary, fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+                      {t(hintKey)}
+                    </Text>
+                  ) : null}
+                  <Pressable
+                    testID="sub-save-button"
+                    onPress={save}
+                    disabled={!isValid}
+                    style={({ pressed }) => [
+                      styles.saveBtn,
+                      { opacity: !isValid ? 0.4 : (pressed ? 0.85 : 1) },
+                    ]}
+                  >
+                    <GradientFill />
+                    <Text style={styles.saveBtnLabel}>
+                      {isEditing ? t('sub.save_edit') : t('sub.save_add')}
+                    </Text>
+                  </Pressable>
+                </>
+              );
+            })()}
 
             {/* Edit-mode extras */}
             {isEditing ? (

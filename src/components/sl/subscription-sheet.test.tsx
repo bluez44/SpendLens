@@ -64,9 +64,11 @@ describe('SubscriptionSheet', () => {
       <SubscriptionSheet ref={ref} onSave={onSave} onDelete={() => {}} onPauseResume={() => {}} />
     );
     await act(() => ref.current?.presentAdd());
-    fireEvent.changeText(r.getByTestId('sub-name-input'), 'Test');
-    fireEvent.changeText(r.getByTestId('sub-amount-input'), '2000');
-    fireEvent.press(r.getByTestId('sub-save-button'));
+    await act(async () => {
+      fireEvent.changeText(r.getByTestId('sub-name-input'), 'Test');
+      fireEvent.changeText(r.getByTestId('sub-amount-input'), '2000');
+    });
+    await act(async () => { fireEvent.press(r.getByTestId('sub-save-button')); });
     expect(onSave).toHaveBeenCalled();
     const [payload, id] = onSave.mock.calls[0];
     expect(payload.name).toBe('Test');
