@@ -227,9 +227,9 @@ export async function cancelWeeklyRecapReminder(): Promise<void>
 
 Behavior:
 - Uses `Notifications.scheduleNotificationAsync` with a **weekly repeating trigger** at Sunday `hh:mm`. Exact trigger shape depends on Expo SDK v57 — verify at https://docs.expo.dev/versions/v57.0.0/sdk/notifications/ before writing code (weekday-number conventions have shifted across SDK versions; do not guess).
-- Content data: `{ deepLink: '/share?type=recap' }`.
+- Content data: `{ route: '/share?type=recap' }` — matches the existing `data.route` convention already handled in `src/app/_layout.tsx`.
 - Content body: i18n key `share.weekly_notif_body` — "Your weekly recap is ready".
-- **Cancel-before-schedule pattern**: before scheduling, iterate `getAllScheduledNotificationsAsync()`, cancel any with `notif.content.data?.deepLink === '/share?type=recap'`. Ensures only one weekly recap notif exists.
+- **Cancel-before-schedule pattern**: reuse the existing `REMINDER_ID`-style pattern — define `WEEKLY_RECAP_ID = 'spendlens-weekly-recap'` and call `Notifications.cancelScheduledNotificationAsync(WEEKLY_RECAP_ID)` before re-scheduling. Ensures only one weekly recap notif exists.
 - Silent failure: if `Notifications.requestPermissionsAsync()` returns denied, skip scheduling with `console.warn`. Not user-facing error.
 
 Called from:
