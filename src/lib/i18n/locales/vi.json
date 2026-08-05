@@ -7,7 +7,9 @@
     "delete_failed_title": "Không thể xoá",
     "delete_failed_body": "Đã có lỗi khi xoá. Vui lòng thử lại.",
     "reset_failed_title": "Xoá dữ liệu chưa hoàn tất",
-    "reset_partial_body": "Một số bước gặp lỗi: {{steps}}. Bạn có thể thử lại."
+    "reset_partial_body": "Một số bước gặp lỗi: {{steps}}. Bạn có thể thử lại.",
+    "photo_failed_title": "Không chọn được ảnh",
+    "photo_failed_body": "Đã có lỗi khi mở thư viện ảnh. Vui lòng thử lại."
   },
   "nav": { "today": "Hôm nay", "back_to_camera": "Về camera" },
   "day": { "today": "Hôm nay", "yesterday": "Hôm qua" },

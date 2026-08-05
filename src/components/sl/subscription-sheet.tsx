@@ -178,10 +178,17 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
     })();
 
     const handlePickPhoto = async () => {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 0.8,
-      });
+      let result;
+      try {
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          quality: 0.8,
+        });
+      } catch (err) {
+        console.warn('ImagePicker.launchImageLibraryAsync failed', err);
+        Alert.alert(t('common.photo_failed_title'), t('common.photo_failed_body'));
+        return;
+      }
       if (result.canceled || !result.assets[0]) return;
       const source = result.assets[0].uri;
       try {
@@ -202,7 +209,14 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
       n1: boolean,
     ): Promise<{ n7: boolean; n3: boolean; n1: boolean }> => {
       if (!n7 && !n3 && !n1) return { n7, n3, n1 };
-      const granted = await requestPermission();
+      let granted = false;
+      try {
+        granted = await requestPermission();
+      } catch (err) {
+        console.warn('requestPermission threw', err);
+        Alert.alert('', t('sub.perm_needed_body'));
+        return { n7: false, n3: false, n1: false };
+      }
       if (!granted) {
         Alert.alert('', t('sub.perm_needed_body'));
         return { n7: false, n3: false, n1: false };

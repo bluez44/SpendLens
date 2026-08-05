@@ -7,7 +7,9 @@
     "delete_failed_title": "Delete failed",
     "delete_failed_body": "Something went wrong. Please try again.",
     "reset_failed_title": "Reset partially failed",
-    "reset_partial_body": "Some steps failed: {{steps}}. You can try again."
+    "reset_partial_body": "Some steps failed: {{steps}}. You can try again.",
+    "photo_failed_title": "Photo picker failed",
+    "photo_failed_body": "Something went wrong opening the photo library. Please try again."
   },
   "nav": { "today": "Today", "back_to_camera": "Back to camera" },
   "day": { "today": "Today", "yesterday": "Yesterday" },

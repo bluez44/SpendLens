@@ -88,7 +88,8 @@ export default function CameraScreen() {
           ? { photo: photo.uri, note: currentNote }
           : currentNote ? { note: currentNote } : {},
       });
-    } catch {
+    } catch (err) {
+      console.warn('Camera capture failed, falling back to note-only entry', err);
       router.push({ pathname: '/entry', params: currentNote ? { note: currentNote } : {} });
     }
   }, [note]);
