@@ -231,6 +231,8 @@
     "source_fallback": "Default",
     "revert_to_auto": "Reset to auto",
     "override_title": "Set exchange rate",
+    "override_pair": "You are setting: 1 {{from}} = ? {{to}}",
+    "override_locked": "Same currency, rate is always 1.",
     "override_placeholder": "Rate",
     "override_invalid": "Rate must be greater than 0",
     "change_primary_title": "Change primary to {{code}}?",

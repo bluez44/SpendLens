@@ -15,7 +15,7 @@ import { AccentGradient, Money, useColors } from '@/constants/tokens';
 import { authenticateBiometric, clearPin, isBiometricAvailable } from '@/lib/app-lock';
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency';
 import { exportAndShareCsv } from '@/lib/export';
-import { formatMoney, toDateKey } from '@/lib/format';
+import { formatFxRate, formatMoney, toDateKey } from '@/lib/format';
 import { convert } from '@/lib/fx';
 import { useT } from '@/lib/i18n';
 import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@/lib/notifications';
@@ -49,7 +49,10 @@ export default function SettingsScreen() {
   const [timePicker, setTimePicker] = useState<null | 'first' | 'change'>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const nonUsdCurrencies = CURRENCIES.filter((c) => c !== 'USD' && c !== settings.primaryCurrency) as Exclude<CurrencyCode, 'USD'>[];
+  const nonUsdCurrencies = CURRENCIES.filter((c) => c !== 'USD') as Exclude<CurrencyCode, 'USD'>[];
+  const fxRowCurrencies = nonUsdCurrencies.filter((c) => c !== settings.primaryCurrency);
+  const referenceFor = (cc: Exclude<CurrencyCode, 'USD'>): CurrencyCode =>
+    cc === settings.primaryCurrency ? 'USD' : settings.primaryCurrency;
 
   const askChangePrimary = (target: CurrencyCode) => {
     if (target === settings.primaryCurrency) return;
@@ -71,7 +74,7 @@ export default function SettingsScreen() {
       convert(settings.monthlyBudget, settings.primaryCurrency, target, rates),
       target,
     );
-    const anyFallback = nonUsdCurrencies.some((c) => getRateSource(c) === 'fallback');
+    const anyFallback = fxRowCurrencies.some((c) => getRateSource(c) === 'fallback');
     const body = [
       t('currency.change_primary_body', { n: total }),
       ...lines,
@@ -306,23 +309,21 @@ export default function SettingsScreen() {
           ) : null}
           {fetchError ? <Text style={{ color: Money.expense, fontSize: 12 }}>{fetchError}</Text> : null}
           {nonUsdCurrencies.map((cc) => {
-            const rateUsd = rates[cc];
+            const reference = referenceFor(cc);
             const source = getRateSource(cc);
-            const displayRate = formatMoney(
-              convert(1, cc, settings.primaryCurrency, rates),
-              settings.primaryCurrency,
-            );
+            const rateInRef = convert(1, cc, reference, rates);
+            const displayRate = formatFxRate(rateInRef, reference);
             return (
               <Pressable
                 key={cc}
-                onPress={() => rateOverrideRef.current?.present(cc, rateUsd)}
+                onPress={() => rateOverrideRef.current?.present(cc, rateInRef, reference)}
                 style={({ pressed }) => ({
                   paddingVertical: 10, opacity: pressed ? 0.6 : 1,
                   flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
                 })}
               >
                 <Text style={{ color: colors.text }}>
-                  {t('currency.rate_row', { from: cc, value: displayRate, to: '' }).replace(/\s*$/, '')}
+                  {t('currency.rate_row', { from: cc, value: displayRate, to: reference })}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
@@ -466,7 +467,10 @@ export default function SettingsScreen() {
 
       <RateOverrideSheet
         ref={rateOverrideRef}
-        onSave={(cc, rate) => { setManualRate(cc, rate); }}
+        onSave={(cc, rateInRef, reference) => {
+          const rateToUsd = reference === 'USD' ? rateInRef : rateInRef * rates[reference];
+          setManualRate(cc, rateToUsd);
+        }}
       />
     </View>
   );

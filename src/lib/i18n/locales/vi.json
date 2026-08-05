@@ -231,6 +231,8 @@
     "source_fallback": "Mặc định",
     "revert_to_auto": "Trở về tự động",
     "override_title": "Đặt tỷ giá",
+    "override_pair": "Bạn đang đặt tỷ giá: 1 {{from}} = ? {{to}}",
+    "override_locked": "Cùng một đơn vị nên tỷ giá luôn bằng 1.",
     "override_placeholder": "Tỷ giá",
     "override_invalid": "Tỷ giá phải lớn hơn 0",
     "change_primary_title": "Đổi đơn vị chính sang {{code}}?",

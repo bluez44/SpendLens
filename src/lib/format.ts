@@ -28,6 +28,22 @@ export function signedMoney(amount: number, currency: CurrencyCode, isIncome: bo
   return (isIncome ? '+' : '−') + formatMoney(amount, currency);
 }
 
+/**
+ * Format an FX rate for the "1 X = Y" display. Adapts precision to magnitude
+ * so tiny anchors like 1 VND = 0.00003825 USD stay readable instead of
+ * rounding to 0. The caller renders the target currency code separately.
+ */
+export function formatFxRate(rate: number, currency: CurrencyCode): string {
+  const abs = Math.abs(rate);
+  if (abs >= 1000) {
+    const rounded = Math.round(abs);
+    return currency === 'VND' ? groupThousandsRaw(rounded) : rounded.toString();
+  }
+  if (abs >= 1) return abs.toFixed(CURRENCY_META[currency].decimals);
+  if (abs > 0) return Number(abs.toPrecision(4)).toString();
+  return '0';
+}
+
 export function formatCompact(amount: number, currency: CurrencyCode): string {
   if (currency !== 'VND') return formatMoney(amount, currency);
   const abs = Math.abs(amount);

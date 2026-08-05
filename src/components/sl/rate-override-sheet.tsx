@@ -11,11 +11,21 @@ import { useT } from '@/lib/i18n';
 import type { CurrencyCode } from '@/lib/currency';
 
 export interface RateOverrideSheetHandle {
-  present: (currency: Exclude<CurrencyCode, 'USD'>, currentRate: number) => void;
+  present: (
+    currency: Exclude<CurrencyCode, 'USD'>,
+    currentRate: number,
+    reference: CurrencyCode,
+  ) => void;
   dismiss: () => void;
 }
 
-interface Props { onSave: (currency: Exclude<CurrencyCode, 'USD'>, rate: number) => void; }
+interface Props {
+  onSave: (
+    currency: Exclude<CurrencyCode, 'USD'>,
+    rate: number,
+    reference: CurrencyCode,
+  ) => void;
+}
 
 export const RateOverrideSheet = forwardRef<RateOverrideSheetHandle, Props>(
   function RateOverrideSheet({ onSave }, ref) {
@@ -23,13 +33,17 @@ export const RateOverrideSheet = forwardRef<RateOverrideSheetHandle, Props>(
     const c = useColors();
     const sheet = useRef<BottomSheetModal>(null);
     const [currency, setCurrency] = useState<Exclude<CurrencyCode, 'USD'>>('VND');
+    const [reference, setReference] = useState<CurrencyCode>('USD');
     const [draft, setDraft] = useState('');
     const [error, setError] = useState('');
 
+    const locked = currency === reference;
+
     useImperativeHandle(ref, () => ({
-      present: (cur, rate) => {
+      present: (cur, rate, ref_) => {
         setCurrency(cur);
-        setDraft(String(rate));
+        setReference(ref_);
+        setDraft(cur === ref_ ? '1' : String(rate));
         setError('');
         sheet.current?.present();
       },
@@ -44,41 +58,62 @@ export const RateOverrideSheet = forwardRef<RateOverrideSheetHandle, Props>(
     );
 
     const save = () => {
+      if (locked) { sheet.current?.dismiss(); return; }
       const parsed = Number(draft);
       if (!(parsed > 0)) {
         setError(t('currency.override_invalid'));
         return;
       }
-      onSave(currency, parsed);
+      onSave(currency, parsed, reference);
       sheet.current?.dismiss();
     };
 
     return (
       <BottomSheetModal
         ref={sheet}
-        snapPoints={['35%']}
+        snapPoints={['38%']}
         backdropComponent={renderBackdrop}
         keyboardBehavior="interactive"
         backgroundStyle={{ backgroundColor: c.card }}
       >
         <BottomSheetView style={styles.body}>
           <Text style={{ fontWeight: '700', color: c.text, fontSize: 18 }}>
-            {t('currency.override_title')} — {currency}
+            {t('currency.override_title')}
+          </Text>
+          <Text style={{ color: c.textSecondary, fontSize: 13 }}>
+            {t('currency.override_pair', { from: currency, to: reference })}
           </Text>
           <BottomSheetTextInput
             testID="rate-input"
             value={draft}
             onChangeText={(v) => { setDraft(v); setError(''); }}
             keyboardType="numeric"
+            editable={!locked}
             placeholder={t('currency.override_placeholder')}
             placeholderTextColor={c.textSecondary}
-            style={[styles.input, { color: c.text, borderColor: c.cardBorder }]}
+            style={[
+              styles.input,
+              {
+                color: locked ? c.textSecondary : c.text,
+                borderColor: c.cardBorder,
+                backgroundColor: locked ? c.hairline : 'transparent',
+              },
+            ]}
           />
+          {locked ? (
+            <Text style={{ color: c.textSecondary, fontSize: 12 }}>
+              {t('currency.override_locked')}
+            </Text>
+          ) : null}
           {error ? <Text style={{ color: Money.expense, fontSize: 12 }}>{error}</Text> : null}
           <Pressable
             testID="rate-save"
             onPress={save}
-            style={({ pressed }) => [styles.saveBtn, { opacity: pressed ? 0.7 : 1 }]}
+            disabled={locked}
+            style={({ pressed }) => [
+              styles.saveBtn,
+              { opacity: locked ? 0.4 : (pressed ? 0.7 : 1) },
+            ]}
           >
             <Text style={{ color: '#fff', fontWeight: '700' }}>{t('settings.save')}</Text>
           </Pressable>
