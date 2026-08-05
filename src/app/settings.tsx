@@ -22,8 +22,7 @@ import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@
 import { db } from '@/lib/db';
 import { useSettings } from '@/lib/settings-context';
 import { resetTransactions } from '@/lib/transactions';
-import { resetUserCategories } from '@/lib/user-categories';
-import { toCategoryObj } from '@/lib/user-categories';
+import { resetUserCategories, toCategoryObj } from '@/lib/user-categories';
 import { useTransactions } from '@/lib/transactions-context';
 import { useSubscriptions } from '@/lib/subscriptions-context';
 
