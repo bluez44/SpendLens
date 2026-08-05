@@ -47,6 +47,14 @@
         {
           "faceIDPermission": "Dùng Face ID để mở khoá SpendLens."
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "SpendLens saves shareable cards to your photo library so you can post them.",
+          "savePhotosPermission": "SpendLens saves shareable cards to your photo library so you can post them.",
+          "isAccessMediaLocationEnabled": false
+        }
       ]
     ],
     "experiments": {
