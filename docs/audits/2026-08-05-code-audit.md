@@ -9,7 +9,7 @@
 | 3 | Input bounds (amount/note/date) | ✅ Done | `709c174` |
 | 4 | Photo/permission alert surfacing | ✅ Done | `38a07ef` |
 | 5 | `useDraftTransaction` hook | ✅ Done | `152cb51` |
-| 6 | Split `settings.tsx` into 4 sub-components | ✅ Done | _pending_ |
+| 6 | Split `settings.tsx` into 4 sub-components | ✅ Done | `a781381` |
 | 7 | `useSubscriptionFormState` + `useSyncedState` | ⬜ Pending | — |
 | 8 | `useCompareSelection` hook | ⬜ Pending | — |
 | 9 | Memoize `categoryExtras` + stable `onShare` | ✅ Done | `32a1baf` |
