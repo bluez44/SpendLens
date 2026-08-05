@@ -19,7 +19,7 @@ import {
   availableMonthsDesc, availableWeeksDesc, buildComparison,
   filterByMonth, filterByWeek, weekRangeLabel, weekStartOf,
 } from '@/lib/comparison';
-import { formatCompact, formatMoney, monthKey, toDateKey } from '@/lib/format';
+import { formatCompact, formatMoney, monthKey, shiftDateKey, shiftMonthKey, toDateKey } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings-context';
 import { useTransactions } from '@/lib/transactions-context';
@@ -81,33 +81,30 @@ export default function CompareScreen() {
   const yearOverYearAvailable = useMemo(() => {
     const months = availableMonthsDesc(transactions);
     if (!months.length) return false;
-    const now = new Date();
-    const yoy = monthKey(toDateKey(new Date(now.getFullYear() - 1, now.getMonth(), 1)));
+    const yoy = shiftMonthKey(monthKey(toDateKey(new Date())), -12);
     return months.includes(yoy);
   }, [transactions]);
 
   useEffect(() => {
     if (preset === 'custom') return;
-    const now = new Date();
+    const nowMk = monthKey(toDateKey(new Date()));
     if (preset === 'this_vs_last_month') {
-      setMonthA(monthKey(toDateKey(now)));
-      setMonthB(monthKey(toDateKey(new Date(now.getFullYear(), now.getMonth() - 1, 1))));
+      setMonthA(nowMk);
+      setMonthB(shiftMonthKey(nowMk, -1));
     } else if (preset === 'last_vs_prev_month') {
-      setMonthA(monthKey(toDateKey(new Date(now.getFullYear(), now.getMonth() - 1, 1))));
-      setMonthB(monthKey(toDateKey(new Date(now.getFullYear(), now.getMonth() - 2, 1))));
+      setMonthA(shiftMonthKey(nowMk, -1));
+      setMonthB(shiftMonthKey(nowMk, -2));
     } else if (preset === 'year_over_year') {
-      setMonthA(monthKey(toDateKey(now)));
-      setMonthB(monthKey(toDateKey(new Date(now.getFullYear() - 1, now.getMonth(), 1))));
+      setMonthA(nowMk);
+      setMonthB(shiftMonthKey(nowMk, -12));
     } else if (preset === 'this_vs_last_week') {
-      const cur = weekStartOf(toDateKey(now));
+      const cur = weekStartOf(toDateKey(new Date()));
       setWeekA(cur);
-      const [y, m, d] = cur.split('-').map(Number);
-      setWeekB(toDateKey(new Date(y, m - 1, d - 7)));
+      setWeekB(shiftDateKey(cur, -7));
     } else if (preset === 'last_vs_prev_week') {
-      const cur = weekStartOf(toDateKey(now));
-      const [y, m, d] = cur.split('-').map(Number);
-      setWeekA(toDateKey(new Date(y, m - 1, d - 7)));
-      setWeekB(toDateKey(new Date(y, m - 1, d - 14)));
+      const cur = weekStartOf(toDateKey(new Date()));
+      setWeekA(shiftDateKey(cur, -7));
+      setWeekB(shiftDateKey(cur, -14));
     }
   }, [preset]);
 

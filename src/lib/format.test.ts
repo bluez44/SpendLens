@@ -7,6 +7,7 @@ import {
   formatVND,
   monthKey,
   shiftDateKey,
+  shiftMonthKey,
   signedVND,
   toDateKey,
   formatMoney,
@@ -90,6 +91,32 @@ describe('dayLabel', () => {
 describe('monthKey', () => {
   it('extracts YYYY-MM', () => {
     expect(monthKey('2026-07-17')).toBe('2026-07');
+  });
+});
+
+describe('shiftMonthKey', () => {
+  it('shifts backward within a year', () => {
+    expect(shiftMonthKey('2026-08', -1)).toBe('2026-07');
+    expect(shiftMonthKey('2026-08', -3)).toBe('2026-05');
+  });
+
+  it('rolls year backward when month goes below January', () => {
+    expect(shiftMonthKey('2026-01', -1)).toBe('2025-12');
+    expect(shiftMonthKey('2026-02', -3)).toBe('2025-11');
+  });
+
+  it('shifts forward across year boundary', () => {
+    expect(shiftMonthKey('2026-11', 3)).toBe('2027-02');
+  });
+
+  it('year-over-year with -12 stays in the same month', () => {
+    expect(shiftMonthKey('2026-08', -12)).toBe('2025-08');
+    expect(shiftMonthKey('2026-02', -12)).toBe('2025-02');
+  });
+
+  it('day-of-month irrelevance — Feb → prior month never produces Feb 31', () => {
+    // shifting from March back one month should give February, not "Feb 31 = Mar 3"
+    expect(shiftMonthKey('2026-03', -1)).toBe('2026-02');
   });
 });
 

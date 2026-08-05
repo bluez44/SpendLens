@@ -112,3 +112,16 @@ export function dayLabel(dateKey: string, todayKey: string): string {
 export function monthKey(dateKey: string): string {
   return dateKey.slice(0, 7);
 }
+
+/**
+ * Shift a YYYY-MM key by N months (delta can be negative). Rolls the year
+ * over when the month goes below 1 or above 12. Day-of-month never enters
+ * the computation, so this cannot produce Feb 31 style bugs.
+ */
+export function shiftMonthKey(mk: string, delta: number): string {
+  const [y, m] = mk.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  const yy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${yy}-${mm}`;
+}
