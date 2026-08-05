@@ -1,6 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Constants from 'expo-constants';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
@@ -22,9 +22,9 @@ import { cancelDailyReminder, requestPermission, scheduleDailyReminder } from '@
 import { db } from '@/lib/db';
 import { useSettings } from '@/lib/settings-context';
 import { resetTransactions } from '@/lib/transactions';
-import { resetUserCategories } from '@/lib/user-categories';
-import { toCategoryObj } from '@/lib/user-categories';
+import { resetUserCategories, toCategoryObj } from '@/lib/user-categories';
 import { useTransactions } from '@/lib/transactions-context';
+import { useSubscriptions } from '@/lib/subscriptions-context';
 
 const THEME_MODES = ['auto', 'light', 'dark'] as const;
 const LANGUAGE_MODES = ['auto', 'vi', 'en'] as const;
@@ -38,6 +38,7 @@ export default function SettingsScreen() {
     changePrimary, setManualRate, clearManualRate, refetchRates,
   } = useSettings();
   const { transactions, refresh, userCategories, refreshUserCategories } = useTransactions();
+  const subscriptionsContext = useSubscriptions();
   const categoryExtras = userCategories.map(toCategoryObj);
   const exportSheetRef = useRef<DateRangeSheetHandle>(null);
   const budgetSheetRef = useRef<BudgetSheetHandle>(null);
@@ -262,6 +263,20 @@ export default function SettingsScreen() {
           value={themeIndex >= 0 ? themeIndex : 0}
           onChange={(i) => update('themeMode', THEME_MODES[i])}
         />
+
+        {/* ĐĂNG KÝ HÀNG THÁNG */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>
+          {t('sub.section_title')}
+        </Text>
+        <Pressable
+          style={[styles.row, { borderColor: colors.hairline }]}
+          onPress={() => router.push('/subscriptions')}
+        >
+          <Text style={{ color: colors.text, fontWeight: '500' }}>{t('sub.section_row')}</Text>
+          <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
+            {t('sub.count_active', { n: subscriptionsContext.count({ activeOnly: true }) })} ›
+          </Text>
+        </Pressable>
 
         {/* TIỀN TỆ */}
         <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontWeight: '700' }]}>

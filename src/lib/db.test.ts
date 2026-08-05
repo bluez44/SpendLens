@@ -7,7 +7,7 @@ describe('createDb', () => {
     const tables = database.getAllSync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
     );
-    expect(tables.map((t) => t.name)).toEqual(['categories', 'fx_rates', 'settings', 'transactions', 'users']);
+    expect(tables.map((t) => t.name)).toEqual(['categories', 'fx_rates', 'settings', 'subscriptions', 'transactions', 'users']);
   });
 });
 
@@ -67,5 +67,41 @@ describe('runMigrations currency columns', () => {
     );
     expect(row?.rate_to_usd).toBe(999);
     expect(row?.source).toBe('manual');
+  });
+});
+
+describe('runMigrations subscriptions', () => {
+  it('creates subscriptions table', () => {
+    const db = createDb(':memory:');
+    runMigrations(db);
+    const t = db.getAllSync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='subscriptions'"
+    );
+    expect(t).toHaveLength(1);
+  });
+
+  it('subscriptions table has expected columns', () => {
+    const db = createDb(':memory:');
+    runMigrations(db);
+    const cols = db.getAllSync<{ name: string }>('PRAGMA table_info(subscriptions)');
+    const names = cols.map((c) => c.name).sort();
+    expect(names).toEqual([
+      'anchor_day', 'category', 'created_at', 'id', 'name',
+      'next_due_date', 'notify_1', 'notify_3', 'notify_7',
+      'original_amount', 'original_currency', 'paused', 'photo_path',
+      'updated_at', 'uuid',
+    ]);
+  });
+
+  it('adds subscription_uuid to transactions', () => {
+    const db = createDb(':memory:');
+    runMigrations(db);
+    expect(hasColumn(db, 'transactions', 'subscription_uuid')).toBe(true);
+  });
+
+  it('is idempotent (running twice does not error)', () => {
+    const db = createDb(':memory:');
+    runMigrations(db);
+    expect(() => runMigrations(db)).not.toThrow();
   });
 });

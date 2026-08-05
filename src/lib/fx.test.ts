@@ -80,14 +80,29 @@ describe('FxService.setManualRate / clearManualRate', () => {
 });
 
 describe('FxService.fetchFromApi', () => {
+  beforeEach(() => {
+    process.env.EXPO_PUBLIC_EXCHANGE_RATE_API_KEY = 'test-key';
+  });
+
   it('updates auto+fallback rows, skips manual', async () => {
     const d = db();
     const svc = new FxService(d);
     svc.setManualRate('JPY', 999);
+    // Base = VND. conversion_rates[X] = how many X per 1 VND.
+    // rate_to_usd(X) = USD_per_VND / X_per_VND.
     global.fetch = jest.fn(async () => ({
       ok: true,
       json: async () => ({
-        rates: { VND: 24000, EUR: 0.90, JPY: 150, GBP: 0.78, KRW: 1300 },
+        result: 'success',
+        base_code: 'VND',
+        conversion_rates: {
+          VND: 1,
+          USD: 1 / 24000,
+          EUR: 0.90 / 24000,
+          JPY: 150 / 24000,
+          GBP: 0.78 / 24000,
+          KRW: 1300 / 24000,
+        },
       }),
     })) as unknown as typeof fetch;
     await svc.fetchFromApi();
@@ -97,6 +112,7 @@ describe('FxService.fetchFromApi', () => {
     const byCur = Object.fromEntries(rows.map(r => [r.currency, r]));
     expect(byCur.VND.source).toBe('auto');
     expect(byCur.VND.rate_to_usd).toBeCloseTo(1 / 24000, 8);
+    expect(byCur.EUR.rate_to_usd).toBeCloseTo(1 / 0.90, 5);
     expect(byCur.JPY.source).toBe('manual');
     expect(byCur.JPY.rate_to_usd).toBe(999);
   });
@@ -122,7 +138,18 @@ describe('FxService.getLastFetchedAt', () => {
     const svc = new FxService(d);
     global.fetch = jest.fn(async () => ({
       ok: true,
-      json: async () => ({ rates: { VND: 24000, EUR: 0.90, JPY: 150, GBP: 0.78, KRW: 1300 } }),
+      json: async () => ({
+        result: 'success',
+        base_code: 'VND',
+        conversion_rates: {
+          VND: 1,
+          USD: 1 / 24000,
+          EUR: 0.90 / 24000,
+          JPY: 150 / 24000,
+          GBP: 0.78 / 24000,
+          KRW: 1300 / 24000,
+        },
+      }),
     })) as unknown as typeof fetch;
     const before = Date.now();
     await svc.fetchFromApi();

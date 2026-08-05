@@ -8,8 +8,8 @@ import {
   useFonts,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider, Stack, router } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, type ReactNode } from 'react';
@@ -23,6 +23,7 @@ import { AppLockProvider, useAppLock } from '@/lib/app-lock-context';
 import { SettingsProvider, useSettings } from '@/lib/settings-context';
 import { ThemeProvider as SLThemeProvider } from '@/lib/theme-context';
 import { TransactionsProvider } from '@/lib/transactions-context';
+import { SubscriptionsProvider } from '@/lib/subscriptions-context';
 import { scheduleDailyReminder } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -55,9 +56,12 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
             <Stack.Screen name="index" />
             <Stack.Screen name="home" />
             <Stack.Screen name="history" />
+            <Stack.Screen name="history-months" />
             <Stack.Screen name="gallery" />
             <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
             <Stack.Screen name="transaction/[id]" />
+            <Stack.Screen name="subscriptions" />
+            <Stack.Screen name="compare" />
           </Stack>
           {isLocked && <LockScreen biometricEnabled={settings.appLockBiometricEnabled} onUnlock={unlock} />}
         </BottomSheetModalProvider>
@@ -86,6 +90,24 @@ export default function RootLayout() {
     if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
   }, [fontsLoaded]);
 
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (!response) return;
+      const route = (response.notification.request.content.data as { route?: string })?.route;
+      if (route === '/subscriptions') {
+        router.push('/subscriptions');
+      }
+    });
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const route = (response.notification.request.content.data as { route?: string })?.route;
+      if (route === '/subscriptions') {
+        router.push('/subscriptions');
+      }
+    });
+    return () => sub.remove();
+  }, [fontsLoaded]);
+
   if (!fontsLoaded) return null;
 
   return (
@@ -93,9 +115,11 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <SettingsProvider>
           <TransactionsProvider>
-            <LockGate>
-              <ThemedShell scheme={scheme} />
-            </LockGate>
+            <SubscriptionsProvider>
+              <LockGate>
+                <ThemedShell scheme={scheme} />
+              </LockGate>
+            </SubscriptionsProvider>
           </TransactionsProvider>
         </SettingsProvider>
       </SafeAreaProvider>

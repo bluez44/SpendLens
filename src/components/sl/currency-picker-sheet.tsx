@@ -45,6 +45,7 @@ export const CurrencyPickerSheet = forwardRef<CurrencyPickerSheetHandle, Props>(
       <BottomSheetModal
         ref={sheet}
         snapPoints={['40%']}
+        stackBehavior="push"
         backdropComponent={renderBackdrop}
         backgroundStyle={{ backgroundColor: c.card }}
       >

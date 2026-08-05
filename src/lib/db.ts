@@ -46,6 +46,23 @@ const SCHEMA = `
     source TEXT NOT NULL,
     updated_at INTEGER NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uuid TEXT NOT NULL,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    original_amount REAL NOT NULL,
+    original_currency TEXT NOT NULL,
+    anchor_day INTEGER NOT NULL,
+    next_due_date TEXT NOT NULL,
+    photo_path TEXT,
+    notify_7 INTEGER NOT NULL DEFAULT 0,
+    notify_3 INTEGER NOT NULL DEFAULT 0,
+    notify_1 INTEGER NOT NULL DEFAULT 0,
+    paused INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
 `;
 
 export function hasColumn(db: SQLiteDatabase, table: string, column: string): boolean {
@@ -105,6 +122,10 @@ export function runMigrations(db: SQLiteDatabase): void {
        ON CONFLICT(currency) DO NOTHING`,
       currency, rate, now,
     );
+  }
+
+  if (!hasColumn(db, 'transactions', 'subscription_uuid')) {
+    db.execSync('ALTER TABLE transactions ADD COLUMN subscription_uuid TEXT');
   }
 }
 

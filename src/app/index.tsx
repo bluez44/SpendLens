@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
+import { useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from "react-native-worklets";
 
 import { Text } from '@/components/sl/text';
@@ -201,28 +201,31 @@ function CameraPage({
   const { t } = useT();
   const { settings } = useSettings();
   const [zoom, setZoom] = useState(0);
-  const [initialZoom, setInitialZoom] = useState(0);
+  const zoomSV = useSharedValue(0);
+  const initialZoomSV = useSharedValue(0);
 
   const cameraGesture = useMemo(() => {
     const pinch = Gesture.Pinch()
-      .onStart(() => { setInitialZoom(zoom); })
+      .onStart(() => {
+        initialZoomSV.set(zoomSV.get());
+      })
       .onUpdate((e) => {
-        const next = Math.max(0, Math.min(1, initialZoom + (e.scale - 1) * 0.5));
-        scheduleOnRN(() => {
-          setZoom(next);
-        })
+        const next = Math.max(0, Math.min(1, initialZoomSV.get() + (e.scale - 1) * 0.5));
+        zoomSV.set(next);
+        scheduleOnRN(setZoom, next);
       })
       .onEnd(() => {
-        // commit final baseline so the next pinch starts from the correct value
-        setInitialZoom(zoom);
+        initialZoomSV.set(zoomSV.get());
       });
     const doubleTap = Gesture.Tap()
       .numberOfTaps(2)
-      .onEnd(() => { scheduleOnRN(() => {
-        setZoom(0);
-      }); });
+      .onEnd(() => {
+        zoomSV.set(0);
+        initialZoomSV.set(0);
+        scheduleOnRN(setZoom, 0);
+      });
     return Gesture.Simultaneous(pinch, doubleTap);
-  }, [initialZoom, zoom]);
+  }, [initialZoomSV, zoomSV]);
 
   return (
     <View style={{ height: SCREEN_HEIGHT, backgroundColor: '#111111' }}>

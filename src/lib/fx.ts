@@ -7,7 +7,13 @@ export type RateMap = Record<NonUsdCurrency, number>;
 const NON_USD: readonly NonUsdCurrency[] =
   CURRENCIES.filter((c): c is NonUsdCurrency => c !== 'USD');
 
-const API_URL = 'https://api.exchangerate.host/latest?base=USD&symbols=VND,EUR,JPY,GBP,KRW';
+const API_BASE: CurrencyCode = 'VND';
+
+function apiUrl(): string {
+  const key = process.env.EXPO_PUBLIC_EXCHANGE_RATE_API_KEY;
+  if (!key) throw new Error('EXPO_PUBLIC_EXCHANGE_RATE_API_KEY is not set');
+  return `https://v6.exchangerate-api.com/v6/${key}/latest/${API_BASE}`;
+}
 
 function rateToUsd(currency: CurrencyCode, rates: RateMap): number {
   return currency === 'USD' ? 1 : rates[currency];
@@ -68,22 +74,33 @@ export class FxService {
   }
 
   async fetchFromApi(): Promise<void> {
-    const res = await fetch(API_URL);
+    const res = await fetch(apiUrl());
     if (!res.ok) throw new Error(`FX API failed: ${res.status}`);
-    const body = await res.json() as { rates?: Record<string, number> };
-    const rates = body.rates ?? {};
+    const body = await res.json() as {
+      result?: string;
+      base_code?: string;
+      conversion_rates?: Record<string, number>;
+    };
+    if (body.result && body.result !== 'success') {
+      throw new Error(`FX API returned result=${body.result}`);
+    }
+    const rates = body.conversion_rates ?? {};
+    const usdPerBase = rates.USD;
+    if (typeof usdPerBase !== 'number' || usdPerBase <= 0) {
+      throw new Error('FX API missing USD conversion rate');
+    }
     const now = Date.now();
     for (const currency of NON_USD) {
-      const apiRate = rates[currency];
-      if (typeof apiRate !== 'number' || apiRate <= 0) continue;
+      const perBase = rates[currency];
+      if (typeof perBase !== 'number' || perBase <= 0) continue;
       const existing = this.getSource(currency);
       if (existing === 'manual') continue;
-      const inverse = 1 / apiRate;
+      const rateToUsd = usdPerBase / perBase;
       this.db.runSync(
         `INSERT INTO fx_rates (currency, rate_to_usd, source, updated_at)
          VALUES (?, ?, 'auto', ?)
          ON CONFLICT(currency) DO UPDATE SET rate_to_usd = excluded.rate_to_usd, source = 'auto', updated_at = excluded.updated_at`,
-        currency, inverse, now,
+        currency, rateToUsd, now,
       );
     }
   }
