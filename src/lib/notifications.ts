@@ -46,3 +46,27 @@ export async function fireBudgetAlert(level: 80 | 100): Promise<void> {
     trigger: null,
   });
 }
+
+export const WEEKLY_RECAP_ID = 'spendlens-weekly-recap';
+
+export async function scheduleWeeklyRecapReminder(hh = 20, mm = 0): Promise<void> {
+  await Notifications.cancelScheduledNotificationAsync(WEEKLY_RECAP_ID);
+  await Notifications.scheduleNotificationAsync({
+    identifier: WEEKLY_RECAP_ID,
+    content: {
+      title: i18n.t('share.weekly_notif_title'),
+      body: i18n.t('share.weekly_notif_body'),
+      data: { route: '/share?type=recap' },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+      weekday: 1, // Sunday per Expo convention — verify against v57 docs before release build
+      hour: hh,
+      minute: mm,
+    },
+  });
+}
+
+export async function cancelWeeklyRecapReminder(): Promise<void> {
+  await Notifications.cancelScheduledNotificationAsync(WEEKLY_RECAP_ID);
+}
