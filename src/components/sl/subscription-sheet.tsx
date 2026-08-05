@@ -250,6 +250,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
           setCustomInput('');
         } else {
           console.warn('Failed to add category', err);
+          Alert.alert(t('common.save_failed_title'), t('common.save_failed_body'));
         }
       }
     }
@@ -257,7 +258,7 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
     // save() reads from refs for correctness when called synchronously after
     // state setters in tests (avoids stale closure over the previous render's
     // state values)
-    const save = () => {
+    const save = async () => {
       const curName = nameRef.current;
       const curCurrency = currencyRef.current;
       const curAmountDigits = amountDigitsRef.current;
@@ -289,8 +290,12 @@ export const SubscriptionSheet = forwardRef<SubscriptionSheetHandle, Props>(
         notify3: curNotify3,
         notify1: curNotify1,
       };
-      onSave(dto, curEditingId);
-      sheet.current?.dismiss();
+      try {
+        await onSave(dto, curEditingId);
+        sheet.current?.dismiss();
+      } catch {
+        // onSave surfaces the error to the user; keep the sheet open for retry
+      }
     };
 
     const confirmDelete = () => {

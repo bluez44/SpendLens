@@ -1,5 +1,14 @@
 {
   "app": { "name": "SpendLens" },
+  "common": {
+    "ok": "OK",
+    "save_failed_title": "Save failed",
+    "save_failed_body": "Something went wrong. Please try again.",
+    "delete_failed_title": "Delete failed",
+    "delete_failed_body": "Something went wrong. Please try again.",
+    "reset_failed_title": "Reset partially failed",
+    "reset_partial_body": "Some steps failed: {{steps}}. You can try again."
+  },
   "nav": { "today": "Today", "back_to_camera": "Back to camera" },
   "day": { "today": "Today", "yesterday": "Yesterday" },
   "category": {

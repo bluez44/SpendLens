@@ -355,8 +355,13 @@ export default function SettingsScreen() {
                 text: t('settings.delete'),
                 style: 'destructive',
                 onPress: () => {
-                  resetTransactions();
-                  refresh();
+                  try {
+                    resetTransactions();
+                    refresh();
+                  } catch (err) {
+                    console.warn('Failed to reset transactions', err);
+                    Alert.alert(t('common.delete_failed_title'), t('common.delete_failed_body'));
+                  }
                 },
               },
             ])
@@ -372,17 +377,30 @@ export default function SettingsScreen() {
                 text: t('settings.reset'),
                 style: 'destructive',
                 onPress: async () => {
-                  resetTransactions();
-                  resetUserCategories();
-                  reset();
-                  await cancelDailyReminder();
-                  try {
-                    await clearPin();
-                  } catch (err) {
-                    console.warn('Failed to clear PIN', err);
+                  const failed: string[] = [];
+                  const steps: Array<[string, () => void | Promise<void>]> = [
+                    ['transactions', () => resetTransactions()],
+                    ['categories', () => resetUserCategories()],
+                    ['settings', () => reset()],
+                    ['reminder', () => cancelDailyReminder()],
+                    ['pin', () => clearPin()],
+                  ];
+                  for (const [label, run] of steps) {
+                    try {
+                      await run();
+                    } catch (err) {
+                      console.warn(`Reset step failed: ${label}`, err);
+                      failed.push(label);
+                    }
                   }
                   refresh();
                   refreshUserCategories();
+                  if (failed.length > 0) {
+                    Alert.alert(
+                      t('common.reset_failed_title'),
+                      t('common.reset_partial_body', { steps: failed.join(', ') }),
+                    );
+                  }
                 },
               },
             ])

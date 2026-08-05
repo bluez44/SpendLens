@@ -159,37 +159,44 @@ export default function EntryScreen() {
       isIncome,
       photoPath: photoUri ?? null,
     };
-    if (editing) {
-      update(Number(id), payload);
-      router.back();
-    } else {
+    try {
+      if (editing) {
+        update(Number(id), payload);
+        router.back();
+        return;
+      }
       add(payload);
-      if (!editing && !isIncome) {
-        const budget = settings.monthlyBudget;
-        if (budget > 0 && settings.budgetAlertsEnabled) {
-          const currentMonth = toDateKey(new Date()).slice(0, 7);
-          const primaryAmount = convert(originalAmount, currency, settings.primaryCurrency, rates);
-          const spent = transactions
-            .filter((tx) => !tx.isIncome && tx.date.slice(0, 7) === currentMonth)
-            .reduce((s, tx) => s + tx.amount, 0) + primaryAmount;
-          const fireLevel = decideBudgetAlert({
-            spent,
-            budget,
-            notifiedMonth: settings.budgetNotifiedMonth,
-            currentMonth,
-          });
-          if (fireLevel) {
-            updateSettings('budgetNotifiedMonth', `${currentMonth}:${fireLevel}`);
-            try {
-              await fireBudgetAlert(fireLevel);
-            } catch (err) {
-              console.warn('Failed to fire budget alert', err);
-            }
+    } catch (err) {
+      console.warn('Failed to save transaction', err);
+      Alert.alert(t('common.save_failed_title'), t('common.save_failed_body'));
+      return;
+    }
+
+    if (!isIncome) {
+      const budget = settings.monthlyBudget;
+      if (budget > 0 && settings.budgetAlertsEnabled) {
+        const currentMonth = toDateKey(new Date()).slice(0, 7);
+        const primaryAmount = convert(originalAmount, currency, settings.primaryCurrency, rates);
+        const spent = transactions
+          .filter((tx) => !tx.isIncome && tx.date.slice(0, 7) === currentMonth)
+          .reduce((s, tx) => s + tx.amount, 0) + primaryAmount;
+        const fireLevel = decideBudgetAlert({
+          spent,
+          budget,
+          notifiedMonth: settings.budgetNotifiedMonth,
+          currentMonth,
+        });
+        if (fireLevel) {
+          updateSettings('budgetNotifiedMonth', `${currentMonth}:${fireLevel}`);
+          try {
+            await fireBudgetAlert(fireLevel);
+          } catch (err) {
+            console.warn('Failed to fire budget alert', err);
           }
         }
       }
-      router.replace('/');
     }
+    router.replace('/');
   };
 
   return (

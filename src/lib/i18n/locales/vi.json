@@ -1,5 +1,14 @@
 {
   "app": { "name": "SpendLens" },
+  "common": {
+    "ok": "OK",
+    "save_failed_title": "Không thể lưu",
+    "save_failed_body": "Đã có lỗi khi lưu. Vui lòng thử lại.",
+    "delete_failed_title": "Không thể xoá",
+    "delete_failed_body": "Đã có lỗi khi xoá. Vui lòng thử lại.",
+    "reset_failed_title": "Xoá dữ liệu chưa hoàn tất",
+    "reset_partial_body": "Một số bước gặp lỗi: {{steps}}. Bạn có thể thử lại."
+  },
   "nav": { "today": "Hôm nay", "back_to_camera": "Về camera" },
   "day": { "today": "Hôm nay", "yesterday": "Hôm qua" },
   "category": {

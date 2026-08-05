@@ -45,7 +45,13 @@ export default function TransactionDetailScreen() {
         text: t('settings.delete'),
         style: 'destructive',
         onPress: () => {
-          remove(txn.id);
+          try {
+            remove(txn.id);
+          } catch (err) {
+            console.warn('Failed to delete transaction', err);
+            Alert.alert(t('common.delete_failed_title'), t('common.delete_failed_body'));
+            return;
+          }
           if (router.canGoBack()) router.back();
           else router.replace('/history');
         },

@@ -21,8 +21,14 @@ export default function SubscriptionsScreen() {
   const sheetRef = useRef<SubscriptionSheetHandle>(null);
 
   const onSave = async (input: NewSubscription, id?: number) => {
-    if (id !== undefined) await update(id, input);
-    else await add(input);
+    try {
+      if (id !== undefined) await update(id, input);
+      else await add(input);
+    } catch (err) {
+      console.warn('Failed to save subscription', err);
+      Alert.alert(t('common.save_failed_title'), t('common.save_failed_body'));
+      throw err;
+    }
   };
 
   const onDelete = async (id: number) => {
@@ -34,15 +40,27 @@ export default function SubscriptionsScreen() {
         {
           text: t('settings.delete'),
           style: 'destructive',
-          onPress: async () => { await remove(id); },
+          onPress: async () => {
+            try {
+              await remove(id);
+            } catch (err) {
+              console.warn('Failed to delete subscription', err);
+              Alert.alert(t('common.delete_failed_title'), t('common.delete_failed_body'));
+            }
+          },
         },
       ],
     );
   };
 
   const onPauseResume = async (id: number, wantPause: boolean) => {
-    if (wantPause) await pause(id);
-    else await resume(id);
+    try {
+      if (wantPause) await pause(id);
+      else await resume(id);
+    } catch (err) {
+      console.warn('Failed to toggle subscription pause', err);
+      Alert.alert(t('common.save_failed_title'), t('common.save_failed_body'));
+    }
   };
 
   const openAdd = () => sheetRef.current?.presentAdd();
