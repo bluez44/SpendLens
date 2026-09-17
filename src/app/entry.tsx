@@ -11,30 +11,33 @@ import { GradientButton } from '@/components/sl/gradient';
 import { CategoryChip } from '@/components/sl/category-chip';
 import { Icon } from '@/components/sl/icons';
 import { PhotoTile } from '@/components/sl/photo-tile';
+import { QuickAmountChips } from '@/components/sl/quick-amount-chips';
 import { Segmented } from '@/components/sl/segmented';
+import { SuggestionChips } from '@/components/sl/suggestion-chips';
 import { IncomeGradient, Money, Radius, useColors, W } from '@/constants/tokens';
 import { STATIC_CATEGORIES } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
 import { CURRENCY_META } from '@/lib/currency';
+import { frequentEntries } from '@/lib/frequent-entries';
 import { convert } from '@/lib/fx';
 import { deleteUserCategory, insertUserCategory, listUserCategories, toCategoryObj } from '@/lib/user-categories';
 import type { UserCategory } from '@/lib/user-categories';
 import { dayLabel, formatAmountInput, formatHHMM, formatMoney, toDateKey } from '@/lib/format';
-import { decideBudgetAlert } from '@/lib/budget-alert';
-import { fireBudgetAlert } from '@/lib/notifications';
 import { useT } from '@/lib/i18n';
 import { useTransactions } from '@/lib/transactions-context';
 import { useSettings } from '@/lib/settings-context';
+import { useSaveTransaction } from '@/lib/use-save-transaction';
 import { buildTxnPayload, useDraftTransaction } from '@/lib/use-draft-transaction';
 
 export default function EntryScreen() {
   const c = useColors();
   const { t } = useT();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ photo?: string; note?: string; id?: string }>();
+  const params = useLocalSearchParams<{ photo?: string; note?: string; id?: string; amount?: string; category?: string }>();
   const { photo, id } = params;
-  const { add, update, getById, transactions, refreshUserCategories } = useTransactions();
-  const { settings, rates, update: updateSettings } = useSettings();
+  const { getById, transactions, refreshUserCategories } = useTransactions();
+  const { settings, rates } = useSettings();
+  const { saveNew, saveEdit } = useSaveTransaction();
 
   const scrollRef = useRef<ScrollView>(null);
   const amountOffsetRef = useRef(0);
@@ -46,11 +49,21 @@ export default function EntryScreen() {
     [editing, id, getById]
   );
   const photoUri = photo ?? existing?.photoPath ?? undefined;
+  const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
+
+  const initialCategory = ((): CategoryId | undefined => {
+    const raw = params.category;
+    if (editing || !raw) return undefined;
+    const known = [...STATIC_CATEGORIES, ...userCategories.map(toCategoryObj)].some((cat) => cat.id === raw);
+    return known ? (raw as CategoryId) : 'food';
+  })();
 
   const draft = useDraftTransaction({
     existing,
     primaryCurrency: settings.primaryCurrency,
     initialNote: params.note,
+    initialAmountDigits: editing ? undefined : params.amount,
+    initialCategory,
   });
   const {
     isIncome, setIsIncome,
@@ -60,11 +73,13 @@ export default function EntryScreen() {
     note, setNote,
     selectedDate, setSelectedDate,
     originalAmount, canSave,
+    applySuggestion, setAmount,
   } = draft;
+
+  const suggestions = useMemo(() => frequentEntries(transactions), [transactions]);
 
   const [pickerStep, setPickerStep] = useState<'idle' | 'date' | 'time' | 'datetime'>('idle');
   const currencyPickerRef = useRef<CurrencyPickerSheetHandle>(null);
-  const [userCategories, setUserCategories] = useState<UserCategory[]>(() => listUserCategories());
   const [customInput, setCustomInput] = useState('');
 
   const accent = isIncome ? Money.income : Money.expense;
@@ -141,44 +156,11 @@ export default function EntryScreen() {
       isIncome,
       photoPath: photoUri ?? null,
     });
-    try {
-      if (editing) {
-        update(Number(id), payload);
-        router.back();
-        return;
-      }
-      add(payload);
-    } catch (err) {
-      console.warn('Failed to save transaction', err);
-      Alert.alert(t('common.save_failed_title'), t('common.save_failed_body'));
+    if (editing) {
+      if (await saveEdit(Number(id), payload)) router.back();
       return;
     }
-
-    if (!isIncome) {
-      const budget = settings.monthlyBudget;
-      if (budget > 0 && settings.budgetAlertsEnabled) {
-        const currentMonth = toDateKey(new Date()).slice(0, 7);
-        const primaryAmount = convert(originalAmount, currency, settings.primaryCurrency, rates);
-        const spent = transactions
-          .filter((tx) => !tx.isIncome && tx.date.slice(0, 7) === currentMonth)
-          .reduce((s, tx) => s + tx.amount, 0) + primaryAmount;
-        const fireLevel = decideBudgetAlert({
-          spent,
-          budget,
-          notifiedMonth: settings.budgetNotifiedMonth,
-          currentMonth,
-        });
-        if (fireLevel) {
-          updateSettings('budgetNotifiedMonth', `${currentMonth}:${fireLevel}`);
-          try {
-            await fireBudgetAlert(fireLevel);
-          } catch (err) {
-            console.warn('Failed to fire budget alert', err);
-          }
-        }
-      }
-    }
-    router.replace('/');
+    if ((await saveNew(payload)) !== null) router.replace('/');
   };
 
   return (
@@ -228,6 +210,7 @@ export default function EntryScreen() {
               placeholder="0"
               placeholderTextColor={c.textSecondary}
               onFocus={() => scrollToOffset(amountOffsetRef.current)}
+              autoFocus={!editing}
               style={[styles.amountInput, { color: c.text }]}
             />
             {CURRENCY_META[currency].position === 'suffix' ? (
@@ -251,6 +234,17 @@ export default function EntryScreen() {
             </Text>
           ) : null}
         </View>
+
+        {!editing && !isIncome ? (
+          <View style={styles.suggestions}>
+            <SuggestionChips
+              entries={suggestions}
+              extras={userCategories.map(toCategoryObj)}
+              onPick={applySuggestion}
+            />
+            <QuickAmountChips currency={currency} onPick={setAmount} />
+          </View>
+        ) : null}
 
         {/* Categories (expense only) */}
         {!isIncome ? (
@@ -310,7 +304,7 @@ export default function EntryScreen() {
           style={[styles.field, { backgroundColor: c.card, borderColor: c.cardBorder }]}
           onLayout={(e) => { noteOffsetRef.current = e.nativeEvent.layout.y; }}
         >
-          <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>{t('entry.note_label')} <Text style={{ color: Money.expense }}>*</Text></Text>
+          <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>{t('entry.note_label')}</Text>
           <TextInput
             value={note}
             onChangeText={setNote}
@@ -377,9 +371,7 @@ export default function EntryScreen() {
           <Text style={{
             color: c.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 12,
           }}>
-            {!(originalAmount > 0)
-              ? t('entry.hint_missing_amount')
-              : t('entry.hint_missing_note')}
+            {t('entry.hint_missing_amount')}
           </Text>
         ) : null}
         <GradientButton
@@ -429,6 +421,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 18 },
+  suggestions: { marginTop: 14, gap: 10 },
   field: {
     marginTop: 16,
     paddingVertical: 14,

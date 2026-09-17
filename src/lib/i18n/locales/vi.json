@@ -43,7 +43,6 @@
     "save_income": "Lưu khoản thu",
     "save_update": "Cập nhật",
     "hint_missing_amount": "Nhập số tiền để lưu",
-    "hint_missing_note": "Nhập ghi chú để lưu",
     "custom_category_placeholder": "Tên danh mục mới",
     "custom_category_delete_title": "Xoá danh mục?",
     "custom_category_delete_body": "Danh mục sẽ bị xoá vĩnh viễn. Các giao dịch cũ vẫn giữ.",
