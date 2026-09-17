@@ -30,7 +30,7 @@ Inspired by Locket's photo-forward interaction — every expense begins with a p
   </tr>
   <tr>
     <td align="center"><img src="./docs/screenshots/transaction-detail.png" alt="Transaction detail" width="220" /><br /><sub>Chi tiết giao dịch — full photo, edit, delete.</sub></td>
-    <td align="center"><img src="./docs/screenshots/settings.png" alt="Settings" width="220" /><br /><sub>Cài đặt — budget, reminder, theme, CSV export, reset.</sub></td>
+    <td align="center"><img src="./docs/screenshots/settings.png" alt="Settings" width="220" /><br /><sub>Cài đặt — budget, reminders & budget alerts, language, app lock, theme, subscriptions, currency, data (CSV export, resets), about.</sub></td>
     <td align="center"><img src="./docs/screenshots/dark-mode.png" alt="Dark mode" width="220" /><br /><sub>Manual theme override — Auto / Light / Dark.</sub></td>
   </tr>
 </table>
@@ -39,7 +39,7 @@ Inspired by Locket's photo-forward interaction — every expense begins with a p
 
 - **Camera-first capture.** Opens straight into the camera. Tap the lower half of the viewfinder to type a note; the note is carried through to the entry screen.
 - **Locket-style paging.** Swipe up on the camera to reveal today's transactions as full-screen cards; tap any card for full details.
-- **Vietnamese localization + VND formatting.** All UI copy in Vietnamese; amounts formatted as `45.000₫`, income/expense signed with `+` / `−` (U+2212).
+- **Vietnamese-first localization + VND formatting.** UI copy defaults to Vietnamese, with English available via Settings → Ngôn ngữ (Auto / Tiếng Việt / English); amounts formatted as `45.000₫`, income/expense signed with `+` / `−` (U+2212).
 - **Monthly budget with progress bar.** Set a budget in Settings; Home shows spent-to-date with color thresholds (coral < 80%, orange 80–100%, red > 100%).
 - **Daily reminder notifications.** Local notification via `expo-notifications` with a user-picked time, idempotently rescheduled on startup.
 - **CSV export.** Share transactions with a UTF-8 BOM and Vietnamese category labels — Excel opens diacritics correctly. Range picker from Settings or History.
@@ -66,7 +66,7 @@ Routing follows a camera-first `Stack` in `src/app/`:
 | `/history` | **Thu chi**. Ranged summary + day-grouped feed. Share icon in header opens CSV export. |
 | `/gallery` | **Thư viện**. Three-column photo grid. |
 | `/transaction/[id]` | **Chi tiết giao dịch**. Full photo header, edit + delete actions. |
-| `/settings` | **Cài đặt**. Monthly budget, daily reminder, theme, CSV export, resets, About. |
+| `/settings` | **Cài đặt**. Budget, reminders & budget alerts, language, app lock, theme, subscriptions, currency, data (CSV export, resets), About. |
 | `/history-months` | **Tháng cũ**. Pick any past month: summary, category donut, day-grouped feed. |
 | `/compare` | **So sánh**. Month or week A vs B with presets, overlay bars, category deltas. |
 | `/subscriptions` | **Đăng ký hàng tháng**. List, add, edit, pause and delete recurring charges. |
@@ -128,19 +128,18 @@ docs/
 
 ## Getting started
 
-**Requirements:** Node 20+, npm, and either Expo Go on a physical device OR the Android/iOS simulator. Camera and SQLite are native modules, so **the web target is not supported**.
+**Requirements:** Node 20+, npm, and a local Android toolchain (or macOS + Xcode for iOS). The app depends on native modules (`expo-camera`, `expo-sqlite`, `expo-local-authentication`, `expo-notifications`), so it needs a custom **development build** (`expo-dev-client`) — **Expo Go cannot run it**. The web target is not supported either.
 
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Start Metro
-npx expo start
+# 2. Build and install the dev client (does a full native build the first time)
+npm run android   # expo run:android
+npm run ios       # expo run:ios (macOS only)
 
-# 3. Then press:
-#    i — iOS simulator
-#    a — Android emulator
-#    or scan the QR with Expo Go
+# 3. Start Metro for subsequent runs
+npm start
 ```
 
 The app starts with an empty database. For development, `seedIfEmpty()` in `src/lib/seed.ts` can be called manually to insert sample transactions; it is never run automatically.

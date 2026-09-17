@@ -31,3 +31,12 @@ Reduce the friction of logging a spend and give young users more reasons to open
 - Each sub-project runs the full cycle: spec (`docs/superpowers/specs/`) → TDD plan (`docs/superpowers/plans/`) → implementation → code review.
 - Each sub-project lives on its own branch cut from `main` and is merged before the next one is brainstormed.
 - Revisit this roadmap before writing each new spec; update order or scope here rather than silently diverging.
+
+## Follow-ups from sub-project A
+
+Noted during A's final review; not fixed there because they're out of A's scope or need design decisions from a later sub-project.
+
+- Sub-project B: note preview on camera should use a distinct label (e.g. `a11y.edit_note` with the note text) instead of reusing `a11y.add_note`.
+- Editing recomputes date/time from `createdAt` in the device's current timezone; a txn created in another timezone can shift day when edited (consequence of "create and edit behave identically").
+- Flash button exposes on/off only via label; consider `accessibilityState`.
+- tsconfig: ~1200 jest-global type errors in test files (likely missing `types: ["jest"]` for tests) + 3 pre-existing non-test tsc errors; 14 pre-existing eslint errors — separate cleanup.
