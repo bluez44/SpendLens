@@ -5,7 +5,8 @@ import type { Txn } from './transactions';
 
 /**
  * Display text for a transaction: the user's note (`name`), else the legacy
- * `note` column, else the category label in the current language.
+ * `note` column, else the income label for income or the category label in
+ * the current language.
  */
 export function txnTitle(
   txn: Pick<Txn, 'name' | 'note' | 'category' | 'isIncome'>,

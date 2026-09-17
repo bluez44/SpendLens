@@ -74,6 +74,7 @@ describe('useSaveTransaction', () => {
 
     expect(mockRemove).toHaveBeenCalledWith(7);
     expect(mockShow).toHaveBeenLastCalledWith({ message: i18n.t('toast.undone'), durationMs: 2000 });
+    expect(mockUpdateSettings).not.toHaveBeenCalled();
   });
 
   it('Undo still confirms when the row is already gone', async () => {
