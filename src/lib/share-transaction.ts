@@ -4,6 +4,7 @@ import type { Category } from './categories';
 import { categoryLabel } from './categories';
 import { dayLabel, signedVND } from './format';
 import type { Txn } from './transactions';
+import { txnTitle } from './txn-title';
 
 export interface ShareToggles {
   showDate: boolean;
@@ -36,7 +37,7 @@ export function buildShareOverlay(
   return {
     categoryText: toggles.showCategory ? categoryLabel(category) : null,
     amountText: toggles.showAmount ? signedVND(txn.amount, txn.isIncome) : null,
-    nameText: toggles.showName ? (txn.note ?? txn.name) : null,
+    nameText: toggles.showName ? txnTitle(txn, [category]) : null,
     dateText: toggles.showDate ? `${dayLabel(txn.date, todayKey)} · ${txn.time}` : null,
   };
 }

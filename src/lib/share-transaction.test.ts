@@ -27,7 +27,7 @@ describe('buildShareOverlay', () => {
     expect(overlay).toEqual({
       categoryText: 'Ăn uống',
       amountText: '−45.000₫',
-      nameText: 'Latte size L',
+      nameText: 'Cà phê',
       dateText: 'Hôm nay · 14:30',
     });
   });
@@ -66,6 +66,11 @@ describe('buildShareOverlay', () => {
   it('prefixes income with a plus sign', () => {
     const overlay = buildShareOverlay({ ...baseTxn, isIncome: true }, DEFAULT_SHARE_TOGGLES, foodCategory, '2026-07-24');
     expect(overlay.amountText).toBe('+45.000₫');
+  });
+
+  it('uses the category label for nameText when name and note are empty', () => {
+    const overlay = buildShareOverlay({ ...baseTxn, name: '', note: null }, DEFAULT_SHARE_TOGGLES, foodCategory, '2026-07-24');
+    expect(overlay.nameText).toBe('Ăn uống');
   });
 });
 

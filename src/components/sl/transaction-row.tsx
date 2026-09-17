@@ -6,6 +6,7 @@ import { categoryOf, categoryLabel, INCOME_LABEL_KEY } from '@/lib/categories';
 import type { Category } from '@/lib/categories';
 import { i18n } from '@/lib/i18n';
 import type { Txn } from '@/lib/transactions';
+import { txnTitle } from '@/lib/txn-title';
 import { signedMoney } from '@/lib/format';
 import { Money, Radius, useColors, W } from '@/constants/tokens';
 
@@ -29,7 +30,7 @@ export function TransactionRow({
       <PhotoTile uri={txn.photoPath} size={tileSize} radius={Radius.tile} />
       <View style={styles.body}>
         <Text numberOfLines={1} style={{ fontSize: 14.5, fontWeight: W.bold, color: c.text }}>
-          {txn.name}
+          {txnTitle(txn, extras)}
         </Text>
         <Text style={{ fontSize: 12.5, fontWeight: W.medium, color: c.textSecondary, marginTop: 2 }}>
           {label} · {txn.time}

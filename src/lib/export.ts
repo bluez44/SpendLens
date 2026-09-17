@@ -5,6 +5,7 @@ import { categoryOf, categoryLabel } from './categories';
 import type { Category } from './categories';
 import { i18n } from './i18n';
 import type { Txn } from './transactions';
+import { txnTitle } from './txn-title';
 
 const BOM = '﻿';
 
@@ -21,7 +22,7 @@ export function buildTransactionsCsv(txns: Txn[], extras: Category[] = []): stri
     t.date,
     t.time,
     categoryLabel(categoryOf(t.category, extras)),
-    t.name,
+    txnTitle(t, extras),
     t.amount.toFixed(2),
     t.currency,
     t.originalAmount.toFixed(2),

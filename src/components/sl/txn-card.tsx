@@ -12,6 +12,7 @@ import type { Category } from '@/lib/categories';
 import { signedMoney } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import type { Txn } from '@/lib/transactions';
+import { txnTitle } from '@/lib/txn-title';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -63,7 +64,7 @@ export function TxnCard({
             ≈ {signedMoney(txn.originalAmount, txn.originalCurrency, txn.isIncome)}
           </Text>
         ) : null}
-        <Text style={styles.note} numberOfLines={2}>{txn.name || txn.note || ''}</Text>
+        <Text style={styles.note} numberOfLines={2}>{txnTitle(txn, extras)}</Text>
         <Text style={styles.tapHint}>{t('txn.tap_hint')}</Text>
       </View>
     </Pressable>

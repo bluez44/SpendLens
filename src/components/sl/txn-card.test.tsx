@@ -89,4 +89,10 @@ describe('TxnCard', () => {
     const { getByRole } = await render(<TxnCard txn={txnWithPhoto} onShare={jest.fn()} />);
     expect(getByRole('button', { name: 'Chia sẻ giao dịch' })).toBeTruthy();
   });
+
+  it('shows the category label as the title when name and note are empty', async () => {
+    const { getAllByText } = await render(<TxnCard txn={{ ...baseTxn, name: '', note: null }} />);
+    // once in the category chip, once as the title
+    expect(getAllByText('Ăn uống')).toHaveLength(2);
+  });
 });

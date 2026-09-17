@@ -17,6 +17,7 @@ import { i18n, useT } from '@/lib/i18n';
 import { dayLabel, formatMoney, signedMoney, toDateKey } from '@/lib/format';
 import { useTransactions } from '@/lib/transactions-context';
 import { useSubscriptions } from '@/lib/subscriptions-context';
+import { txnTitle } from '@/lib/txn-title';
 import { toCategoryObj } from '@/lib/user-categories';
 
 export default function TransactionDetailScreen() {
@@ -113,7 +114,7 @@ export default function TransactionDetailScreen() {
         <Text style={{ fontSize: 46, fontWeight: W.extrabold, letterSpacing: -1, marginTop: 16, color: accent }}>
           {signedMoney(txn.amount, txn.currency, txn.isIncome)}
         </Text>
-        <Text style={{ fontSize: 17, fontWeight: W.bold, marginTop: 6, color: c.text }}>{txn.name}</Text>
+        <Text style={{ fontSize: 17, fontWeight: W.bold, marginTop: 6, color: c.text }}>{txnTitle(txn, categoryExtras)}</Text>
 
         <View style={{ alignSelf: 'stretch', marginTop: 24 }}>
           {txn.note ? <DetailRow label={t('transaction.note_label')} value={txn.note} border /> : null}

@@ -64,4 +64,15 @@ describe('buildTransactionsCsv', () => {
     ]);
     expect(csv.slice(1).split('\n')[1]).toBe('2026-07-20,10:00,Ăn uống,Dinner,232000.00,VND,9.50,USD,Expense');
   });
+
+  it('writes the category label in the Name column when the note is empty', () => {
+    const csv = buildTransactionsCsv([
+      {
+        id: 1, date: '2026-07-17', time: '8:00', createdAt: 1, category: 'food',
+        name: '', note: null, amount: 30000, isIncome: false, photoPath: null,
+        currency: 'VND', originalAmount: 30000, originalCurrency: 'VND',
+      } as never,
+    ]);
+    expect(csv.slice(1).split('\n')[1]).toBe('2026-07-17,8:00,Ăn uống,Ăn uống,30000.00,VND,30000.00,VND,Expense');
+  });
 });
