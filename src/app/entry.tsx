@@ -81,6 +81,7 @@ export default function EntryScreen() {
   const [pickerStep, setPickerStep] = useState<'idle' | 'date' | 'time' | 'datetime'>('idle');
   const currencyPickerRef = useRef<CurrencyPickerSheetHandle>(null);
   const [customInput, setCustomInput] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const accent = isIncome ? Money.income : Money.expense;
 
@@ -132,7 +133,8 @@ export default function EntryScreen() {
   }
 
   const save = async () => {
-    if (!canSave) return;
+    if (!canSave || saving) return;
+    setSaving(true);
     let effectiveCategory: CategoryId = isIncome ? 'other' : category;
     if (!isIncome && category === 'other' && customInput.trim() !== '') {
       try {
@@ -157,10 +159,18 @@ export default function EntryScreen() {
       photoPath: photoUri ?? null,
     });
     if (editing) {
-      if (await saveEdit(Number(id), payload)) router.back();
+      if (await saveEdit(Number(id), payload)) {
+        router.back();
+        return;
+      }
+      setSaving(false);
       return;
     }
-    if ((await saveNew(payload)) !== null) router.replace('/');
+    if ((await saveNew(payload)) !== null) {
+      router.replace('/');
+      return;
+    }
+    setSaving(false);
   };
 
   return (
@@ -377,7 +387,7 @@ export default function EntryScreen() {
         <GradientButton
           label={editing ? t('entry.save_update') : isIncome ? t('entry.save_income') : t('entry.save_expense')}
           onPress={save}
-          disabled={!canSave}
+          disabled={!canSave || saving}
           colors={isIncome ? IncomeGradient : undefined}
           style={{ marginTop: canSave ? 20 : 8, marginBottom: insets.bottom + 12 }}
         />
