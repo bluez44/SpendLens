@@ -79,8 +79,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "build:release": "cd android && gradlew assembleRelease && cd .. && node scripts/upload-apk.js release",
-    "build:debug": "cd android && gradlew assembleDebug && cd .. && node scripts/upload-apk.js debug"
+    "build:release": "cd android && .\\gradlew assembleRelease && cd .. && node scripts/upload-apk.js release",
+    "build:debug": "cd android && .\\gradlew assembleDebug && cd .. && node scripts/upload-apk.js debug"
   },
   "private": true
 }
