@@ -339,5 +339,21 @@
     "perm_needed_body": "Enable notifications in Settings to receive reminders.",
     "validation_name": "Please enter a name.",
     "validation_amount": "Amount must be greater than 0."
+  },
+  "a11y": {
+    "open_home": "Open overview",
+    "open_history": "Open history",
+    "flash_on": "Turn flash on",
+    "flash_off": "Turn flash off",
+    "flip_camera": "Flip camera",
+    "capture": "Take photo",
+    "add_note": "Add note",
+    "share_cards": "Share recap / streak",
+    "back": "Back",
+    "edit_txn": "Edit transaction",
+    "open_txn": "View transaction {{amount}}",
+    "add_subscription": "Add subscription",
+    "confirm_category": "Add category",
+    "choose_currency": "Choose currency"
   }
 }

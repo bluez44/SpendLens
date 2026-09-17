@@ -339,5 +339,21 @@
     "perm_needed_body": "Bật quyền thông báo trong Cài đặt để nhận nhắc nhở.",
     "validation_name": "Vui lòng nhập tên.",
     "validation_amount": "Số tiền phải lớn hơn 0."
+  },
+  "a11y": {
+    "open_home": "Mở Tổng quan",
+    "open_history": "Mở Thu chi",
+    "flash_on": "Bật đèn flash",
+    "flash_off": "Tắt đèn flash",
+    "flip_camera": "Đổi camera trước/sau",
+    "capture": "Chụp ảnh",
+    "add_note": "Thêm ghi chú",
+    "share_cards": "Chia sẻ recap / streak",
+    "back": "Quay lại",
+    "edit_txn": "Sửa giao dịch",
+    "open_txn": "Xem giao dịch {{amount}}",
+    "add_subscription": "Thêm đăng ký",
+    "confirm_category": "Thêm danh mục",
+    "choose_currency": "Chọn tiền tệ"
   }
 }
