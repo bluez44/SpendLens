@@ -136,6 +136,42 @@ describe('subscriptionUuid on insert/list', () => {
   });
 });
 
+describe('updateTransaction created_at', () => {
+  const base = {
+    date: '2026-07-01', time: '10:00',
+    category: 'food' as const, name: 'x',
+    originalAmount: 1000, originalCurrency: 'VND' as const, isIncome: false,
+  };
+
+  it('persists a new createdAt and the row re-sorts in listTransactions', () => {
+    const db = freshDb();
+    const a = insertTransaction({ ...base, createdAt: 1000 }, db);
+    const b = insertTransaction({ ...base, createdAt: 2000 }, db);
+    expect(listTransactions(db).map((t) => t.id)).toEqual([b, a]);
+
+    updateTransaction(a, { ...base, date: '2026-07-02', time: '08:15', createdAt: 3000 }, db);
+
+    const row = db.getFirstSync<{ created_at: number; date: string; time: string }>(
+      'SELECT created_at, date, time FROM transactions WHERE id = ?', a,
+    );
+    expect(row?.created_at).toBe(3000);
+    expect(row?.date).toBe('2026-07-02');
+    expect(row?.time).toBe('08:15');
+    expect(listTransactions(db).map((t) => t.id)).toEqual([a, b]);
+  });
+
+  it('leaves created_at unchanged when createdAt is omitted', () => {
+    const db = freshDb();
+    const id = insertTransaction({ ...base, createdAt: 1000 }, db);
+    updateTransaction(id, { ...base, name: 'renamed' }, db);
+    const row = db.getFirstSync<{ created_at: number; name: string }>(
+      'SELECT created_at, name FROM transactions WHERE id = ?', id,
+    );
+    expect(row?.created_at).toBe(1000);
+    expect(row?.name).toBe('renamed');
+  });
+});
+
 describe('resetTransactions', () => {
   it('deletes every row', () => {
     const db = freshDb();

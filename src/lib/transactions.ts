@@ -39,7 +39,7 @@ export interface NewTxn {
   originalCurrency: CurrencyCode;
   isIncome: boolean;
   photoPath?: string | null;
-  /** Defaults to now; seed data passes the real transaction time. */
+  /** Transaction moment (epoch ms). Insert defaults to now; update leaves it unchanged when omitted. */
   createdAt?: number;
   subscriptionUuid?: string | null;
 }
@@ -128,11 +128,12 @@ export function updateTransaction(
   if (input.subscriptionUuid !== undefined) {
     database.runSync(
       `UPDATE transactions
-       SET date = ?, time = ?, updated_at = ?, category = ?, name = ?, note = ?,
+       SET date = ?, time = ?, created_at = COALESCE(?, created_at), updated_at = ?,
+           category = ?, name = ?, note = ?,
            amount = ?, currency = ?, original_amount = ?, original_currency = ?,
            is_income = ?, photo_path = ?, subscription_uuid = ?
        WHERE id = ?`,
-      input.date, input.time, Date.now(),
+      input.date, input.time, input.createdAt ?? null, Date.now(),
       input.category, input.name, input.note ?? null,
       amount, primary, input.originalAmount, input.originalCurrency,
       input.isIncome ? 1 : 0, input.photoPath ?? null,
@@ -142,11 +143,12 @@ export function updateTransaction(
   } else {
     database.runSync(
       `UPDATE transactions
-       SET date = ?, time = ?, updated_at = ?, category = ?, name = ?, note = ?,
+       SET date = ?, time = ?, created_at = COALESCE(?, created_at), updated_at = ?,
+           category = ?, name = ?, note = ?,
            amount = ?, currency = ?, original_amount = ?, original_currency = ?,
            is_income = ?, photo_path = ?
        WHERE id = ?`,
-      input.date, input.time, Date.now(),
+      input.date, input.time, input.createdAt ?? null, Date.now(),
       input.category, input.name, input.note ?? null,
       amount, primary, input.originalAmount, input.originalCurrency,
       input.isIncome ? 1 : 0, input.photoPath ?? null,
