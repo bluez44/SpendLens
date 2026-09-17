@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-17
 **Source:** [`docs/product-review/2026-09-17-gen-z-user-review.md`](../../product-review/2026-09-17-gen-z-user-review.md)
-**Status:** Roadmap approved. Sub-project A implemented on `main`; B spec written; C–F not yet designed.
+**Status:** Roadmap approved. Sub-projects A and B implemented on `main`; C–F not yet designed.
 
 ## Goal
 

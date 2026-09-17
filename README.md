@@ -38,6 +38,8 @@ Inspired by Locket's photo-forward interaction — every expense begins with a p
 ## Features
 
 - **Camera-first capture.** Opens straight into the camera. Tap the lower half of the viewfinder to type a note; the note is carried through to the entry screen.
+- **Quick add.** Tap ＋ next to the shutter to log a spend without a photo: amount, category and an optional note, with one-tap suggestions from your frequent entries and 20k/50k/100k/200k presets (VND). Every new save vibrates and shows a 5-second Undo toast.
+- **Pick from library.** Tap the image button left of the shutter to attach an existing screenshot or receipt photo.
 - **Locket-style paging.** Swipe up on the camera to reveal today's transactions as full-screen cards; tap any card for full details.
 - **Vietnamese-first localization + VND formatting.** UI copy defaults to Vietnamese, with English available via Settings → Ngôn ngữ (Auto / Tiếng Việt / English); amounts formatted as `45.000₫`, income/expense signed with `+` / `−` (U+2212).
 - **Monthly budget with progress bar.** Set a budget in Settings; Home shows spent-to-date with color thresholds (coral < 80%, orange 80–100%, red > 100%).
