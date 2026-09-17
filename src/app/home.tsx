@@ -126,6 +126,7 @@ export default function HomeScreen() {
         <BudgetBar
           spent={spentThisMonth}
           budget={settings.monthlyBudget}
+          currency={settings.primaryCurrency}
           onSetBudget={() => router.push('/settings')}
         />
 

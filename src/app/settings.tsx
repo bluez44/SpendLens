@@ -119,6 +119,7 @@ export default function SettingsScreen() {
 
       <BudgetSheet
         ref={budgetSheetRef}
+        currency={settings.primaryCurrency}
         onSave={(n) => update('monthlyBudget', n)}
       />
     </View>

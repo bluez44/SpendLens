@@ -2,12 +2,14 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
 import { useColors } from '@/constants/tokens';
-import { formatVND } from '@/lib/format';
+import type { CurrencyCode } from '@/lib/currency';
+import { formatMoney } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 
 interface Props {
   spent: number;
   budget: number;
+  currency: CurrencyCode;
   onSetBudget: () => void;
 }
 
@@ -17,7 +19,7 @@ function pickColor(pct: number): string {
   return '#FF6B6B';                  // AccentGradient[1] — normal (coral)
 }
 
-export function BudgetBar({ spent, budget, onSetBudget }: Props) {
+export function BudgetBar({ spent, budget, currency, onSetBudget }: Props) {
   const colors = useColors();
   const { t } = useT();
 
@@ -47,7 +49,7 @@ export function BudgetBar({ spent, budget, onSetBudget }: Props) {
       </View>
       <View style={styles.row}>
         <Text style={{ color: colors.text, fontWeight: '600' }}>
-          {formatVND(spent)} / {formatVND(budget)}
+          {formatMoney(spent, currency)} / {formatMoney(budget, currency)}
         </Text>
       </View>
       <View style={[styles.track, { backgroundColor: colors.barTrack }]}>

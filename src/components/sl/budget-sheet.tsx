@@ -11,7 +11,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { GradientButton } from '@/components/sl/gradient';
 import { Text } from '@/components/sl/text';
 import { useColors } from '@/constants/tokens';
-import { formatVND } from '@/lib/format';
+import type { CurrencyCode } from '@/lib/currency';
+import { formatMoney } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 
 export interface BudgetSheetHandle {
@@ -21,10 +22,11 @@ export interface BudgetSheetHandle {
 
 interface Props {
   onSave: (amount: number) => void;
+  currency: CurrencyCode;
 }
 
 export const BudgetSheet = forwardRef<BudgetSheetHandle, Props>(
-  function BudgetSheet({ onSave }, ref) {
+  function BudgetSheet({ onSave, currency }, ref) {
     const { t } = useT();
     const colors = useColors();
     const sheetRef = useRef<BottomSheetModal>(null);
@@ -72,7 +74,7 @@ export const BudgetSheet = forwardRef<BudgetSheetHandle, Props>(
             style={[styles.input, { color: colors.text, borderColor: colors.hairline }]}
           />
           <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
-            {formatVND(Number(draft) || 0)}
+            {formatMoney(Number(draft) || 0, currency)}
           </Text>
           <View style={styles.actions}>
             <Pressable onPress={() => sheetRef.current?.dismiss()} style={{ padding: 12 }}>
