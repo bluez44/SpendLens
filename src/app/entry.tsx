@@ -12,7 +12,7 @@ import { CategoryChip } from '@/components/sl/category-chip';
 import { Icon } from '@/components/sl/icons';
 import { PhotoTile } from '@/components/sl/photo-tile';
 import { Segmented } from '@/components/sl/segmented';
-import { Money, Radius, useColors, W } from '@/constants/tokens';
+import { IncomeGradient, Money, Radius, useColors, W } from '@/constants/tokens';
 import { STATIC_CATEGORIES } from '@/lib/categories';
 import type { CategoryId } from '@/lib/categories';
 import { CURRENCY_META } from '@/lib/currency';
@@ -298,7 +298,7 @@ export default function EntryScreen() {
           style={[styles.field, { backgroundColor: c.card, borderColor: c.cardBorder }]}
           onLayout={(e) => { noteOffsetRef.current = e.nativeEvent.layout.y; }}
         >
-          <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>{t('entry.note_label')} <Text style={{ color: '#FB5B4D' }}>*</Text></Text>
+          <Text style={{ fontSize: 11, fontWeight: W.bold, color: c.textSecondary, marginBottom: 3 }}>{t('entry.note_label')} <Text style={{ color: Money.expense }}>*</Text></Text>
           <TextInput
             value={note}
             onChangeText={setNote}
@@ -374,7 +374,7 @@ export default function EntryScreen() {
           label={editing ? t('entry.save_update') : isIncome ? t('entry.save_income') : t('entry.save_expense')}
           onPress={save}
           disabled={!canSave}
-          colors={isIncome ? (['#34C79A', '#1FA07A'] as const) : undefined}
+          colors={isIncome ? IncomeGradient : undefined}
           style={{ marginTop: canSave ? 20 : 8, marginBottom: insets.bottom + 12 }}
         />
       </ScrollView>

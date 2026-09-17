@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/sl/text';
-import { useColors } from '@/constants/tokens';
+import { AccentGradient, Money, useColors } from '@/constants/tokens';
 import type { CurrencyCode } from '@/lib/currency';
 import { formatMoney } from '@/lib/format';
 import { useT } from '@/lib/i18n';
@@ -14,9 +14,9 @@ interface Props {
 }
 
 function pickColor(pct: number): string {
-  if (pct > 100) return '#FB5B4D';   // Money.expense — over budget (red)
-  if (pct >= 80) return '#F59E0B';   // orange — warning
-  return '#FF6B6B';                  // AccentGradient[1] — normal (coral)
+  if (pct > 100) return Money.expense;   // over budget
+  if (pct >= 80) return Money.warning;   // warning
+  return AccentGradient[1];              // normal (coral)
 }
 
 export function BudgetBar({ spent, budget, currency, onSetBudget }: Props) {

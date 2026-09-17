@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/sl/icons';
 import { PhotoTile } from '@/components/sl/photo-tile';
-import { useColors, W } from '@/constants/tokens';
+import { OnPhoto, useColors, W } from '@/constants/tokens';
 import { signedMoney } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import { useTransactions } from '@/lib/transactions-context';
@@ -43,11 +43,11 @@ export default function GalleryScreen() {
               <View style={{ width: tile, height: tile, borderRadius: 14, overflow: 'hidden' }}>
                 <PhotoTile uri={txn.photoPath} width={tile} height={tile} radius={14} />
                 <View style={styles.amount}>
-                  <Text style={{ fontSize: 11, fontWeight: W.extrabold, color: '#fff' }}>
+                  <Text style={{ fontSize: 11, fontWeight: W.extrabold, color: OnPhoto.text }}>
                     {signedMoney(txn.amount, txn.currency, txn.isIncome)}
                   </Text>
                   {txn.originalCurrency !== txn.currency ? (
-                    <Text style={{ color: c.textSecondary, fontSize: 10, marginTop: 2 }}>
+                    <Text style={{ color: OnPhoto.textSecondary, fontSize: 10, marginTop: 2 }}>
                       ≈ {signedMoney(txn.originalAmount, txn.originalCurrency, txn.isIncome)}
                     </Text>
                   ) : null}

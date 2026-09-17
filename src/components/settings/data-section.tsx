@@ -3,7 +3,7 @@ import { Alert, Pressable } from 'react-native';
 
 import { DateRangeSheet, type DateRangeSheetHandle } from '@/components/sl/date-range-sheet';
 import { Text } from '@/components/sl/text';
-import { useColors } from '@/constants/tokens';
+import { Money, useColors } from '@/constants/tokens';
 import { clearPin } from '@/lib/app-lock';
 import { exportAndShareCsv } from '@/lib/export';
 import { toDateKey } from '@/lib/format';
@@ -51,7 +51,7 @@ export function DataSection() {
             },
           ])
         }>
-        <Text style={{ color: '#FB5B4D', fontWeight: '500' }}>{t('settings.reset_txns_row')}</Text>
+        <Text style={{ color: Money.expense, fontWeight: '500' }}>{t('settings.reset_txns_row')}</Text>
       </Pressable>
       <Pressable
         style={[styles.row, { borderColor: colors.hairline }]}
@@ -90,7 +90,7 @@ export function DataSection() {
             },
           ])
         }>
-        <Text style={{ color: '#FB5B4D', fontWeight: '500' }}>{t('settings.reset_all_row')}</Text>
+        <Text style={{ color: Money.expense, fontWeight: '500' }}>{t('settings.reset_all_row')}</Text>
       </Pressable>
 
       <DateRangeSheet

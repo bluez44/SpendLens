@@ -60,7 +60,7 @@ export default function TransactionDetailScreen() {
   };
 
   const cat = categoryOf(txn.category, categoryExtras);
-  const chipBg = txn.isIncome ? '#D1FAE5' : cat.chip;
+  const chipBg = txn.isIncome ? Money.incomeChip : cat.chip;
   const chipFg = txn.isIncome ? Money.income : cat.fg;
   const accent = txn.isIncome ? Money.income : Money.expense;
   const todayKey = toDateKey(new Date());

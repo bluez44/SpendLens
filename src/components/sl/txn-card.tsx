@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
-import { useColors } from '@/constants/tokens';
+import { OnPhoto } from '@/constants/tokens';
 
 import { Icon } from '@/components/sl/icons';
 import { Text } from '@/components/sl/text';
@@ -25,7 +25,6 @@ export function TxnCard({
   onShare?: (txn: Txn) => void;
 }) {
   const { t } = useT();
-  const c = useColors();
   const cat = categoryOf(txn.category, extras);
 
   return (
@@ -59,7 +58,7 @@ export function TxnCard({
         </View>
         <Text style={styles.amount}>{signedMoney(txn.amount, txn.currency, txn.isIncome)}</Text>
         {txn.originalCurrency !== txn.currency ? (
-          <Text style={{ color: c.textSecondary, fontSize: 11, marginTop: 2, alignSelf: 'flex-end' }}>
+          <Text style={{ color: OnPhoto.textSecondary, fontSize: 11, marginTop: 2, alignSelf: 'flex-end' }}>
             ≈ {signedMoney(txn.originalAmount, txn.originalCurrency, txn.isIncome)}
           </Text>
         ) : null}

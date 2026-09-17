@@ -14,6 +14,19 @@ export const Money = {
   /** Softer coral used on dark camera surfaces. */
   expenseOnDark: '#FF9470',
   income: '#34C79A',
+  /** Budget 80–100% warning. */
+  warning: '#F59E0B',
+  /** Light mint chip background for income labels. */
+  incomeChip: '#D1FAE5',
+} as const;
+
+/** Gradient for income primary buttons. */
+export const IncomeGradient = ['#34C79A', '#1FA07A'] as const;
+
+/** Text on top of photos / dark scrims, independent of theme. */
+export const OnPhoto = {
+  text: '#fff',
+  textSecondary: 'rgba(255,255,255,0.78)',
 } as const;
 
 /** Font weights as literal types so they satisfy RN's fontWeight union. */
