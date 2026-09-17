@@ -81,20 +81,17 @@ describe('useDraftTransaction', () => {
     expect(result.current.amountDigits).toBe('9'.repeat(15));
   });
 
-  it('recomputes canSave as amount and note change', async () => {
+  it('canSave depends only on a positive amount', async () => {
     const { result } = await renderHook(() =>
       useDraftTransaction({ primaryCurrency: 'VND' })
     );
     expect(result.current.canSave).toBe(false);
 
     await act(async () => result.current.setAmountDigits('50000'));
-    expect(result.current.canSave).toBe(false); // note still empty
+    expect(result.current.canSave).toBe(true); // note is optional
 
-    await act(async () => result.current.setNote('Cà phê'));
-    expect(result.current.canSave).toBe(true);
-
-    await act(async () => result.current.setNote('   '));
-    expect(result.current.canSave).toBe(false); // whitespace-only fails trim
+    await act(async () => result.current.setAmountDigits(''));
+    expect(result.current.canSave).toBe(false);
   });
 
   it('recomputes originalAmount when currency changes', async () => {
@@ -146,6 +143,45 @@ describe('useDraftTransaction', () => {
     });
     expect(movedPayload.date).toBe('2026-07-31');
     expect(movedPayload.time).toBe('21:00');
+  });
+
+  it('applies initial amount digits and category for a new draft', async () => {
+    const { result } = await renderHook(() =>
+      useDraftTransaction({ primaryCurrency: 'VND', initialAmountDigits: '35.000', initialCategory: 'transport' })
+    );
+    expect(result.current.amountDigits).toBe('35000');
+    expect(result.current.category).toBe('transport');
+    expect(result.current.originalAmount).toBe(35000);
+  });
+
+  it('ignores initial amount and category when editing', async () => {
+    const { result } = await renderHook(() =>
+      useDraftTransaction({ existing: editingTxn, primaryCurrency: 'VND', initialAmountDigits: '1', initialCategory: 'fun' })
+    );
+    expect(result.current.amountDigits).toBe('45000');
+    expect(result.current.category).toBe('food');
+  });
+
+  it('applySuggestion fills currency, amount, category and note', async () => {
+    const { result } = await renderHook(() => useDraftTransaction({ primaryCurrency: 'VND' }));
+    await act(async () => result.current.applySuggestion({
+      name: 'Latte', category: 'fun', originalAmount: 4.5, originalCurrency: 'USD', count: 2, lastUsedAt: 1,
+    }));
+    expect(result.current.currency).toBe('USD');
+    expect(result.current.amountDigits).toBe('450');
+    expect(result.current.originalAmount).toBe(4.5);
+    expect(result.current.category).toBe('fun');
+    expect(result.current.note).toBe('Latte');
+  });
+
+  it('setAmount converts a major-unit value to digits in the current currency', async () => {
+    const { result } = await renderHook(() => useDraftTransaction({ primaryCurrency: 'VND' }));
+    await act(async () => result.current.setAmount(50000));
+    expect(result.current.amountDigits).toBe('50000');
+
+    const usd = await renderHook(() => useDraftTransaction({ primaryCurrency: 'USD' }));
+    await act(async () => usd.result.current.setAmount(12.5));
+    expect(usd.result.current.amountDigits).toBe('1250');
   });
 });
 

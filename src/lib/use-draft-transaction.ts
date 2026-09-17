@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { CURRENCY_META, type CurrencyCode } from './currency';
 import type { CategoryId } from './categories';
 import { formatHHMM, toDateKey } from './format';
+import type { FrequentEntry } from './frequent-entries';
 import type { NewTxn, Txn } from './transactions';
 
 export interface DraftTransaction {
@@ -20,9 +21,17 @@ export interface DraftTransaction {
   setSelectedDate: (v: Date) => void;
   originalAmount: number;
   canSave: boolean;
+  /** Fill currency, amount, category and note from a suggestion. */
+  applySuggestion: (entry: FrequentEntry) => void;
+  /** Set the amount from a major-unit value in the current currency. */
+  setAmount: (value: number) => void;
 }
 
 const MAX_AMOUNT_DIGITS = 15;
+
+function sanitizeDigits(v: string): string {
+  return v.replace(/\D/g, '').slice(0, MAX_AMOUNT_DIGITS);
+}
 
 function digitsFromExistingAmount(originalAmount: number, currency: CurrencyCode): string {
   const decimals = CURRENCY_META[currency].decimals;
@@ -41,24 +50,41 @@ export function useDraftTransaction(opts: {
   existing?: Txn;
   primaryCurrency: CurrencyCode;
   initialNote?: string;
+  initialAmountDigits?: string;
+  initialCategory?: CategoryId;
 }): DraftTransaction {
-  const { existing, primaryCurrency, initialNote } = opts;
+  const { existing, primaryCurrency, initialNote, initialAmountDigits, initialCategory } = opts;
 
   const [isIncome, setIsIncome] = useState(existing?.isIncome ?? false);
   const [currency, setCurrency] = useState<CurrencyCode>(
     existing ? existing.originalCurrency : primaryCurrency,
   );
   const [amountDigits, setAmountDigitsRaw] = useState<string>(
-    existing ? digitsFromExistingAmount(existing.originalAmount, existing.originalCurrency) : '',
+    existing
+      ? digitsFromExistingAmount(existing.originalAmount, existing.originalCurrency)
+      : sanitizeDigits(initialAmountDigits ?? ''),
   );
-  const [category, setCategory] = useState<CategoryId>(existing?.category ?? 'food');
+  const [category, setCategory] = useState<CategoryId>(
+    existing ? existing.category : (initialCategory ?? 'food'),
+  );
   const [note, setNote] = useState(mergeExistingText(existing) || initialNote || '');
   const [selectedDate, setSelectedDate] = useState<Date>(
     existing ? new Date(existing.createdAt) : new Date(),
   );
 
   const setAmountDigits = (v: string) => {
-    setAmountDigitsRaw(v.replace(/\D/g, '').slice(0, MAX_AMOUNT_DIGITS));
+    setAmountDigitsRaw(sanitizeDigits(v));
+  };
+
+  const setAmount = (value: number) => {
+    setAmountDigitsRaw(sanitizeDigits(digitsFromExistingAmount(value, currency)));
+  };
+
+  const applySuggestion = (entry: FrequentEntry) => {
+    setCurrency(entry.originalCurrency);
+    setAmountDigitsRaw(sanitizeDigits(digitsFromExistingAmount(entry.originalAmount, entry.originalCurrency)));
+    setCategory(entry.category);
+    setNote(entry.name);
   };
 
   const originalAmount = useMemo(() => {
@@ -67,7 +93,7 @@ export function useDraftTransaction(opts: {
     return CURRENCY_META[currency].decimals === 2 ? n / 100 : n;
   }, [amountDigits, currency]);
 
-  const canSave = originalAmount > 0 && note.trim() !== '';
+  const canSave = originalAmount > 0;
 
   return {
     isIncome, setIsIncome,
@@ -77,6 +103,7 @@ export function useDraftTransaction(opts: {
     note, setNote,
     selectedDate, setSelectedDate,
     originalAmount, canSave,
+    applySuggestion, setAmount,
   };
 }
 
