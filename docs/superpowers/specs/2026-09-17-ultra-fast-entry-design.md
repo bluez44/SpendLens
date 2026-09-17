@@ -44,6 +44,8 @@ Capture row (`captureRow`), left to right:
 2. **Shutter** (unchanged).
 3. **Quick-add button** — 48×48 circle filled with `GradientFill` (accent) and the existing `plus` glyph in white. A lightning glyph is deliberately **not** used: the flash toggle already uses `flash`/`flash-off`, and two lightning icons on one screen would be confused. `accessibilityLabel = a11y.quick_add`.
 
+Without camera permission the capture row still shows the library and quick-add buttons (a 74 pt spacer replaces the shutter) — neither needs the camera.
+
 Viewfinder overlays:
 - **Flip camera** moves from the capture row to the top-left of the viewfinder, styled like `flashBtn` (40×40, `rgba(0,0,0,0.35)`), `accessibilityLabel = a11y.flip_camera`.
 - **Zoom badge** moves from top-left to top-centre (`alignSelf: 'center'`).
@@ -52,13 +54,13 @@ Viewfinder overlays:
 Library flow:
 1. Tap 🖼 → `ImagePicker.launchImageLibraryAsync` (images only, quality 0.7; exact option names verified against the SDK 57 `expo-image-picker` docs during planning).
 2. Cancelled → nothing. Error → `Alert(common.photo_failed_title, common.photo_failed_body)`.
-3. Picked → `router.push({ pathname: '/entry', params: { photo: uri, note } })` (note omitted when empty) — identical to the capture path; clear nothing on camera until Entry saves.
+3. Picked → `router.push({ pathname: '/entry', params: { photo: uri, note } })` (note omitted when empty) — identical to the capture path (the camera note is not cleared, same as capture today).
 
 Quick-add flow:
 1. Tap ＋ → `quickAddRef.current?.present(note)` (current viewfinder note pre-fills the note field).
 2. User taps a suggestion chip **or** types an amount (+ optionally a quick-amount chip, category chip, note).
 3. Save → sheet dismisses → `saveNew` (haptic + Undo toast) → camera clears its note state.
-4. "More details…" → sheet dismisses → `router.push({ pathname: '/entry', params: { amount: amountDigits, category, note } })` (params omitted when empty).
+4. "More details…" → sheet dismisses → `router.push({ pathname: '/entry', params: { amount: amountDigits, category, note } })` (params omitted when empty; `amount` omitted when a suggestion switched the draft to a non-primary currency, because Entry interprets digits in the primary currency).
 
 ### Quick-add sheet (`src/components/sl/quick-add-sheet.tsx`)
 
@@ -127,6 +129,7 @@ export function quickAmountsFor(currency: CurrencyCode): number[]
 - `canSave = originalAmount > 0` (note no longer required).
 - Options gain `initialAmountDigits?: string` and `initialCategory?: CategoryId`, used only when `existing` is undefined; `initialAmountDigits` passes through the same digit sanitiser as `setAmountDigits`; an `initialCategory` that is not a known static/custom id falls back to `'food'` in Entry (validated by the caller with `categoryOf`).
 - Expose `applySuggestion(entry: FrequentEntry)`: sets currency, amount digits (via `digitsFromExistingAmount`), category, note.
+- Expose `setAmount(value: number)`: sets amount digits from a major-unit number in the current currency (used by quick-amount chips).
 
 ### `src/lib/toast-context.tsx` + `src/components/sl/toast.tsx`
 
@@ -136,8 +139,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }): JSX.
 export function useToast(): { show: (opts: ToastOptions) => void; hide: () => void }
 ```
 - One toast at a time; `show` replaces the current toast and restarts the timer. Default `durationMs = 5000`.
-- Pressing the action calls `onAction` then hides.
-- `Toast` view: absolutely positioned above `insets.bottom + 24`, dark pill (`rgba(20,20,20,0.92)`, white `sl/text`), action label in `AccentGradient[1]`, `accessibilityLiveRegion="polite"`, action `accessibilityRole="button"`. Fades in/out with `react-native-reanimated` (already a dependency).
+- Pressing the action hides the toast first, then calls `onAction` (so an `onAction` that shows a follow-up toast, like Undo → "Undone", is not immediately hidden).
+- `Toast` view: absolutely positioned above `insets.bottom + 24`, dark pill (`rgba(20,20,20,0.92)`, white `sl/text`), action label in `AccentGradient[1]`, `accessibilityLiveRegion="polite"`, action `accessibilityRole="button"`. Fades in with React Native's `Animated` API (not reanimated, which cannot run under Jest here).
 - Mounted in `src/app/_layout.tsx` inside `BottomSheetModalProvider`, wrapping the `Stack` and the lock overlay.
 
 ### `src/lib/use-save-transaction.ts`
