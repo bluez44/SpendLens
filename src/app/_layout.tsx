@@ -22,6 +22,7 @@ import { LockScreen } from '@/components/sl/lock-screen';
 import { AppLockProvider, useAppLock } from '@/lib/app-lock-context';
 import { SettingsProvider, useSettings } from '@/lib/settings-context';
 import { ThemeProvider as SLThemeProvider } from '@/lib/theme-context';
+import { ToastProvider } from '@/lib/toast-context';
 import { TransactionsProvider } from '@/lib/transactions-context';
 import { SubscriptionsProvider } from '@/lib/subscriptions-context';
 import { scheduleDailyReminder, scheduleWeeklyRecapReminder } from '@/lib/notifications';
@@ -62,23 +63,25 @@ function ThemedShell({ scheme }: { scheme: string | null | undefined }) {
       <ThemeProvider value={effective === 'dark' ? DarkTheme : DefaultTheme}>
         <StatusBar style={effective === 'dark' ? 'light' : 'dark'} />
         <BottomSheetModalProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.bg },
-            }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="home" />
-            <Stack.Screen name="history" />
-            <Stack.Screen name="history-months" />
-            <Stack.Screen name="gallery" />
-            <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="transaction/[id]" />
-            <Stack.Screen name="subscriptions" />
-            <Stack.Screen name="compare" />
-            <Stack.Screen name="share" />
-          </Stack>
-          {isLocked && <LockScreen biometricEnabled={settings.appLockBiometricEnabled} onUnlock={unlock} />}
+          <ToastProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.bg },
+              }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="home" />
+              <Stack.Screen name="history" />
+              <Stack.Screen name="history-months" />
+              <Stack.Screen name="gallery" />
+              <Stack.Screen name="entry" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="transaction/[id]" />
+              <Stack.Screen name="subscriptions" />
+              <Stack.Screen name="compare" />
+              <Stack.Screen name="share" />
+            </Stack>
+            {isLocked && <LockScreen biometricEnabled={settings.appLockBiometricEnabled} onUnlock={unlock} />}
+          </ToastProvider>
         </BottomSheetModalProvider>
       </ThemeProvider>
     </SLThemeProvider>
