@@ -43,14 +43,22 @@ describe('TxnCard', () => {
     expect(getByText('+45.000₫')).toBeTruthy();
   });
 
-  it('renders the note when present', async () => {
-    const { getByText } = await render(<TxnCard txn={{ ...baseTxn, note: 'Latte size L' }} />);
-    expect(getByText('Latte size L')).toBeTruthy();
+  it('renders name when both name and a legacy note are present', async () => {
+    const { getByText, queryByText } = await render(
+      <TxnCard txn={{ ...baseTxn, name: 'Cà phê', note: 'Latte size L' }} />,
+    );
+    expect(getByText('Cà phê')).toBeTruthy();
+    expect(queryByText('Latte size L')).toBeNull();
   });
 
   it('renders name when note is null', async () => {
     const { getByText } = await render(<TxnCard txn={{ ...baseTxn, note: null }} />);
     expect(getByText('Cà phê')).toBeTruthy();
+  });
+
+  it('falls back to the legacy note when name is empty', async () => {
+    const { getByText } = await render(<TxnCard txn={{ ...baseTxn, name: '', note: 'Latte size L' }} />);
+    expect(getByText('Latte size L')).toBeTruthy();
   });
 
   it('shows the tap hint', async () => {

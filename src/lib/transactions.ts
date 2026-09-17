@@ -18,7 +18,9 @@ export interface Txn {
   time: string; // HH:mm
   createdAt: number; // epoch ms
   category: CategoryId;
+  /** The user-entered note shown everywhere as the transaction's text. */
   name: string;
+  /** Legacy free-text column; new rows always store null. */
   note: string | null;
   amount: number; // positive in primary currency
   currency: CurrencyCode;

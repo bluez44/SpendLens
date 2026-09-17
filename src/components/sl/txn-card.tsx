@@ -63,7 +63,7 @@ export function TxnCard({
             ≈ {signedMoney(txn.originalAmount, txn.originalCurrency, txn.isIncome)}
           </Text>
         ) : null}
-        <Text style={styles.note} numberOfLines={2}>{txn.note ?? txn.name}</Text>
+        <Text style={styles.note} numberOfLines={2}>{txn.name || txn.note || ''}</Text>
         <Text style={styles.tapHint}>{t('txn.tap_hint')}</Text>
       </View>
     </Pressable>
