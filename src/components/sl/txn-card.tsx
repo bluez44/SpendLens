@@ -46,6 +46,7 @@ export function TxnCard({
         <Pressable
           style={styles.shareBtn}
           hitSlop={8}
+          accessibilityRole="button"
           accessibilityLabel={t('share.a11y_share')}
           onPress={() => onShare?.(txn)}>
           <Icon name="share" size={18} color="#fff" />

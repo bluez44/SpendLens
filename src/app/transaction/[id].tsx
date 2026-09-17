@@ -73,13 +73,18 @@ export default function TransactionDetailScreen() {
       <View style={styles.photoHeader}>
         <PhotoTile uri={txn.photoPath} width="100%" height={340} radius={0} />
         <View style={[StyleSheet.absoluteFill, styles.headerControls, { paddingTop: insets.top + 6 }]}>
-          <Pressable style={styles.headerBtn} onPress={goBack}>
+          <Pressable
+            style={styles.headerBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('a11y.back')}
+            onPress={goBack}>
             <Icon name="back" size={20} color="#fff" />
           </Pressable>
           <View style={styles.headerRightGroup}>
             {txn.photoPath ? (
               <Pressable
                 style={styles.headerBtn}
+                accessibilityRole="button"
                 accessibilityLabel={t('share.a11y_share')}
                 onPress={() => shareSheetRef.current?.present(txn)}>
                 <Icon name="share" size={19} color="#fff" />
@@ -87,6 +92,8 @@ export default function TransactionDetailScreen() {
             ) : null}
             <Pressable
               style={styles.headerBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('a11y.edit_txn')}
               onPress={() => router.push({ pathname: '/entry', params: { id: String(txn.id) } })}>
               <Icon name="edit" size={19} color="#fff" />
             </Pressable>

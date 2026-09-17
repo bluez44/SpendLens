@@ -178,6 +178,7 @@ export default function CameraScreen() {
         <Pressable
           style={[styles.backToCamera, { bottom: insets.bottom + 24 }]}
           onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+          accessibilityRole="button"
           accessibilityLabel={t('nav.back_to_camera')}>
           <Icon name="camera" size={22} color="#fff" />
         </Pressable>
@@ -191,6 +192,8 @@ export default function CameraScreen() {
         <Pressable
           testID="share-cards-icon"
           onPress={handleOpenShareCards}
+          accessibilityRole="button"
+          accessibilityLabel={t('a11y.share_cards')}
           style={({ pressed }) => [
             styles.floatingIcon,
             { opacity: cannotShareCards ? 0.5 : (pressed ? 0.7 : 1) },
@@ -203,10 +206,14 @@ export default function CameraScreen() {
   );
 }
 
-function RoundButton({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
+function RoundButton({
+  children, onPress, accessibilityLabel,
+}: { children: React.ReactNode; onPress: () => void; accessibilityLabel: string }) {
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       style={({ pressed }) => [styles.roundBtn, { opacity: pressed ? 0.7 : 1 }]}>
       {children}
     </Pressable>
@@ -269,14 +276,14 @@ function CameraPage({
     <View style={{ height: SCREEN_HEIGHT, backgroundColor: '#111111' }}>
       {/* Top nav */}
       <View style={[styles.nav, { paddingTop: insets.top + 8 }]}>
-        <RoundButton onPress={() => router.push('/home')}><Icon name="home" /></RoundButton>
+        <RoundButton onPress={() => router.push('/home')} accessibilityLabel={t('a11y.open_home')}><Icon name="home" /></RoundButton>
         <View style={styles.totalPill}>
           <Text style={{ fontSize: 12, fontWeight: W.semibold, color: 'rgba(255,255,255,0.65)' }}>{t('nav.today')}</Text>
           <Text style={{ fontSize: 15, fontWeight: W.extrabold, color: Money.expenseOnDark }}>
             −{formatMoney(todayExpense, settings.primaryCurrency)}
           </Text>
         </View>
-        <RoundButton onPress={() => router.push('/history')}><Icon name="menu" /></RoundButton>
+        <RoundButton onPress={() => router.push('/history')} accessibilityLabel={t('a11y.open_history')}><Icon name="menu" /></RoundButton>
       </View>
 
       {/* Viewfinder */}
@@ -298,7 +305,11 @@ function CameraPage({
                   <Text style={styles.zoomBadgeText}>{(1 + zoom * 4).toFixed(1)}x</Text>
                 </View>
               )}
-              <Pressable style={styles.flashBtn} onPress={() => setFlash((f) => (f === 'off' ? 'on' : 'off'))}>
+              <Pressable
+                style={styles.flashBtn}
+                accessibilityRole="button"
+                accessibilityLabel={flash === 'on' ? t('a11y.flash_off') : t('a11y.flash_on')}
+                onPress={() => setFlash((f) => (f === 'off' ? 'on' : 'off'))}>
                 <Icon name={flash === 'on' ? 'flash' : 'flash-off'} size={19} color="#fff" />
               </Pressable>
             </>
@@ -317,12 +328,18 @@ function CameraPage({
             <>
               <Pressable
                 style={styles.noteTapZone}
+                accessibilityRole="button"
+                accessibilityLabel={t('a11y.add_note')}
                 onPress={() => setNoteFocused(true)}
                 pointerEvents={noteFocused ? 'none' : 'auto'}
               />
 
               {note && !noteFocused ? (
-                <Pressable style={styles.notePreview} onPress={() => setNoteFocused(true)}>
+                <Pressable
+                  style={styles.notePreview}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('a11y.add_note')}
+                  onPress={() => setNoteFocused(true)}>
                   <Icon name="edit" size={12} color="rgba(255,255,255,0.85)" />
                   <Text numberOfLines={1} style={styles.notePreviewText}>{note}</Text>
                 </Pressable>
@@ -338,9 +355,11 @@ function CameraPage({
         {granted ? (
           <View style={styles.captureRow}>
             <View style={styles.sideSlot} />
-            <Shutter onPress={capture} />
+            <Shutter onPress={capture} accessibilityLabel={t('a11y.capture')} />
             <Pressable
               style={[styles.sideSlot, styles.circleBtn]}
+              accessibilityRole="button"
+              accessibilityLabel={t('a11y.flip_camera')}
               onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}>
               <Icon name="flip" size={22} color="#fff" />
             </Pressable>

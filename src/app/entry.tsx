@@ -196,7 +196,12 @@ export default function EntryScreen() {
           {/* Photo */}
         <View style={styles.photoWrap}>
           <PhotoTile uri={photoUri} width="100%" height={150} radius={Radius.cardLg} />
-          <Pressable style={styles.close} onPress={() => router.back()}>
+          <Pressable
+            style={styles.close}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.close_a11y')}
+            onPress={() => router.back()}>
             <Icon name="close" size={16} color="#fff" />
           </Pressable>
         </View>
@@ -231,6 +236,8 @@ export default function EntryScreen() {
           </View>
           <Pressable
             onPress={() => currencyPickerRef.current?.present(currency)}
+            accessibilityRole="button"
+            accessibilityLabel={t('a11y.choose_currency')}
             style={({ pressed }) => [
               styles.currencyChip,
               { backgroundColor: c.chipBg, opacity: pressed ? 0.7 : 1 },
@@ -285,7 +292,12 @@ export default function EntryScreen() {
                   maxLength={30}
                   style={{ flex: 1, fontSize: 14, color: c.text, padding: 0 }}
                 />
-                <Pressable onPress={tryAddCustomCategory} disabled={customInput.trim() === ''}>
+                <Pressable
+                  onPress={tryAddCustomCategory}
+                  disabled={customInput.trim() === ''}
+                  hitSlop={12}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('a11y.confirm_category')}>
                   <Icon name="check" size={20} color={customInput.trim() === '' ? c.textSecondary : c.text} />
                 </Pressable>
               </View>

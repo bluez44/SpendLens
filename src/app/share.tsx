@@ -97,7 +97,12 @@ export default function ShareScreen() {
 
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: c.text }]}>{t('share.preview_title')}</Text>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={[styles.iconBtn, { backgroundColor: c.segment }]}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.close_a11y')}
+          style={[styles.iconBtn, { backgroundColor: c.segment }]}>
           <Icon name="close" size={18} color={c.text} />
         </Pressable>
       </View>

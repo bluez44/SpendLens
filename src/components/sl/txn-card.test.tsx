@@ -84,4 +84,9 @@ describe('TxnCard', () => {
     expect(onShare).toHaveBeenCalledWith(txnWithPhoto);
     expect(mockRouterPush).not.toHaveBeenCalled();
   });
+
+  it('exposes the share control as a button', async () => {
+    const { getByRole } = await render(<TxnCard txn={txnWithPhoto} onShare={jest.fn()} />);
+    expect(getByRole('button', { name: 'Chia sẻ giao dịch' })).toBeTruthy();
+  });
 });

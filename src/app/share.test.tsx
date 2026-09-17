@@ -62,4 +62,9 @@ describe('ShareScreen', () => {
       expect.objectContaining({ url: 'file:///tmp/card.png', type: 'image/png' }),
     );
   });
+
+  it('exposes a labelled close button', async () => {
+    const { getByRole } = await renderWithProviders(<ShareScreen />);
+    expect(getByRole('button', { name: /Đóng|Close/ })).toBeTruthy();
+  });
 });

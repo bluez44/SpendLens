@@ -73,7 +73,12 @@ export default function SubscriptionsScreen() {
           title: t('sub.list_title'),
           headerShown: true,
           headerRight: () => (
-            <Pressable onPress={openAdd} style={{ paddingHorizontal: 12 }}>
+            <Pressable
+              onPress={openAdd}
+              style={{ paddingHorizontal: 12 }}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('a11y.add_subscription')}>
               <Text style={{ color: c.text, fontSize: 22, fontWeight: '700' }}>＋</Text>
             </Pressable>
           ),

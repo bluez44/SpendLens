@@ -25,7 +25,11 @@ export default function GalleryScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
       <View style={styles.header}>
-        <Pressable style={[styles.iconBtn, { backgroundColor: c.segment }]} onPress={goBack}>
+        <Pressable
+          style={[styles.iconBtn, { backgroundColor: c.segment }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('a11y.back')}
+          onPress={goBack}>
           <Icon name="back" size={20} color={c.text} />
         </Pressable>
         <View>
@@ -39,7 +43,11 @@ export default function GalleryScreen() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: PADDING, paddingBottom: insets.bottom + 24 }}>
         <View style={styles.grid}>
           {transactions.map((txn) => (
-            <Pressable key={txn.id} onPress={() => router.push(`/transaction/${txn.id}`)}>
+            <Pressable
+              key={txn.id}
+              accessibilityRole="button"
+              accessibilityLabel={t('a11y.open_txn', { amount: signedMoney(txn.amount, txn.currency, txn.isIncome) })}
+              onPress={() => router.push(`/transaction/${txn.id}`)}>
               <View style={{ width: tile, height: tile, borderRadius: 14, overflow: 'hidden' }}>
                 <PhotoTile uri={txn.photoPath} width={tile} height={tile} radius={14} />
                 <View style={styles.amount}>

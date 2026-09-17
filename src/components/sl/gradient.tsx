@@ -56,10 +56,17 @@ export function GradientButton({
 }
 
 /** Locket-style shutter button. */
-export function Shutter({ onPress, size = 74, gradientRing = false }: { onPress?: () => void; size?: number; gradientRing?: boolean }) {
+export function Shutter({
+  onPress, size = 74, gradientRing = false, accessibilityLabel,
+}: { onPress?: () => void; size?: number; gradientRing?: boolean; accessibilityLabel?: string }) {
   const inner = size - 16;
   return (
-    <Pressable onPress={onPress} hitSlop={16} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
+    <Pressable
+      onPress={onPress}
+      hitSlop={16}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
       {gradientRing ? (
         <View style={{ width: size, height: size, borderRadius: size / 2, padding: 5, overflow: 'hidden' }}>
           <GradientFill />
