@@ -273,6 +273,16 @@
     "verify_wrong_pin": "Sai PIN"
   },
   "format": { "month_abbrev": "Th{{month}}" },
+  "quick_add": {
+    "title": "Nhập nhanh",
+    "note_placeholder": "Ghi chú (tuỳ chọn)",
+    "details": "Chi tiết…"
+  },
+  "toast": {
+    "saved": "Đã lưu {{amount}}",
+    "undo": "Hoàn tác",
+    "undone": "Đã hoàn tác"
+  },
   "currency": {
     "section_title": "TIỀN TỆ",
     "primary_label": "Đơn vị chính",
@@ -354,6 +364,10 @@
     "open_txn": "Xem giao dịch {{amount}}",
     "add_subscription": "Thêm đăng ký",
     "confirm_category": "Thêm danh mục",
-    "choose_currency": "Chọn tiền tệ"
+    "choose_currency": "Chọn tiền tệ",
+    "quick_add": "Nhập nhanh",
+    "pick_photo": "Chọn ảnh từ thư viện",
+    "edit_note": "Sửa ghi chú: {{note}}",
+    "suggestion": "Điền {{note}} {{amount}}"
   }
 }

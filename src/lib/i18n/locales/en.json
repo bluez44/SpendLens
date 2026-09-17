@@ -273,6 +273,16 @@
     "verify_wrong_pin": "Wrong PIN"
   },
   "format": { "month_abbrev": "M{{month}}" },
+  "quick_add": {
+    "title": "Quick add",
+    "note_placeholder": "Note (optional)",
+    "details": "More details…"
+  },
+  "toast": {
+    "saved": "Saved {{amount}}",
+    "undo": "Undo",
+    "undone": "Undone"
+  },
   "currency": {
     "section_title": "CURRENCY",
     "primary_label": "Primary currency",
@@ -354,6 +364,10 @@
     "open_txn": "View transaction {{amount}}",
     "add_subscription": "Add subscription",
     "confirm_category": "Add category",
-    "choose_currency": "Choose currency"
+    "choose_currency": "Choose currency",
+    "quick_add": "Quick add",
+    "pick_photo": "Choose photo from library",
+    "edit_note": "Edit note: {{note}}",
+    "suggestion": "Fill {{note}} {{amount}}"
   }
 }

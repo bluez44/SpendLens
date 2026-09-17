@@ -13,6 +13,7 @@ const A11Y_KEYS = [
   'open_home', 'open_history', 'flash_on', 'flash_off', 'flip_camera',
   'capture', 'add_note', 'share_cards', 'back', 'edit_txn', 'open_txn',
   'add_subscription', 'confirm_category', 'choose_currency',
+  'quick_add', 'pick_photo', 'edit_note', 'suggestion',
 ];
 
 describe('locale files', () => {
@@ -23,5 +24,13 @@ describe('locale files', () => {
   it('define every accessibility label', () => {
     const viKeys = keysOf(vi);
     for (const k of A11Y_KEYS) expect(viKeys).toContain(`a11y.${k}`);
+  });
+
+  it('define the quick-add and toast strings', () => {
+    const viKeys = keysOf(vi);
+    for (const k of [
+      'quick_add.title', 'quick_add.note_placeholder', 'quick_add.details',
+      'toast.saved', 'toast.undo', 'toast.undone',
+    ]) expect(viKeys).toContain(k);
   });
 });
