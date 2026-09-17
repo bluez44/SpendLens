@@ -101,5 +101,7 @@ describe('ToastProvider', () => {
     expect(queryByText('First')).toBeNull();
     await act(async () => { jest.advanceTimersByTime(800); });
     expect(queryByText('Second')).toBeTruthy();
+    await act(async () => { jest.advanceTimersByTime(200); });
+    expect(queryByText('Second')).toBeNull();
   });
 });

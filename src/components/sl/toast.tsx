@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Animated, Pressable, StyleSheet } from 'react-native';
+import { AccessibilityInfo, Animated, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/sl/text';
 import { AccentGradient, W } from '@/constants/tokens';
+
+// Camera capture row (shutter + swipe-up chevron) occupies roughly
+// insets.bottom + 24…128, so the toast must clear it to avoid covering
+// the chevron/shutter and swallowing taps for the toast's full duration.
+const TOAST_BOTTOM_OFFSET = 140;
 
 export function Toast({
   message,
@@ -19,12 +24,19 @@ export function Toast({
 
   useEffect(() => {
     Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+    try {
+      AccessibilityInfo.announceForAccessibility(message);
+    } catch {
+      // best-effort: VoiceOver announcement should never break the toast
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opacity]);
 
   return (
     <Animated.View
+      testID="toast-wrap"
       pointerEvents="box-none"
-      style={[styles.wrap, { bottom: insets.bottom + 24, opacity }]}>
+      style={[styles.wrap, { bottom: insets.bottom + TOAST_BOTTOM_OFFSET, opacity }]}>
       <Animated.View style={styles.pill} accessibilityLiveRegion="polite">
         <Text numberOfLines={2} style={styles.message}>{message}</Text>
         {actionLabel && onAction ? (
