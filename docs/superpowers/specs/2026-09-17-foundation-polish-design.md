@@ -3,7 +3,7 @@
 **Date:** 2026-09-17
 **Roadmap:** [`2026-09-17-app-improvement-roadmap.md`](./2026-09-17-app-improvement-roadmap.md)
 **Source findings:** [`docs/product-review/2026-09-17-gen-z-user-review.md`](../../product-review/2026-09-17-gen-z-user-review.md) §3
-**Branch:** `fix/foundation-polish` (from `main`)
+**Branch:** `main` (product owner chose to work directly on `main`, 2026-09-17)
 **Status:** Design approved, pending implementation plan
 
 ## Goal
@@ -63,7 +63,7 @@ Fix the bugs found in the user review and clean up the colour-token and accessib
 - `src/lib/transactions.test.ts` (in-memory DB):
   4. `updateTransaction` with a new `createdAt` persists it and the row sorts accordingly in `listTransactions`.
   5. `updateTransaction` without `createdAt` leaves `created_at` unchanged.
-  6. Updating a subscription-generated txn without `subscriptionUuid` keeps its `subscription_uuid`.
+  6. Updating a subscription-generated txn without `subscriptionUuid` keeps its `subscription_uuid` — already covered by the existing test `updateTransaction preserves subscription_uuid when field omitted`; no new test.
 - `src/lib/format.test.ts`:
   7. `formatHHMM` pads hours/minutes.
 
