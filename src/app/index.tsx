@@ -1,4 +1,5 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -11,8 +12,9 @@ import { Text } from '@/components/sl/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
-import { GradientButton, Shutter } from '@/components/sl/gradient';
+import { GradientButton, GradientFill, Shutter } from '@/components/sl/gradient';
 import { Icon } from '@/components/sl/icons';
+import { QuickAddSheet, type QuickAddDetailsParams, type QuickAddSheetHandle } from '@/components/sl/quick-add-sheet';
 import { ShareSheet } from '@/components/sl/share-sheet';
 import type { ShareSheetHandle } from '@/components/sl/share-sheet';
 import { CardPickerSheet, type CardPickerSheetHandle } from '@/components/share/card-picker-sheet';
@@ -47,6 +49,32 @@ export default function CameraScreen() {
   const flatListRef = useRef<FlatList>(null);
   const shareSheetRef = useRef<ShareSheetHandle>(null);
   const cardPickerRef = useRef<CardPickerSheetHandle>(null);
+  const quickAddRef = useRef<QuickAddSheetHandle>(null);
+
+  const openQuickAdd = useCallback(() => {
+    setNoteFocused(false);
+    quickAddRef.current?.present(note);
+  }, [note]);
+
+  const pickFromLibrary = useCallback(async () => {
+    const currentNote = note;
+    setNoteFocused(false);
+    let result: ImagePicker.ImagePickerResult;
+    try {
+      result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
+    } catch (err) {
+      console.warn('Library pick failed', err);
+      Alert.alert(t('common.photo_failed_title'), t('common.photo_failed_body'));
+      return;
+    }
+    if (result.canceled || !result.assets[0]) return;
+    const uri = result.assets[0].uri;
+    router.push({ pathname: '/entry', params: currentNote ? { photo: uri, note: currentNote } : { photo: uri } });
+  }, [note, t]);
+
+  const openEntryDetails = useCallback((params: QuickAddDetailsParams) => {
+    router.push({ pathname: '/entry', params: { ...params } });
+  }, []);
 
   const cannotShareCards = useMemo(() => {
     const weekStart = weekStartOf(toDateKey(new Date()));
@@ -136,6 +164,8 @@ export default function CameraScreen() {
           setNote={setNote}
           setNoteFocused={setNoteFocused}
           todayExpense={todayExpense}
+          onPickPhoto={pickFromLibrary}
+          onQuickAdd={openQuickAdd}
         />
       );
     if (item.type === 'empty') return <EmptyTodayCard />;
@@ -146,7 +176,7 @@ export default function CameraScreen() {
         onShare={onShareTxn}
       />
     );
-  }, [insets, permission, requestPermission, granted, facing, flash, note, noteFocused, todayExpense, capture, categoryExtras, onShareTxn]);
+  }, [insets, permission, requestPermission, granted, facing, flash, note, noteFocused, todayExpense, capture, categoryExtras, onShareTxn, pickFromLibrary, openQuickAdd]);
 
   return (
     <View style={styles.root}>
@@ -188,6 +218,11 @@ export default function CameraScreen() {
         ref={cardPickerRef}
         onSelect={(type) => router.push(`/share?type=${type}` as never)}
       />
+      <QuickAddSheet
+        ref={quickAddRef}
+        onSaved={() => setNote('')}
+        onOpenDetails={openEntryDetails}
+      />
       <View style={[styles.topRightIcons, { top: insets.top + 12 }]} pointerEvents="box-none">
         <Pressable
           testID="share-cards-icon"
@@ -226,6 +261,7 @@ function CameraPage({
   cameraRef, capture,
   note, noteFocused, setNote, setNoteFocused,
   todayExpense,
+  onPickPhoto, onQuickAdd,
 }: {
   insets: EdgeInsets;
   permission: ReturnType<typeof useCameraPermissions>[0];
@@ -242,6 +278,8 @@ function CameraPage({
   setNote: (v: string) => void;
   setNoteFocused: (v: boolean) => void;
   todayExpense: number;
+  onPickPhoto: () => void;
+  onQuickAdd: () => void;
 }) {
   const { t } = useT();
   const { settings } = useSettings();
@@ -301,8 +339,10 @@ function CameraPage({
                 />
               </GestureDetector>
               {zoom > 0 && (
-                <View style={styles.zoomBadge}>
-                  <Text style={styles.zoomBadgeText}>{(1 + zoom * 4).toFixed(1)}x</Text>
+                <View style={styles.zoomBadgeWrap} pointerEvents="none">
+                  <View style={styles.zoomBadge}>
+                    <Text style={styles.zoomBadgeText}>{(1 + zoom * 4).toFixed(1)}x</Text>
+                  </View>
                 </View>
               )}
               <Pressable
@@ -311,6 +351,13 @@ function CameraPage({
                 accessibilityLabel={flash === 'on' ? t('a11y.flash_off') : t('a11y.flash_on')}
                 onPress={() => setFlash((f) => (f === 'off' ? 'on' : 'off'))}>
                 <Icon name={flash === 'on' ? 'flash' : 'flash-off'} size={19} color="#fff" />
+              </Pressable>
+              <Pressable
+                style={styles.flipBtn}
+                accessibilityRole="button"
+                accessibilityLabel={t('a11y.flip_camera')}
+                onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}>
+                <Icon name="flip" size={19} color="#fff" />
               </Pressable>
             </>
           ) : (
@@ -338,7 +385,7 @@ function CameraPage({
                 <Pressable
                   style={styles.notePreview}
                   accessibilityRole="button"
-                  accessibilityLabel={t('a11y.add_note')}
+                  accessibilityLabel={t('a11y.edit_note', { note })}
                   onPress={() => setNoteFocused(true)}>
                   <Icon name="edit" size={12} color="rgba(255,255,255,0.85)" />
                   <Text numberOfLines={1} style={styles.notePreviewText}>{note}</Text>
@@ -352,21 +399,28 @@ function CameraPage({
 
       {/* Capture area — minus the "vuốt lên" hint */}
       <View style={[styles.captureArea, { paddingBottom: insets.bottom + 24 }]}>
-        {granted ? (
-          <View style={styles.captureRow}>
-            <View style={styles.sideSlot} />
+        <View style={styles.captureRow}>
+          <Pressable
+            style={[styles.sideSlot, styles.circleBtn]}
+            accessibilityRole="button"
+            accessibilityLabel={t('a11y.pick_photo')}
+            onPress={onPickPhoto}>
+            <Icon name="image" size={22} color="#fff" />
+          </Pressable>
+          {granted ? (
             <Shutter onPress={capture} accessibilityLabel={t('a11y.capture')} />
-            <Pressable
-              style={[styles.sideSlot, styles.circleBtn]}
-              accessibilityRole="button"
-              accessibilityLabel={t('a11y.flip_camera')}
-              onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}>
-              <Icon name="flip" size={22} color="#fff" />
-            </Pressable>
-          </View>
-        ) : (
-          <View style={styles.captureRow} />
-        )}
+          ) : (
+            <View style={styles.shutterSpacer} />
+          )}
+          <Pressable
+            style={[styles.sideSlot, styles.quickAddBtn]}
+            accessibilityRole="button"
+            accessibilityLabel={t('a11y.quick_add')}
+            onPress={onQuickAdd}>
+            <GradientFill />
+            <Icon name="plus" size={22} color="#fff" />
+          </Pressable>
+        </View>
         <View style={styles.chevron}>
           <Icon name="arrow-up" size={14} color="rgba(255,255,255,0.42)" />
         </View>
@@ -562,13 +616,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  zoomBadge: {
-    position: 'absolute', top: 12, left: 12,
-    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+  flipBtn: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  zoomBadgeWrap: {
+    position: 'absolute', top: 18, left: 0, right: 0,
+    alignItems: 'center',
     zIndex: 5,
   },
+  zoomBadge: {
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
   zoomBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  quickAddBtn: {
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  shutterSpacer: { width: 74, height: 74 },
   chevron: {
     flexDirection: 'row',
     alignItems: 'center',

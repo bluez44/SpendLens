@@ -15,7 +15,8 @@ export type IconName =
   | 'settings'
   | 'share'
   | 'camera'
-  | 'check';
+  | 'check'
+  | 'image';
 
 export function Icon({
   name,
@@ -101,6 +102,13 @@ export function Icon({
         </>
       )}
       {name === 'check' && <Path d="M5 12l4 4 10-10" {...p} strokeWidth={2.2} />}
+      {name === 'image' && (
+        <>
+          <Path d="M4 5h16v14H4z" {...p} strokeWidth={2} />
+          <Circle cx={9} cy={10} r={1.6} {...p} strokeWidth={2} />
+          <Path d="M4 17l5-5 4 4 3-3 4 4" {...p} strokeWidth={2} />
+        </>
+      )}
     </Svg>
   );
 }
