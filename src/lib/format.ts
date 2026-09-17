@@ -97,6 +97,11 @@ export function toDateKey(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+/** Local wall-clock time as zero-padded 24h `HH:MM`. */
+export function formatHHMM(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 export function shiftDateKey(dateKey: string, days: number): string {
   const [y, m, d] = dateKey.split('-').map(Number);
   return toDateKey(new Date(y, m - 1, d + days));

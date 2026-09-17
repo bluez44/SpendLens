@@ -14,6 +14,7 @@ import {
   signedMoney,
   formatCompact,
   formatAmountInput,
+  formatHHMM,
 } from './format';
 
 beforeEach(async () => { await i18n.changeLanguage('vi'); });
@@ -174,5 +175,15 @@ describe('formatAmountInput', () => {
   });
   it('JPY (decimals=0): digits as int', () => {
     expect(formatAmountInput('3000', 'JPY')).toBe('3000');
+  });
+});
+
+describe('formatHHMM', () => {
+  it('zero-pads hours and minutes', () => {
+    expect(formatHHMM(new Date(2026, 0, 1, 9, 5))).toBe('09:05');
+  });
+
+  it('keeps two-digit values and uses 24h time', () => {
+    expect(formatHHMM(new Date(2026, 0, 1, 21, 45))).toBe('21:45');
   });
 });

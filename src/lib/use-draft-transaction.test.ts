@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { useDraftTransaction } from './use-draft-transaction';
+import { buildTxnPayload, useDraftTransaction } from './use-draft-transaction';
 import type { Txn } from './transactions';
 
 const editingTxn: Txn = {
@@ -106,5 +106,44 @@ describe('useDraftTransaction', () => {
 
     await act(async () => result.current.setCurrency('USD'));
     expect(result.current.originalAmount).toBe(1.5); // USD: cents / 100
+  });
+});
+
+describe('buildTxnPayload', () => {
+  const base = {
+    category: 'food' as const,
+    note: '  Bún bò  ',
+    originalAmount: 45000,
+    currency: 'VND' as const,
+    isIncome: false,
+    photoPath: null,
+  };
+
+  it('derives date, time and createdAt from selectedDate for a new txn', () => {
+    const d = new Date(2026, 7, 1, 9, 5);
+    expect(buildTxnPayload({ ...base, selectedDate: d })).toEqual({
+      date: '2026-08-01',
+      time: '09:05',
+      createdAt: d.getTime(),
+      category: 'food',
+      name: 'Bún bò',
+      note: null,
+      originalAmount: 45000,
+      originalCurrency: 'VND',
+      isIncome: false,
+      photoPath: null,
+    });
+  });
+
+  it('round-trips an edited txn whose date was not changed', () => {
+    const created = new Date(2026, 7, 1, 10, 30).getTime();
+    const p = buildTxnPayload({ ...base, selectedDate: new Date(created) });
+    expect([p.date, p.time, p.createdAt]).toEqual(['2026-08-01', '10:30', created]);
+  });
+
+  it('reflects a changed date when editing', () => {
+    const moved = new Date(2026, 6, 31, 21, 0);
+    const p = buildTxnPayload({ ...base, selectedDate: moved });
+    expect([p.date, p.time, p.createdAt]).toEqual(['2026-07-31', '21:00', moved.getTime()]);
   });
 });

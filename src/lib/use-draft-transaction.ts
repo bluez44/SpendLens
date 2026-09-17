@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 
 import { CURRENCY_META, type CurrencyCode } from './currency';
 import type { CategoryId } from './categories';
-import type { Txn } from './transactions';
+import { formatHHMM, toDateKey } from './format';
+import type { NewTxn, Txn } from './transactions';
 
 export interface DraftTransaction {
   isIncome: boolean;
@@ -76,5 +77,35 @@ export function useDraftTransaction(opts: {
     note, setNote,
     selectedDate, setSelectedDate,
     originalAmount, canSave,
+  };
+}
+
+export interface BuildTxnPayloadInput {
+  selectedDate: Date;
+  category: CategoryId;
+  note: string;
+  originalAmount: number;
+  currency: CurrencyCode;
+  isIncome: boolean;
+  photoPath: string | null;
+}
+
+/**
+ * Build the repository payload for both create and edit. The picked
+ * `selectedDate` is always authoritative for date/time/createdAt.
+ * `name` holds the user's note; `note` is a legacy column and is written null.
+ */
+export function buildTxnPayload(input: BuildTxnPayloadInput): NewTxn {
+  return {
+    date: toDateKey(input.selectedDate),
+    time: formatHHMM(input.selectedDate),
+    createdAt: input.selectedDate.getTime(),
+    category: input.category,
+    name: input.note.trim(),
+    note: null,
+    originalAmount: input.originalAmount,
+    originalCurrency: input.currency,
+    isIncome: input.isIncome,
+    photoPath: input.photoPath,
   };
 }

@@ -19,14 +19,13 @@ import { CURRENCY_META } from '@/lib/currency';
 import { convert } from '@/lib/fx';
 import { deleteUserCategory, insertUserCategory, listUserCategories, toCategoryObj } from '@/lib/user-categories';
 import type { UserCategory } from '@/lib/user-categories';
-import { dayLabel, formatAmountInput, formatMoney, toDateKey } from '@/lib/format';
+import { dayLabel, formatAmountInput, formatHHMM, formatMoney, toDateKey } from '@/lib/format';
 import { decideBudgetAlert } from '@/lib/budget-alert';
 import { fireBudgetAlert } from '@/lib/notifications';
 import { useT } from '@/lib/i18n';
-import type { NewTxn } from '@/lib/transactions';
 import { useTransactions } from '@/lib/transactions-context';
 import { useSettings } from '@/lib/settings-context';
-import { useDraftTransaction } from '@/lib/use-draft-transaction';
+import { buildTxnPayload, useDraftTransaction } from '@/lib/use-draft-transaction';
 
 export default function EntryScreen() {
   const c = useColors();
@@ -133,18 +132,15 @@ export default function EntryScreen() {
         else console.warn('Failed to auto-create category', err);
       }
     }
-    const payload: NewTxn = {
-      date: editing && existing ? existing.date : toDateKey(selectedDate),
-      time: editing && existing ? existing.time : formatHHMM(selectedDate),
-      createdAt: editing && existing ? existing.createdAt : selectedDate.getTime(),
+    const payload = buildTxnPayload({
+      selectedDate,
       category: effectiveCategory,
-      name: note.trim(),
-      note: null,
+      note,
       originalAmount,
-      originalCurrency: currency,
+      currency,
       isIncome,
       photoPath: photoUri ?? null,
-    };
+    });
     try {
       if (editing) {
         update(Number(id), payload);
@@ -386,10 +382,6 @@ export default function EntryScreen() {
       <CurrencyPickerSheet ref={currencyPickerRef} onChoose={(cc) => setCurrency(cc)} />
     </View>
   );
-}
-
-function formatHHMM(d: Date): string {
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 const styles = StyleSheet.create({
