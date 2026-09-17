@@ -107,6 +107,46 @@ describe('useDraftTransaction', () => {
     await act(async () => result.current.setCurrency('USD'));
     expect(result.current.originalAmount).toBe(1.5); // USD: cents / 100
   });
+
+  it('round-trips through buildTxnPayload for an edit, in local time', async () => {
+    const createdAt = new Date(2026, 7, 1, 10, 30).getTime();
+    const existing: Txn = {
+      ...editingTxn,
+      date: '2026-08-01',
+      time: '10:30',
+      createdAt,
+    };
+    const { result } = await renderHook(() =>
+      useDraftTransaction({ existing, primaryCurrency: 'VND' })
+    );
+
+    const unchangedPayload = buildTxnPayload({
+      selectedDate: result.current.selectedDate,
+      category: result.current.category,
+      note: result.current.note,
+      originalAmount: result.current.originalAmount,
+      currency: result.current.currency,
+      isIncome: result.current.isIncome,
+      photoPath: null,
+    });
+    expect(unchangedPayload.date).toBe(existing.date);
+    expect(unchangedPayload.time).toBe(existing.time);
+    expect(unchangedPayload.createdAt).toBe(existing.createdAt);
+
+    await act(async () => result.current.setSelectedDate(new Date(2026, 6, 31, 21, 0)));
+
+    const movedPayload = buildTxnPayload({
+      selectedDate: result.current.selectedDate,
+      category: result.current.category,
+      note: result.current.note,
+      originalAmount: result.current.originalAmount,
+      currency: result.current.currency,
+      isIncome: result.current.isIncome,
+      photoPath: null,
+    });
+    expect(movedPayload.date).toBe('2026-07-31');
+    expect(movedPayload.time).toBe('21:00');
+  });
 });
 
 describe('buildTxnPayload', () => {

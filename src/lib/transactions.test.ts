@@ -170,6 +170,17 @@ describe('updateTransaction created_at', () => {
     expect(row?.created_at).toBe(1000);
     expect(row?.name).toBe('renamed');
   });
+
+  it('applies createdAt on the subscription UPDATE branch too', () => {
+    const db = freshDb();
+    const id = insertTransaction({ ...base, createdAt: 1000, subscriptionUuid: 'sub-1' }, db);
+    updateTransaction(id, { ...base, subscriptionUuid: 'sub-1', createdAt: 5000 }, db);
+    const row = db.getFirstSync<{ created_at: number; subscription_uuid: string | null }>(
+      'SELECT created_at, subscription_uuid FROM transactions WHERE id = ?', id,
+    );
+    expect(row?.created_at).toBe(5000);
+    expect(row?.subscription_uuid).toBe('sub-1');
+  });
 });
 
 describe('resetTransactions', () => {
