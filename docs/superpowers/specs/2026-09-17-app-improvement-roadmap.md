@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-17
 **Source:** [`docs/product-review/2026-09-17-gen-z-user-review.md`](../../product-review/2026-09-17-gen-z-user-review.md)
-**Status:** Roadmap approved. Sub-project A implemented on `main`; B–F not yet designed.
+**Status:** Roadmap approved. Sub-project A implemented on `main`; B spec written; C–F not yet designed.
 
 ## Goal
 
@@ -19,7 +19,7 @@ Reduce the friction of logging a spend and give young users more reasons to open
 | Order | Sub-project | Depends on | Done when |
 |---|---|---|---|
 | 1 | **A — Bug fixes & foundation polish** | — | Review bugs B1–B6 fixed with regression tests; no hardcoded money/status hex colours; every icon-only button has an accessibility label. Spec: [`2026-09-17-foundation-polish-design.md`](./2026-09-17-foundation-polish-design.md) |
-| 2 | **B — Ultra-fast entry** | A (clean `entry.tsx`) | An expense can be saved with only amount + category (note optional); ≤ 3 taps from launch to saved without a photo; pick photo from library on camera; save toast with Undo + haptics; frequent-entry suggestions |
+| 2 | **B — Ultra-fast entry** | A (clean `entry.tsx`) | An expense can be saved with only amount + category (note optional); ≤ 3 taps from launch to saved without a photo; pick photo from library on camera; save toast with Undo + haptics; frequent-entry suggestions. Spec: [`2026-09-17-ultra-fast-entry-design.md`](./2026-09-17-ultra-fast-entry-design.md) |
 | 3 | **C — Navigation & onboarding** | B (dock must host the quick-add entry point) | Floating labelled dock on camera replaces the ⌂/☰ pair; one-time 3-step onboarding + coachmarks; consistent custom headers and ✕ (modal) / ← (push) convention; share-card entry moved off the camera |
 | 4 | **D — Find & understand data** | C (new entry points) | Search + filters in History; previous/next period navigation with `/history-months` merged into History; donut/legend drill-down to a category's transactions; gallery shows photo txns only, grouped by month, virtualised; full-screen photo + duplicate on detail |
 | 5 | **E — Smart budgets** | D (category-filtered list reused for budget drill-down) | Safe-to-spend today on camera pill + Home; per-category budgets; budget cycle starting on payday; income categories |
