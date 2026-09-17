@@ -47,6 +47,12 @@ Inspired by Locket's photo-forward interaction — every expense begins with a p
 - **Theme override.** Auto (follow system) / Light / Dark, applied instantly across every screen.
 - **SQLite persistence.** All transactions and settings live in `expo-sqlite`; data survives reinstalls until the user resets.
 - **Muted shutter.** No click sound when capturing.
+- **Multi-currency.** Record in VND, USD, EUR, JPY, GBP or KRW; amounts are normalised to your primary currency with live or manually overridden FX rates.
+- **Monthly subscriptions.** Track recurring charges with 7/3/1-day reminders, pause/resume, and automatic transactions on the due date.
+- **Budget alerts.** Optional notifications when monthly spend reaches 80% and 100% of the budget.
+- **Compare periods.** Month-vs-month or week-vs-week totals, overlay bar chart and per-category deltas.
+- **Shareable cards.** Weekly recap and streak cards rendered as 1080×1920 images for stories, with a hide-amounts toggle and a weekly recap notification.
+- **App lock.** Biometric unlock with PIN fallback.
 
 ## Screens
 
@@ -61,6 +67,10 @@ Routing follows a camera-first `Stack` in `src/app/`:
 | `/gallery` | **Thư viện**. Three-column photo grid. |
 | `/transaction/[id]` | **Chi tiết giao dịch**. Full photo header, edit + delete actions. |
 | `/settings` | **Cài đặt**. Monthly budget, daily reminder, theme, CSV export, resets, About. |
+| `/history-months` | **Tháng cũ**. Pick any past month: summary, category donut, day-grouped feed. |
+| `/compare` | **So sánh**. Month or week A vs B with presets, overlay bars, category deltas. |
+| `/subscriptions` | **Đăng ký hàng tháng**. List, add, edit, pause and delete recurring charges. |
+| `/share` | **Chia sẻ card**. Preview a weekly recap or streak card, save to gallery or share. |
 
 ## Tech stack
 
@@ -133,7 +143,7 @@ npx expo start
 #    or scan the QR with Expo Go
 ```
 
-On first launch the SQLite database is seeded with a small sample of transactions so every screen has realistic data immediately.
+The app starts with an empty database. For development, `seedIfEmpty()` in `src/lib/seed.ts` can be called manually to insert sample transactions; it is never run automatically.
 
 ### Reset the local database
 
@@ -152,18 +162,11 @@ npm test
 npx tsc --noEmit
 ```
 
-Suite covers:
+Tests are colocated as `*.test.ts(x)` next to the code they cover. Highlights:
 
-- `format.test.ts` — formatVND, signedVND, compactK/Tr, dayLabel, date-key helpers.
-- `categories.test.ts` — categoryOf lookup + Vietnamese labels.
-- `db.test.ts` — SQLite schema init.
-- `transactions.test.ts` — resetTransactions clears rows + swallows local-file delete errors.
-- `settings.test.ts` — round-trip load/update/reset for every key type.
-- `notifications.test.ts` — schedule cancels-then-schedules with fixed identifier.
-- `export.test.ts` — CSV BOM, escape triggers, income/expense labelling.
-- `budget-bar.test.tsx` — three threshold states + CTA when unset.
-- `txn-card.test.tsx` — badge, category label, expense/income signs, tap navigation.
-- `sanity.test.ts` — smoke check the harness.
+- `src/lib/` — formatting, categories, transactions repository (in-memory SQLite), settings, notifications, CSV export, FX conversion, comparison, streaks, share-card data, subscriptions and their scheduler, app lock, draft-transaction hook, locale key parity.
+- `src/components/` — budget bar, transaction card, share cards, picker sheets, PIN pad and lock screen.
+- `src/app/` — share preview screen.
 
 ## Build (EAS)
 
